@@ -39,6 +39,7 @@ void setup()
 
 void loop()
 {
+  DDRD = 0;
   digitalWrite(pin_CS,LOW);
   delay(1);
   t1 = micros();
@@ -47,7 +48,7 @@ void loop()
     //digitalWrite(pin_RD, LOW);  //write RD LOW to read in data
     PORTB &= B11111011;
     //while(digitalRead(pin_INT)) {} //while INT is HIGH, the code waits
-    while(PORTB & 00001000) {}
+    while(PORTB & B00001000) {}
     char val = fullRead();  //read D0-D7
     //digitalWrite(pin_RD, HIGH); //stop reading in data
     PORTB |= B00000100;

@@ -20,7 +20,8 @@
 
 #include "math.h"
 
-int sqcount = 0; //count for the square wave, variable for signal value
+int sqcount = 0;
+int sawcount = 0; //count for the square wave/sawtooth wave, variable for signal value
 int t1,t2;
 
 char fullRead()  //defines fullRead, the function that reads pins D0-D7 for input data
@@ -60,16 +61,23 @@ void loop()
     {
       sqcount++;
     }
-    else {} //if voltage is neither, implying that it must be inbetween
+    else   //if voltage is neither, implying that it must be inbetween 
+    {
+      sawcount++;
+    } 
   }
   t2 = micros();
   if (sqcount >= Vmax*(1 - thresh_percent))
   {
     //Turn to the right
   }
-  else
+  else if (sawcount >= Vmax*(1 - thresh_percent))
   {
     //Turn to the left
+  }
+  else
+  {
+    //ERROR!
   }
   
   digitalWrite(pin_CS,HIGH);

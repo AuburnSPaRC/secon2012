@@ -67,15 +67,15 @@ void loop()
     } 
   }
   t2 = micros();
-  if (sqcount >= Vmax*(1 - thresh_percent))
+  if (sqcount >= num_samples*(1 - thresh_percent))   //if 90% of samples are within range, then it must be a square wave
   {
     //Turn to the right
   }
-  else if (sawcount >= Vmax*(1 - thresh_percent))
+  else if (sawcount >= num_samples*(1 - thresh_percent))   //if 90% of samples are NOT within range, then it must be a sawtooth wave
   {
     //Turn to the left
   }
-  else
+  else  //if for some reason neither fit
   {
     //ERROR!
   }

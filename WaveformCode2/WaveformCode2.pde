@@ -52,8 +52,25 @@ void loop()
     char val = fullRead();  //read D0-D7
     //digitalWrite(pin_RD, HIGH); //stop reading in data
     PORTB |= B00000100;
+    if (val >= (Vmax - Vmax*thresh_volt && val <= (Vmax + Vmax*thresh_volt))  //if voltage is within 10% of square wave maximum
+    {
+      sqcount++;
+    }
+    else if (val >= 0 && val <= Vmax*thresh_volt)  //if voltage is within 10% of square wave minimum
+    {
+      sqcount++;
+    }
+    else {} //if voltage is neither, implying that it must be inbetween
   }
   t2 = micros();
+  if (sqcount >= Vmax*(1 - thresh_percent))
+  {
+    //Turn to the right
+  }
+  else
+  {
+    //Turn to the left
+  }
   
   digitalWrite(pin_CS,HIGH);
   delay(1);

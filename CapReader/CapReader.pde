@@ -39,12 +39,9 @@
 #define R 500.0
 
 #include "math.h"
+#include "status.h"
 
-const byte LEFT = 0;   // These are the statuses
-const byte RIGHT = 1;  // that the function
-const byte ERROR = 2;  // should return.
-
-byte CapRead();  //function prototype
+Status CapRead();  //function prototype
 
 void setup()
 {
@@ -58,7 +55,7 @@ void loop()
   delay(1000);
 }
 
-byte CapRead()
+Status CapRead()
 {
   //declare variables
   int V1, V2;  //holds voltage samples

@@ -1,87 +1,92 @@
     #include <OneWire.h>
      
-    // DS18S20 Temperature chip i/o borrowed from eaxample at http://www.arduino.cc/playground/Learning/OneWire
+// -- CONSTANTS --
+    
+    // Optimal minimum range above or below room temp (5.55C=10F)
+    const float TEMP_RANGE = 5.55555; 
+    // Tolerance from optimal level (ex: temperature of +5C will trigger if TEMP_RANGE is 5.55C)
+    const float TRIGGER = 1.0;
+    // Room temperature amount to be used for now (will be removed)
+    //const float AMBIENT 23.0;
+    // Family ID of DS18B20 Temperature Sensor
+    const byte DS18B20_ID = 0x28;
+    // Unique ID of plate sensor (8 bytes)
+    byte ID_PLATE[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    // Unique ID of ambient sensor (8 bytes)
+    byte ID_AMBIENT[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+ 
+// -- I/O SETUP --
+ 
+    // DS18S20 Temperature chip i/o
     OneWire ds(10);  // on pin 10
      
     void setup(void) {
-      // initialize inputs/outputs
-      // start serial port
+      // Initialize inputs/outputs
+      // Start serial port
       Serial.begin(9600);
     }
      
+// -- MAIN LOOP --
+
     void loop(void) {
-      int HighByte, LowByte, TReading, SignBit, Tc_100, Whole, Fract;
-      byte i;
-      byte present = 0;
-      byte data[12];
-      byte addr[8];
-     
-      if ( !ds.search(addr)) {
-          Serial.print("No more addresses.\n");
-          ds.reset_search();
-          return;
-      }
-     
-      Serial.print("R=");
-      for( i = 0; i < 8; i++) {
-        Serial.print(addr[i], HEX);
-        Serial.print(" ");
-      }
-     
-      if ( OneWire::crc8( addr, 7) != addr[7]) {
-          Serial.print("CRC is not valid!\n");
-          return;
-      }
-     
-     
+
+      float tempPlate, tempAmbient;
+      
       ds.reset();
-      ds.select(addr);
-      ds.write(0x44,1);         // start conversion, with parasite power on at the end
-     
-      delay(1000);     // maybe 750ms is enough, maybe not
-      // we might do a ds.depower() here, but the reset will take care of it.
-     
-      present = ds.reset();
-      ds.select(addr);    
-      ds.write(0xBE);         // Read Scratchpad
-     
-      Serial.print("P=");
-      Serial.print(present,HEX);
-      Serial.print(" ");
-      for ( i = 0; i < 9; i++) {           // we need 9 bytes
-        data[i] = ds.read();
-        Serial.print(data[i], HEX);
-        Serial.print(" ");
-      }
-      Serial.print(" CRC=");
-      Serial.print( OneWire::crc8( data, 8), HEX);
-      Serial.println();
-      LowByte = data[0];
-      HighByte = data[1];
-      TReading = (HighByte << 8) + LowByte;
-      SignBit = TReading & 0x8000;  // test most sig bit
-      if (SignBit) // negative
+      ds.select(ID_PLATE);
+      ds.write(0x44);         // Start measurement command
+      
+      ds.reset();
+      ds.select(ID_AMBIENT);
+      ds.write(0x44);         // Start measurement command
+      
+      //Above should be replaceable by:
+      //ds.reset();
+      //ds.skip();
+      //ds.write(0x44);
+      
+      delay(1000);            // Measurement may take 750ms
+      
+      tempPlate = readTemp(ID_PLATE);
+      tempAmbient = readTemp(ID_AMBIENT);
+    
+      if (tempPlate > tempAmbient + TEMP_RANGE - TRIGGER)
       {
-        TReading = (TReading ^ 0xffff) + 1; // 2's comp
+        Serial.print("RIGHT");
       }
-      Tc_100 = (6 * TReading) + TReading / 4;    // multiply by (100 * 0.0625) or 6.25
-    
-      Whole = Tc_100 / 100;  // separate off the whole and fractional portions
-      Fract = Tc_100 % 100;
-    
-    
-      if (SignBit) // If its negative
+      else if (tempPlate < tempAmbient - TEMP_RANGE + TRIGGER)
       {
-         Serial.print("-");
+        Serial.print("LEFT");
       }
-      Serial.print(Whole);
-      Serial.print(".");
-      if (Fract < 10)
+      else
       {
-         Serial.print("0");
+        Serial.print("ERROR");
       }
-      Serial.print(Fract);
-    
+
       Serial.print("\n");
     }
 
+// -- DATA READ AND CONVERSION --
+
+    float readTemp(byte addr[]) {
+      
+      int HighByte, LowByte, TReading;
+      float Tc_100;
+      byte i;
+      byte data[12];
+      
+      ds.reset();
+      ds.select(addr);    
+      ds.write(0xBE);         // Read scratchpad command
+     
+      for ( i = 0; i < 9; i++) {     // Read 9 bytes of data
+        data[i] = ds.read();
+      }
+      
+      LowByte = data[0];
+      HighByte = data[1];
+      TReading = (HighByte << 8) + LowByte;       // Raw temperature from sensor
+      Tc_100 = (6 * TReading) + TReading / 4.;    // Multiply by 6.25 to get degCelsius
+     
+      return Tc_100; 
+    }

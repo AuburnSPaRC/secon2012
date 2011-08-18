@@ -26,7 +26,6 @@
 ////////////////////////
 //  #INCLUDES         //
 ////////////////////////
-#include "status.h"          //has the status enumerations
 #include "math.h"            //needed to perform log() operation.
 #include <OneWire.h>         //for the one-wire interface with the temperature sensor
 #include <NewSoftSerial.h>
@@ -41,6 +40,9 @@
 // -Serial code----------------
 #define pin_RX 12             //pin 12 - RX for serial communication
 #define pin_TX 13             //pin 13 - TX for serial communication
+#define ERROR 'E'
+#define LEFT 'L'
+#define RIGHT 'R'
 // -waveform code--------------
 #define pin_RD 8              //pin 8 - connected to RD of the MAX153
 #define pin_INT 9             //pin 9 - connected to INT of the MAX 153
@@ -87,14 +89,14 @@ byte ID_PLATE[8] = {0x28, 0xF0, 0x3E, 0x77, 0x3, 0x0, 0x0, 0x80};               
 //  List of Functions //  (because apparently Arduino doesn't need function prototypes?)
 ////////////////////////
 //  void waveformSetup()  -  Prepares for reading the waveform.
-//  Status waveformRead() -  Reads the waveform and returns the status.
+//  char waveformRead() -  Reads the waveform and returns the status.
 //  byte fullRead()       -  Used by waveformLoop to read and return Port D.
 //  void capSetup()       -  Prepares for reading capacitance.
-//  Status capRead()      -  Reads capacitance and returns the status.
+//  char capRead()      -  Reads capacitance and returns the status.
 //  void voltSetup()      -  Prepares for reading voltage.
-//  Status voltRead()     -  Reads the voltage and returns the status.
+//  char voltRead()     -  Reads the voltage and returns the status.
 //  void tempSetup()      -  Prepares for reading temperature.
-//  Status tempRead()     -  Reads the temperature and returns the status.
+//  char tempRead()     -  Reads the temperature and returns the status.
 //  float readTemp(byte Addr[])  -  Used by tempRead() to get the temperature.
 
 
@@ -113,8 +115,74 @@ void setup()
   mySerial.begin(9600); //Set baud tate
   mySerial.println("Hello, world?");
 }
+
+char char_last = 0;
+boolean expectingFlag = false;
 void loop()
-{ }
+{ 
+  char char_rx = 0; //holder for the received character
+  char char_tx = 0;
+  if (mySerial.available())
+  {
+    char_rx = mySerial.read(); //read in character
+    if (expectingFlag)
+    {
+      if (char_rx == 'K')
+      {
+        expectingFlag = false;
+        return;
+      }
+      else
+      {
+        char_tx = char_last;
+      }
+      
+    } // end if (expecting)
+    else {
+    switch (char_rx)
+    {
+      case '?':
+        char_tx = 'K';
+        break;
+      case '1':
+      case 'V':
+        voltSetup();
+        delay(1);
+        char_tx = voltRead();
+        expectingFlag = true;
+        break;
+      case '2':
+      case 'T':
+        tempSetup();
+        delay(1);
+        char_tx = tempRead();
+        expectingFlag = true;
+        break;
+      case '3':
+      case 'C':
+        capSetup();
+        delay(1);
+        char_tx = capRead();
+        expectingFlag = true;
+        break;
+      case '4':
+      case 'W':
+        waveformSetup();
+        delay(1);
+        char_tx = waveformRead();
+        expectingFlag = true;
+        break;
+      default:
+        char_tx = 'X';
+    } // end switch
+    } // end else (NOT expecting)
+        
+    if (char_tx != 0)    
+      mySerial.print(char_tx);
+    
+  }// end if (available)
+
+}
 
 
 ////////////////////////////////////////////////
@@ -132,7 +200,7 @@ void waveformSetup()
 ////////////////////////////////////////////////
 //  waveformRead                              //
 ////////////////////////////////////////////////
-Status waveformRead()
+char waveformRead()
 {
   int sqcount = 0;
   int sawcount = 0; //count for the square wave/sawtooth wave, variable for signal value
@@ -202,7 +270,7 @@ void capSetup()
 ////////////////////////////////////////////////
 //  capRead                                   //
 ////////////////////////////////////////////////
-Status capRead()
+char capRead()
 {
   //declare variables
   int V1, V2;  //holds voltage samples
@@ -251,7 +319,7 @@ void voltSetup()
 ////////////////////////////////////////////////
 //  voltRead                                  //
 ////////////////////////////////////////////////
-Status voltRead()
+char voltRead()
 {
   int Vin;
   double vActual;
@@ -278,7 +346,7 @@ void tempSetup()
 ////////////////////////////////////////////////
 //  tempRead                                  //
 ////////////////////////////////////////////////
-Status tempRead() {
+char tempRead() {
 
   float tempPlate, tempAmbient;
   

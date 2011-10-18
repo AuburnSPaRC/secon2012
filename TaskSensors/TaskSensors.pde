@@ -67,7 +67,7 @@
 // -voltRead code--------------
 #define pin_volt A0
 #define Voltmax 15            // The max voltage for the voltage task
-#define Vdiode 0.7            // This is the turn on voltage for the diodes used.
+#define Vdiode 0.57            // This is the turn on voltage for the diodes used.
 
 // -temperature code-----------
 #define pin_temp 11
@@ -324,7 +324,7 @@ char voltRead()
   int Vin;
   double vActual;
   Vin = analogRead(pin_volt);
-  vActual = ((3*5*Vin)/1023) + Vdiode; //find and put Vactual in fullscale voltage
+  vActual = ((3*5*Vin)/1023) + 2*Vdiode; //find and put Vactual in fullscale voltage
   if (vActual > 10 && vActual <= 15)  //11V to 15V = turn right
   { return RIGHT; }
   else if (vActual >= 4.5)  //5V to 9V = turn left

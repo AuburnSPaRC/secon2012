@@ -62,7 +62,7 @@
 #define pin_CR2 A2            //discharges the capacitor (digital)
 #define pin_CR3 A3            //charges the capacitor (digital)
 #define MidCap 0.5            //uF ; above this is right, below is left
-#define R 500.0               //Ohms ; Resistor that the cap charges through
+#define R 470.0               //Ohms ; Resistor that the cap charges through
 
 // -voltRead code--------------
 #define pin_volt A0

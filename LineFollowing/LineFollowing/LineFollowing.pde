@@ -8,6 +8,8 @@
 #define MUX_S1_PIN    12    // mux select pin MSB
 #define MID_LINE      3500  // value of sensor when line is centered
 
+#define REFLECT_THRESHHOLD 750  // fraction of 1000 at which line is not found
+
 // Robot States
 #define ON_MAIN       0 // following a the main line
 #define AT_BOX        1 // leaves from straight line to 'T'
@@ -59,6 +61,10 @@ void setup()
   *frontSensor = 1;
   *rearSensor = 3;
   
+  // Setup mux outputs
+  pinMode(MUX_S0_PIN, OUTPUT);
+  pinMode(MUX_S1_PIN, OUTPUT);
+  
   lfPID.SetMode(AUTOMATIC);  // turn on the PID
   lfPID.SetOutputLimits(MIN_VELOCITY, MAX_VELOCITY); // force PID to range of motor speeds. 
   
@@ -76,7 +82,8 @@ void loop()
   {
     
     
-    // Read calibrated sensor values and obtain a measure of the line position from 0 to 7000
+    // Read calibrated front sensor values and obtain a measure of the line position from 0 to 7000
+    activateSensor(*frontSensor);
     unsigned int position = qtrrc.readLine(sensorValues, QTR_EMITTERS_ON, 1); //for white line
     if (!(position > 0 && position < 7000))
     {
@@ -95,12 +102,46 @@ void loop()
       
     }
   }
+  else if (AT_TURN)
+  {
+    
+  }
+  else if (AT_BOX)
+  {
+    
+  }
+  
 }
 
 // Checks to see if the robot is at a turn or just at the 'T'.
 boolean isTurn()
 {
-  return false;
+  boolean leftPresent = false;
+  boolean rightPresent = false;
+  
+  activateSensor(*leftSensor);
+  qtrrc.readCalibrated(sensorValues, QTR_EMITTERS_ON);
+  for (int i = 0; i < NUM_SENSORS; i++)
+  {
+    if (sensorValues[i] < REFLECT_THRESHHOLD)
+    {
+      leftPresent = true;
+      rotateAxes(4);
+    }
+  }
+  
+  activateSensor(*rightSensor);
+  qtrrc.readCalibrated(sensorValues, QTR_EMITTERS_ON);
+  for (int i = 0; i < NUM_SENSORS; i++)
+  {
+    if (sensorValues[i] < REFLECT_THRESHHOLD) 
+    {
+      rightPresent = true;
+      rotateAxes(1);
+    }
+  }
+
+  return leftPresent || rightPresent;
 }
 
 // Rotates where the 'front' of the robot is in relation to the sensors and motors. Positive value of turns
@@ -122,7 +163,25 @@ void rotateAxes(unsigned turns)
     rearSensor = rightSensor;
     rightSensor = frontSensor;
     frontSensor = tempUns;
-    
-  }
-  
+  } 
+}
+
+// Activates a sensor based on its value (1-4)
+void activateSensor(int sensor)
+{
+  switch (sensor) 
+  {
+    case 1:
+      digitalWrite(MUX_S0_PIN, LOW);
+      digitalWrite(MUX_S1_PIN, LOW);
+    case 2:
+      digitalWrite(MUX_S0_PIN, LOW);
+      digitalWrite(MUX_S1_PIN, HIGH);
+    case 3:
+      digitalWrite(MUX_S0_PIN, HIGH);
+      digitalWrite(MUX_S1_PIN, LOW);
+    default:
+      digitalWrite(MUX_S0_PIN, HIGH);
+      digitalWrite(MUX_S1_PIN, HIGH);
+  } 
 }

@@ -23,6 +23,18 @@
 #define KI            0 
 #define KD            1
 
+#define MIN_VELOCITY  -255 // minimum motor velocity
+#define MAX_VELOCITY  255  // maximum motor velocity
+
+int* leftVelocity = NULL;
+int* rightVelocity = NULL;
+int* forwardVelocity = NULL;
+int* backwardVelocity  = NULL;
+unsigned* leftSensor = NULL;
+unsigned* rightSensor = NULL;
+unsigned* frontSensor = NULL;
+unsigned* rearSensor = NULL;
+
 unsigned char sensorPins[] = {3, 4, 5, 6, 7, 8, 9, 10};
 unsigned robotState = 0;
 
@@ -38,7 +50,17 @@ void setup()
   Serial.begin(9600);
   delay(500);
   
+  *leftVelocity = 0;
+  *rightVelocity = 0;
+  *forwardVelocity = 0;
+  *backwardVelocity = 0;
+  *leftSensor = 4;
+  *rightSensor = 2;
+  *frontSensor = 1;
+  *rearSensor = 3;
+  
   lfPID.SetMode(AUTOMATIC);  // turn on the PID
+  lfPID.SetOutputLimits(MIN_VELOCITY, MAX_VELOCITY); // force PID to range of motor speeds. 
   
   for (int i = 0; i < 400; i++)  // make the calibration take about 10 seconds
   {
@@ -52,6 +74,8 @@ void loop()
 {
   if (ON_MAIN)
   {
+    
+    
     // Read calibrated sensor values and obtain a measure of the line position from 0 to 7000
     unsigned int position = qtrrc.readLine(sensorValues, QTR_EMITTERS_ON, 1); //for white line
     if (!(position > 0 && position < 7000))
@@ -63,8 +87,12 @@ void loop()
     {
       inputPID = position;            // set PID input to position of line
       lfPID.Compute();                // compute correction, store in outputPID
+      if (outputPID > 0) {*rightVelocity = outputPID;} // positive correction means move right
+      else {*leftVelocity = -outputPID;}               // negative correction means move left
+      
       Serial.print("Correction: ");  
       Serial.println(outputPID);
+      
     }
   }
 }
@@ -75,9 +103,22 @@ boolean isTurn()
   return false;
 }
 
-// Rotates where the 'front' of the robot is in relation to the sensors. Positive value of turns
-//  means rotate 'right' which means the sensor number for the front of the robot is increased
-void rotateSensors(int turns)
+// Rotates where the 'front' of the robot is in relation to the sensors and motors. Positive value of turns
+//  means rotate 'right' which means what used to be 'right' is now 'forward'.
+void rotateAxes(unsigned turns)
 {
+  int* tempInt;
+  unsigned* tempUns;
+  for (int i = turns; i > 0; i--)
+  {
+    leftVelocity = backwardVelocity;
+    rightVelocity = forwardVelocity;
+    forwardVelocity = leftVelocity;
+    backwardVelocity = rightVelocity;
+    leftSensor = rearSensor;
+    rightSensor = frontSensor;
+    frontSensor = leftSensor;
+    rearSensor = rightSensor;
+  }
   
 }

@@ -111,14 +111,18 @@ void rotateAxes(unsigned turns)
   unsigned* tempUns;
   for (int i = turns; i > 0; i--)
   {
+    tempInt = leftVelocity;
     leftVelocity = backwardVelocity;
-    rightVelocity = forwardVelocity;
-    forwardVelocity = leftVelocity;
     backwardVelocity = rightVelocity;
+    rightVelocity = forwardVelocity;
+    forwardVelocity = tempInt;
+    
+    tempUns = leftSensor;
     leftSensor = rearSensor;
-    rightSensor = frontSensor;
-    frontSensor = leftSensor;
     rearSensor = rightSensor;
+    rightSensor = frontSensor;
+    frontSensor = tempUns;
+    
   }
   
 }

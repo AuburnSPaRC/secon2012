@@ -11,14 +11,12 @@
 #define REFLECT_THRESHOLD 750  // fraction of 1000 at which line is not found
 
 // Robot States
-#define ON_MAIN       0 // following a the main line
+#define ON_MAIN       0 // following the main line
 #define AT_BOX        1 // leaves from straight line to 'T'
 #define DECIDED       2 // is moving left or right from the box
-#define FOUND_SIDE    3 // has found to the line next to box
-#define BOX_SIDE      4 // is following to the left or right of box
-#define BOX_TURN      5 // is moving opposite of DECIDED
-#define FOUND_MAIN    6 // found the main line again
-#define AT_TURN       7 // has found a right turn
+#define BOX_SIDE      3 // is following to the left or right of box
+#define BOX_REVERSE   4 // is moving opposite of DECIDED
+#define AT_TURN       5 // has found a right turn
 
 #define MIN_VELOCITY  -255 // minimum motor velocity
 #define MAX_VELOCITY  255  // maximum motor velocity
@@ -129,7 +127,8 @@ void setup()
 
 void loop()
 { 
-  if (robotState==ON_MAIN)
+
+  if (robotState==ON_MAIN) // following the main line
   {
     // Read calibrated front sensor values and obtain a measure of the line position from 0 to 7000
     activateSensor(*frontSensor);
@@ -151,14 +150,45 @@ void loop()
 
     }
   }
-  else if (robotState==AT_TURN)
-  {  
-  }
-  else if (robotState==AT_BOX)
+  
+  else if (robotState==AT_BOX) // leaves from straight line to 'T'
   {
-
-
-    
+    // 1) Bot should slow down and read leftSensor and rightSensor to determine distance from plates.
+    // 2) Run measurement routines and wait for output.
+    // 3) Enter DECIDED state.
+  }
+  
+  else if (robotState==DECIDED) // is moving left or right from the box
+  {
+    // 1) Bot should back up a smidgen.
+    // 2) Begin moving left or right based on output of mesaurement.
+    // 3) Read frontSensor until it discovers a line.
+    // 4) Keep moving until line is near center of sensor.
+    // 5) Enter BOX_SIDE state.
+  }
+  
+  else if (robotState==BOX_SIDE) // is following the line next to box
+  {
+    // 1) Begin moving forward.
+    // 2) Read left/rightSensor until it discovers a line (depends on direction in DECIDED state).
+    // 3) Keep moving forward until line is near center of sensor.
+    // 4) Enter BOX_REVERSE state.
+  }
+  
+  else if (robotState==BOX_REVERSE) // is moving opposite of DECIDED
+  {
+    // 1) Begin moving in direction opposite of direction in DECIDED.
+    // 2) Read frontSensor until it discovers a line.
+    // 3) Keep moving forward until line is near center of sensor.
+    // 4) Enter ON_MAIN state.
+  }
+  
+  else if (robotState==AT_TURN) // has found a right turn
+  {
+    // 1) Continue movind in current direction.
+    // 2) Read rightSensor until line is near center of sensor.
+    // 3) Rotate axes [rotateAxes(1);]
+    // 4) Enter ON_MAIN state.
   }
   
 }

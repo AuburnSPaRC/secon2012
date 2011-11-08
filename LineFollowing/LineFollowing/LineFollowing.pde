@@ -39,6 +39,15 @@ unsigned* rightSensor = NULL;
 unsigned* frontSensor = NULL;
 unsigned* rearSensor = NULL;
 
+unsigned* sensorOneCalMax = NULL;
+unsigned* sensorOneCalMin = NULL;
+unsigned* sensorTwoCalMax = NULL;
+unsigned* sensorTwoCalMin = NULL;
+unsigned* sensorThreeCalMax = NULL;
+unsigned* sensorThreeCalMin = NULL;
+unsigned* sensorFourCalMax = NULL;
+unsigned* sensorFourCalMin = NULL;
+
 //Change these when you need to
 unsigned char sensorPins[] = {10,6,8,13,5,4,3,2};
 unsigned robotState = 0;
@@ -72,31 +81,51 @@ void setup()
   lfPID.SetMode(AUTOMATIC);  // turn on the PID
   lfPID.SetOutputLimits(MIN_VELOCITY, MAX_VELOCITY); // force PID to range of motor speeds. 
   
-  for (int i = 0; i < 400; i++)  // make the calibration take about 10 seconds
+  // Calibrate sensor 1 (robot must be fully on line)
+  activateSensor(1);
+  for (int i = 0; i < 200; i++)  // make the calibration take about 5 seconds
   {
     qtrrc.calibrate();       // reads all sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
   }
-  
-  //This is to calibrate the sensors, we need to set the maximum range of the values or else find a way to have the robot move over the line back and forth once before it starts to get a 
-  //range of values we're going to see.
-  Serial.println();
-  for (int i = 0; i < NUM_SENSORS; i++)
-  {
-    Serial.print(qtrrc.calibratedMinimumOn[i]);
-    Serial.print(' ');
-  }
-  Serial.println();
-  
-  // print the calibration maximum values measured when emitters were on
-  for (int i = 0; i < NUM_SENSORS; i++)
-  {
-    Serial.print(qtrrc.calibratedMaximumOn[i]);
-    Serial.print(' ');
-  }
-    Serial.println();
-    delay(1000);
-}
+  sensorOneCalMax = qtrrc.calibratedMaximumOn;
+  sensorOneCalMin = qtrrc.calibratedMinimumOn;
+  qtrrc.calibratedMaximumOn = NULL;
+  qtrrc.calibratedMinimumOn = NULL;
 
+  // Calibrate sensor 3 (so robot doesn't have to turn)
+  activateSensor(3);
+  for (int i = 0; i < 200; i++)  // make the calibration take about 5 seconds
+  {
+    qtrrc.calibrate();       // reads all sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
+  }
+  sensorThreeCalMax = qtrrc.calibratedMaximumOn;
+  sensorThreeCalMin = qtrrc.calibratedMinimumOn;
+  qtrrc.calibratedMaximumOn = NULL;
+  qtrrc.calibratedMinimumOn = NULL;
+    
+  // Calibrate sensor 2 (robot must turn 90 degrees)
+  activateSensor(2);
+  for (int i = 0; i < 200; i++)  // make the calibration take about 5 seconds
+  {
+    qtrrc.calibrate();       // reads all sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
+  }
+  sensorTwoCalMax = qtrrc.calibratedMaximumOn;
+  sensorTwoCalMin = qtrrc.calibratedMinimumOn;
+  qtrrc.calibratedMaximumOn = NULL;
+  qtrrc.calibratedMinimumOn = NULL;
+  
+  // Calibrate sensor 4 (robot doesn't need to turn)
+  activateSensor(4);
+  for (int i = 0; i < 200; i++)  // make the calibration take about 5 seconds
+  {
+    qtrrc.calibrate();       // reads all sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
+  }
+  sensorFourCalMax = qtrrc.calibratedMaximumOn;
+  sensorFourCalMin = qtrrc.calibratedMinimumOn;
+  qtrrc.calibratedMaximumOn = NULL;
+  qtrrc.calibratedMinimumOn = NULL;
+  
+}
 
 void loop()
 { 
@@ -120,10 +149,6 @@ void loop()
      Serial.print("Correction: ");  
      Serial.println(outputPID);
 
- 
-
-                              
-      
     }
   }
   else if (robotState==AT_TURN)
@@ -191,7 +216,7 @@ void rotateAxes(unsigned turns)
   } 
 }
 
-// Activates a sensor based on its value (1-4)
+// Activates a sensor based on its value (1-4) and chooses the correct calibration array
 void activateSensor(int sensor)
 {
   switch (sensor) 
@@ -199,14 +224,34 @@ void activateSensor(int sensor)
     case 1:
       digitalWrite(MUX_S0_PIN, LOW);
       digitalWrite(MUX_S1_PIN, LOW);
+      if (sensorOneCalMax != NULL)
+      {
+        qtrrc.calibratedMaximumOn = sensorOneCalMax;
+        qtrrc.calibratedMinimumOn = sensorOneCalMin;
+      }
     case 2:
       digitalWrite(MUX_S0_PIN, LOW);
       digitalWrite(MUX_S1_PIN, HIGH);
+      if (sensorTwoCalMax != NULL)
+      {
+        qtrrc.calibratedMaximumOn = sensorTwoCalMax;
+        qtrrc.calibratedMinimumOn = sensorTwoCalMin;
+      }
     case 3:
       digitalWrite(MUX_S0_PIN, HIGH);
       digitalWrite(MUX_S1_PIN, LOW);
+      if (sensorThreeCalMax != NULL)
+      {
+        qtrrc.calibratedMaximumOn = sensorThreeCalMax;
+        qtrrc.calibratedMinimumOn = sensorThreeCalMin;
+      }
     default:
       digitalWrite(MUX_S0_PIN, HIGH);
       digitalWrite(MUX_S1_PIN, HIGH);
+      if (sensorFourCalMax != NULL)
+      {
+        qtrrc.calibratedMaximumOn = sensorFourCalMax;
+        qtrrc.calibratedMinimumOn = sensorFourCalMin;
+      }
   } 
 }

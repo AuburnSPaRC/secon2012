@@ -1,5 +1,3 @@
-Subversion Repository for Auburn SPaRC's 2012 SoutheastCon Robot
-Testing
+Repository for Auburn University Student Projects and Research Committee SoutheastCon 2012.
 
-This is a subversion commit
-Tyler's test SVN commit.
+To checkout with subversion:  svn co https://github.com/AUSPARC/secon2012

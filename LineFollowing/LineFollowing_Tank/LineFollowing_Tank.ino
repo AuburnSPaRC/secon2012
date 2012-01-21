@@ -66,6 +66,12 @@ double forwardSpeed = 0;
 // Change these pins when you need to
 unsigned char fSensorPins[] = {31,33,35,37,39,41,43,45};
 unsigned char rSensorPins[] = {2,3,4,5,6,7,8,9};
+#define LEFT_PWM_PIN   10
+#define LEFT_DIR_PIN   11
+#define RIGHT_PWM_PIN  12
+#define RIGHT_DIR_PIN  13
+
+
 unsigned robotState = 0;
 
 // Sensors (f)(c)0 through (f)(c)7 are connected to (f)(c)SensorPins[]
@@ -112,67 +118,10 @@ void loop()
       moveBot(MOVE_FORWARD); //Begin moving forward again
       break;
     case 1: // At mainLoc M1 -----------------------------------------------------
-      switch (taskLoc)
-      {
-        case -1:
-          followLine(); // Follow the line until 'T' is detected
-          if (isTurn() == AT_T)
-          {
-            moveToSensor();
-            takeReading();
-            moveFromSensor();
-            if (leftRightLoc == LEFT) {turnLeft();}  
-            else {turnRight();} 
-            taskLoc = 0; // Bot is now at taskLoc L/R0
-            moveBot(MOVE_FORWARD);
-          }
-          break;  
-        case 0:
-          followLine(); // Follow the line until turn is detected
-          if (isTurn() == AT_LEFT) // If left turn detected
-          {
-            turnLeft();   // Face the M2 line again
-            taskLoc = 1;  // Bot is now at taskLoc R1
-            moveBot(MOVE_FORWARD); // Start moving forward
-          } 
-          else if (isTurn() == AT_RIGHT) // If left turn detected
-          {
-            turnRight();   // Face the M2 line again
-            taskLoc = 1;   // Bot is now at taskLoc L1
-            moveBot(MOVE_FORWARD); // Start moving forward
-          }
-          break;
-        case 1:
-          followLine(); // Follow the line until turn is detected
-          if (isTurn() == AT_LEFT) // If left turn detected
-          {
-            moveOffLine(); // Move off of the line a bit
-            turnLeft();    // Face the M2 line again
-            taskLoc = 2;   // Bot is now at taskLoc R2
-            moveBot(MOVE_FORWARD); // Start moving towards M2
-          } 
-          else if (isTurn() == AT_RIGHT) // If left turn detected
-          {
-            moveOffLine(); // Move off of the line a bit
-            turnRight();   // Face the M2 line again
-            taskLoc = 2;   // Bot is now at taskLoc L2
-            moveBot(MOVE_FORWARD); // Start moving towards M2
-          } 
-          break;
-        case 2:
-          if (isTurn() == AT_T)
-          {
-            if (leftRightLoc == LEFT) {turnLeft();}  
-            else {turnRight();}
-            taskLoc = -1;  // Bot is now at taskLoc L/R-1
-            mainLoc = 2;   // Bot is now at mainLoc M2
-            moveBot
-          }
-          break;
-      }
+      navigateTask();
       break;
     case 2: // At mainLoc M2 -----------------------------------------------------
-      // TODO
+      navigateTask();
       break;
     case 3: // At mainLoc M3 -----------------------------------------------------
       followLine(); // Follow the line unless turn is detected
@@ -187,9 +136,10 @@ void loop()
       moveBot(MOVE_FORWARD); //Begin moving forward again
       break;
     case 5: // At mainLoc M5 -----------------------------------------------------
-      // TODO
+      navigateTask();
       break;
     case 6: // At mainLoc M6 -----------------------------------------------------
+      navigateTask();
       break;
     case 7: // At mainLoc M7 -----------------------------------------------------
       followLine(); // Follow the line unless turn is detected
@@ -259,6 +209,7 @@ void moveBot(int moveType)
       leftDelta    = 0;
       rightDelta   = 0;
   }
+  updateMotors();
 }
 
 // Turn bot 90 degrees to the left
@@ -291,8 +242,91 @@ void moveFromSensor()
   //TODO
 }
 
-//Moves the bot off of the line by going forward a bit
-void moveOffLine()
+void navigateTask()
 {
-  //TODO
+  switch (taskLoc)
+  {
+    case -1:
+      followLine(); // Follow the line until 'T' is detected
+      if (isTurn() == AT_T)
+      {
+        moveToSensor();
+        takeReading();
+        moveFromSensor();
+        if (leftRightLoc == LEFT) {turnLeft();}  
+        else {turnRight();} 
+        taskLoc = 0; // Bot is now at taskLoc L/R0
+        moveBot(MOVE_FORWARD);
+      }
+      break;  
+    case 0:
+      followLine(); // Follow the line until turn is detected
+      if (isTurn() == AT_LEFT) // If left turn detected
+      {
+        turnLeft(); 
+        taskLoc = 1;  // Bot is now at taskLoc R1
+        moveBot(MOVE_FORWARD); // Start moving forward
+      } 
+      else if (isTurn() == AT_RIGHT) // If left turn detected
+      {
+        turnRight(); 
+        taskLoc = 1;   // Bot is now at taskLoc L1
+        moveBot(MOVE_FORWARD); // Start moving forward
+      }
+      break;
+    case 1:
+      followLine(); // Follow the line until turn is detected
+      if (isTurn() == AT_LEFT) // If left turn detected
+      {
+        turnLeft();    
+        taskLoc = 2;   // Bot is now at taskLoc R2
+        moveBot(MOVE_FORWARD); // Start moving forward
+      } 
+      else if (isTurn() == AT_RIGHT) // If left turn detected
+      {
+        turnRight();  
+        taskLoc = 2;   // Bot is now at taskLoc L2
+        moveBot(MOVE_FORWARD); // Start moving forward
+      } 
+      break;
+    case 2:
+      followLine(); // Follow the line until turn is detected
+      if (isTurn() == AT_LEFT) // If left turn detected
+      {
+        turnLeft();    
+        taskLoc = -1;      // Reset taskLoc
+        increaseMainLoc(); // Increments mainLoc by 1
+        moveBot(MOVE_FORWARD); // Start moving forward
+      } 
+      else if (isTurn() == AT_RIGHT) // If left turn detected
+      {
+        turnRight();       
+        taskLoc = -1;      // Reset taskLoc
+        increaseMainLoc(); // Increments mainLoc by 1
+        moveBot(MOVE_FORWARD); // Start moving forward
+      } 
+      break;
+  } 
+}
+
+void increaseMainLoc()
+{
+  ++mainLoc;    // Increment mainLoc
+  mainLoc %= 8; // Make sure mainLoc is never > 7
+}
+
+// Converts the value between +/- MAX_VELOCITY to an actual PWM signal and direction
+void updateMotors()
+{
+  double tempLeftSpeed = forwardSpeed + leftDelta;    // Left motor speed from -255 to 255
+  double tempRightSpeed = forwardSpeed + rightDelta;  // Reft motor speed from -255 to 255
+  
+  analogWrite(LEFT_PWM_PIN, byte(abs(tempLeftSpeed)));   // Set PWM as magnitude of left speed (0 to 255)
+  analogWrite(RIGHT_PWM_PIN, byte(abs(tempRightSpeed))); // Set PWM as magnitude of right speed (0 to 255)
+  
+  if (tempLeftSpeed < 0) {digitalWrite(LEFT_DIR_PIN, LOW);}   // If negative, direction = LOW;
+  else {digitalWrite(LEFT_DIR_PIN, HIGH);}  // If positive, direction = HIGH
+  
+  if (tempRightSpeed < 0) {digitalWrite(RIGHT_DIR_PIN, LOW);} // If negative, direction = LOW;
+  else {digitalWrite(RIGHT_DIR_PIN, HIGH);} // If positive, direction = HIGH
 }

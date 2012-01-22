@@ -16,14 +16,6 @@
 
 #define REFLECT_THRESHOLD 750  // part of 1000 at which line is not found
 
-// Robot States
-//#define ON_MAIN       0 // following the main line
-//#define AT_BOX        1 // leaves from straight line to 'T'
-//#define DECIDED       2 // is moving left or right from the box
-//#define BOX_SIDE      3 // is following to the left or right of box
-//#define BOX_REVERSE   4 // is moving opposite of DECIDED
-//#define AT_TURN       5 // has found a right turn
-
 // Direction Definitions
 #define LEFT          true
 #define RIGHT         false
@@ -71,9 +63,6 @@ unsigned char rSensorPins[] = {2,3,4,5,6,7,8,9};
 #define RIGHT_PWM_PIN  12
 #define RIGHT_DIR_PIN  13
 
-
-unsigned robotState = 0;
-
 // Sensors (f)(c)0 through (f)(c)7 are connected to (f)(c)SensorPins[]
 PololuQTRSensorsRC fSensor(fSensorPins, NUM_SENSORS, TIMEOUT); 
 PololuQTRSensorsRC rSensor(rSensorPins, NUM_SENSORS, TIMEOUT); 
@@ -86,7 +75,14 @@ PID lfPID(&inputPID, &outputPID, &setpointPID, KP, KI, KD, DIRECT);
 
 void setup()
 {
+  // Setup pin IO:
+  pinMode(LEFT_PWM_PIN, OUTPUT);
+  pinMode(LEFT_DIR_PIN, OUTPUT);
+  pinMode(RIGHT_PWM_PIN, OUTPUT);
+  pinMode(RIGHT_DIR_PIN, OUTPUT);
+  
   setpointPID = MID_LINE;    // Set the point we want our PID loop to adjust to
+  
   Serial.begin(9600);        // Begin serial comm for debugging  
   delay(500);                // Wait for serial comm to come online
   

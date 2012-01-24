@@ -29,10 +29,6 @@
 #include "math.h"            //needed to perform log() operation.
 #include <OneWire.h>         //for the one-wire interface with the temperature sensor
 
-
-
-
-
 ////////////////////////
 //  Defined           //
 //    Constants       //
@@ -74,8 +70,6 @@
 const float TEMP_RANGE = 5.55555; // Optimal minimum range above or below room temp (5.55C=10F)
 // Tolerance from optimal level (ex: temperature of +5C will trigger if TEMP_RANGE is 5.55C)
 const float TRIGGER = 1.0;
-// Room temperature amount to be used for now (will be removed)
-//const float AMBIENT 23.0;
 // Family ID of DS18B20 Temperature Sensor
 const byte DS18B20_ID = 0x28;                                                             //
 // Unique ID of plate sensor (8 bytes)                                                  ////
@@ -100,10 +94,9 @@ byte ID_PLATE[8] = {0x28, 0xF0, 0x3E, 0x77, 0x3, 0x0, 0x0, 0x80};               
 //  float readTemp(byte Addr[])  -  Used by tempRead() to get the temperature.
 
 
-//Global variables/////
-//NewSoftSerial mySerial(pin_RX, pin_TX); //Set (Rx,Tx)
+// Global variables
 OneWire ds(pin_temp);
-
+boolean accurateFlag;  // Is the turn decision accurate? (true for 'yes')
 
 boolean readWaveform()
 {
@@ -149,9 +142,20 @@ boolean readWaveform()
   digitalWrite(pin_CS,HIGH);  //disables the ADC
     
   if (sqcount > num_samples*(sq_thresh_percent))   //if x% of samples are within range, then it must be a square wave
+  {
+    accurateFlag = true;
     return RIGHT;
+  }
   else if (sawcount > num_samples*(saw_thresh_percent))   //if x% of samples are NOT within range, then it must be a sawtooth wave
+  {
+    accurateFlag = true;
     return LEFT;
+  }
+  else
+  {
+    accurateFlag = false;
+    return ERROR;  
+  }
 }
 
 boolean readCapacitance()
@@ -183,17 +187,32 @@ boolean readCapacitance()
   
   C = 112.0 / (R * log(float(1023-V1)/float(1023-V2)));
   // ^ fancy mathematics
-  
+ 
   if (V1 >= 900)      //bad connection
+  {
+    accurateFlag = false;
     return ERROR;
+  }
   else if (V2 == 1023) //cap is too small
+  {
+    accurateFlag = true;
     return LEFT;
+  }
   else if (V1 == V2)  //cap is too big
+  {
+    accurateFlag = true;
     return RIGHT;
+  }
   else if (C > MidCap)
+  {
+    accurateFlag = true;
     return RIGHT;
+  }
   else
+  {
+    accurateFlag = true;
     return LEFT;
+  }
 }
 
 boolean readVoltage()
@@ -206,17 +225,27 @@ boolean readVoltage()
   double vActual;
   Vin = analogRead(pin_volt);
   vActual = ((3*5*Vin)/1023) + 2*Vdiode; //find and put Vactual in fullscale voltage
-  if (vActual > 10 && vActual <= 15)  //11V to 15V = turn right
-    return RIGHT; 
-  else if (vActual >= 4.5)  //5V to 9V = turn left
-    return LEFT;
-  else
-    return ERROR;  // less than 5 (with a little margin of error) indicates error.  
   
+  
+  if (vActual > 10 && vActual <= 15)  //11V to 15V = turn right
+  {
+    accurateFlag = true;
+    return RIGHT; 
+  }
+  else if (vActual >= 4.5)  //5V to 9V = turn left
+  {
+    accurateFlag = true;
+    return LEFT;
+  }
+  else
+  {
+    accurateFlag = false;
+    return ERROR;  // less than 5 (with a little margin of error) indicates error.  
+  }
 }
      
-boolean readTemperature() {
-
+boolean readTemperature() 
+{
   float tempPlate, tempAmbient;
   
   ds.reset();
@@ -231,20 +260,23 @@ boolean readTemperature() {
   
   if (tempPlate > tempAmbient + TEMP_RANGE - TRIGGER)
   {
+    accurateFlag = true;
     return RIGHT;
   }
   else if (tempPlate < tempAmbient - TEMP_RANGE + TRIGGER)
   {
+    accurateFlag = true;
     return LEFT;
   }
   else
   {
-     return ERROR;
+    accurateFlag = false;
+    return ERROR;
   }
 }
 
-float readSensorTemp(byte addr[]) { 
-  
+float readSensorTemp(byte addr[]) 
+{   
   int HighByte, LowByte, TReading;
   float Tc_100;
   byte i;
@@ -264,4 +296,9 @@ float readSensorTemp(byte addr[]) {
   Tc_100 = (6 * TReading) + TReading / 4.;    // Multiply by 6.25 to get degCelsius
  
   return Tc_100; 
+}
+
+boolean getAccurateFlag()
+{
+  return accurateFlag;  
 }

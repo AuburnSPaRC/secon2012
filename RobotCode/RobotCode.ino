@@ -1,13 +1,21 @@
+/**  Main code for operation of SECON robot.
+* 
+* Includes navigation system and line-following system, as well as calibration
+* and setup routines. For reference, high values from line sensor are black, 
+* low are white.
+*
+* Depends: MotionFunctions.ino
+*          MotorFunctions.ino
+*          TaskSensorFunctions.ino
+*          PID_v1.h
+*          PololuQTRSensors.h
+*
+* Credits: Tyler Crumpton
+*
+*/
+
 #include <PID_v1.h>
 #include <PololuQTRSensors.h>
-
-//    ---------    <== Front of bot sensor (fSensor)
-//            |
-//            |
-//            |    <== Right of bot sensor (rSensor)
-//            |
-
-// For reference: high values from sensor are black, low are white.
 
 #define NUM_SENSORS   8     // number of sensors used on each array
 #define TIMEOUT       2500  // waits for 2500 us for sensor outputs to go low
@@ -17,27 +25,27 @@
 #define REFLECT_THRESHOLD 750  // part of 1000 at which line is not found
 
 // Direction Definitions
-#define LEFT          true
-#define RIGHT         false
+#define LEFT    true    // Left direction 
+#define RIGHT   false   // Right direction
 
 // Turn Conditions
-#define ON_LINE       0 // bot is on line or completely off
-#define AT_T          1 // bot is at a T-intersection
-#define AT_LEFT       2 // bot is at left turn
-#define AT_RIGHT      3 // bot is at right turn
+#define ON_LINE       0 // Bot is on line or completely off
+#define AT_T          1 // Bot is at a T-intersection
+#define AT_LEFT       2 // Bot is at left turn
+#define AT_RIGHT      3 // Bot is at right turn
 
 // Movement Actions
-#define STOP          0 // bot completely stops
-#define TURN_LEFT     1 // bot turns ~90 degrees left
-#define TURN_RIGHT    2 // bot turns ~90 degrees right
-#define MOVE_FORWARD  3 // bot moves forward at FULL_SPEED
+#define STOP          0 // Bot completely stops
+#define TURN_LEFT     1 // Bot turns ~90 degrees left
+#define TURN_RIGHT    2 // Bot turns ~90 degrees right
+#define MOVE_FORWARD  3 // Bot moves forward at FULL_SPEED
 
-#define MAX_VELOCITY  255  // maximum motor velocity
+#define MAX_VELOCITY  255  // Maximum motor velocity
 
-#define FULL_SPEED    0.75 // fraction of MAX_VELOCITY that is 'full' speed 
-#define TURN_SPEED    0.90 // fraction of MAX_VELOCITY that is 'turning' speed 
+#define FULL_SPEED    0.75 // Fraction of MAX_VELOCITY that is 'full' speed 
+#define TURN_SPEED    0.90 // Fraction of MAX_VELOCITY that is 'turning' speed 
 
-// maximum difference in wheel speeds when line-following
+// Maximum difference in wheel speeds when line-following
 #define MAX_PID_DELTA (1-FULL_SPEED)*MAX_VELOCITY  
 
 // Course Locations
@@ -100,52 +108,50 @@ void setup()
   
   // Start movement (currently starting at mainLoc 'M0')
   mainLoc = 0;
-  moveBot(MOVE_FORWARD);
+  setMove(MOVE_FORWARD);
 }
 
 void loop()
 { 
   switch (mainLoc)
   {
-    case 0: // At mainLoc M0 -----------------------------------------------------
+    case 0: // At mainLoc M0
       followLine(); // Follow the line until turn is detected
       if (isTurn() == AT_RIGHT) {turnRight();} // Should only detect a right turn
       mainLoc = 1; // Bot is now at mainLoc M1
-      moveBot(MOVE_FORWARD); //Begin moving forward again
+      setMove(MOVE_FORWARD); // Begin moving forward again
       break;
-    case 1: // At mainLoc M1 -----------------------------------------------------
+    case 1: // At mainLoc M1
       navigateTask();
       break;
-    case 2: // At mainLoc M2 -----------------------------------------------------
+    case 2: // At mainLoc M2
       navigateTask();
       break;
-    case 3: // At mainLoc M3 -----------------------------------------------------
+    case 3: // At mainLoc M3
       followLine(); // Follow the line unless turn is detected
       if (isTurn() == AT_RIGHT) {turnRight();} // Should only detect a right turn
       mainLoc = 4; // Bot is now at mainLoc M4
-      moveBot(MOVE_FORWARD); //Begin moving forward again
+      setMove(MOVE_FORWARD); // Begin moving forward again
       break;
-    case 4: // At mainLoc M4 -----------------------------------------------------
+    case 4: // At mainLoc M4
       followLine(); // Follow the line unless turn is detected
       if (isTurn() == AT_RIGHT) {turnRight();} // Should only detect a right turn
       mainLoc = 5; // Bot is now at mainLoc M5
-      moveBot(MOVE_FORWARD); //Begin moving forward again
+      setMove(MOVE_FORWARD); // Begin moving forward again
       break;
-    case 5: // At mainLoc M5 -----------------------------------------------------
+    case 5: // At mainLoc M5
       navigateTask();
       break;
-    case 6: // At mainLoc M6 -----------------------------------------------------
+    case 6: // At mainLoc M6
       navigateTask();
       break;
-    case 7: // At mainLoc M7 -----------------------------------------------------
+    case 7: // At mainLoc M7
       followLine(); // Follow the line unless turn is detected
       if (isTurn() == AT_RIGHT) {turnRight();} // Should only detect a right turn
       mainLoc = 0; // Bot is now at mainLoc M0
-      moveBot(MOVE_FORWARD); //Begin moving forward again
+      setMove(MOVE_FORWARD); // Begin moving forward again
       break;
   }
-  
-  
 }
 
 // Checks to see if the robot is at a turn or a 'T', by checking the outer sensors.
@@ -166,64 +172,10 @@ void followLine()
   // Read calibrated front sensor values and obtain a measure of the line position from 0 to 7000
   unsigned int position = fSensor.readLine(fSensorValues, QTR_EMITTERS_ON, WHITE_LINE);                            
 
-    inputPID = position;            // set PID input to position of line
-    lfPID.Compute();                // compute correction, store in outputPID
-    rightDelta = outputPID;         // sets right wheel's speed variation
-    leftDelta  = -outputPID;        // sets left wheel's speed variation
-    
-    Serial.print("Correction: ");   //for PID debugging
-    Serial.println(outputPID);      //for PID debugging
-}
-
-// Bot move actions
-void moveBot(int moveType)
-{
-  switch (moveType)
-  {
-    case STOP:
-      forwardSpeed = 0;
-      leftDelta    = 0;
-      rightDelta   = 0;
-      break;
-    case TURN_LEFT:
-      forwardSpeed = 0;
-      leftDelta    = -TURN_SPEED * MAX_VELOCITY;
-      rightDelta   = TURN_SPEED * MAX_VELOCITY;
-      break;
-    case TURN_RIGHT:
-      forwardSpeed = 0;
-      leftDelta    = TURN_SPEED * MAX_VELOCITY;
-      rightDelta   = -TURN_SPEED * MAX_VELOCITY;
-      break;
-    case MOVE_FORWARD:
-      forwardSpeed = FULL_SPEED * MAX_VELOCITY;
-      leftDelta    = 0;
-      rightDelta   = 0;
-      break;
-    default:
-      forwardSpeed = FULL_SPEED * MAX_VELOCITY;
-      leftDelta    = 0;
-      rightDelta   = 0;
-  }
-  updateMotors();
-}
-
-// Turn bot 90 degrees to the left
-void turnLeft()
-{
-  //TODO
-}
-
-// Turn bot 90 degrees to the right
-void turnRight()
-{
-  //TODO
-}
-
-//Moves the bot up to the task sensors for a reading
-void moveToSensor()
-{
-  //TODO
+  inputPID = position;            // set PID input to position of line
+  lfPID.Compute();                // compute correction, store in outputPID
+  rightDelta = outputPID;         // sets right wheel's speed variation
+  leftDelta  = -outputPID;        // sets left wheel's speed variation
 }
 
 //Take a reading from the task sensors and makes L/R decision 
@@ -249,12 +201,7 @@ void takeReading()
   }
 }
 
-//Moves the bot back from the task to the 'T'
-void moveFromSensor()
-{
-  //TODO
-}
-
+// Navigate around the task and take the sensor measurement
 void navigateTask()
 {
   switch (taskLoc)
@@ -269,7 +216,7 @@ void navigateTask()
         if (leftRightLoc == LEFT) {turnLeft();}  
         else {turnRight();} 
         taskLoc = 0; // Bot is now at taskLoc L/R0
-        moveBot(MOVE_FORWARD);
+        setMove(MOVE_FORWARD);
       }
       break;  
     case 0:
@@ -278,13 +225,13 @@ void navigateTask()
       {
         turnLeft(); 
         taskLoc = 1;  // Bot is now at taskLoc R1
-        moveBot(MOVE_FORWARD); // Start moving forward
+        setMove(MOVE_FORWARD); // Start moving forward
       } 
       else if (isTurn() == AT_RIGHT) // If left turn detected
       {
         turnRight(); 
         taskLoc = 1;   // Bot is now at taskLoc L1
-        moveBot(MOVE_FORWARD); // Start moving forward
+        setMove(MOVE_FORWARD); // Start moving forward
       }
       break;
     case 1:
@@ -293,13 +240,13 @@ void navigateTask()
       {
         turnLeft();    
         taskLoc = 2;   // Bot is now at taskLoc R2
-        moveBot(MOVE_FORWARD); // Start moving forward
+        setMove(MOVE_FORWARD); // Start moving forward
       } 
       else if (isTurn() == AT_RIGHT) // If left turn detected
       {
         turnRight();  
         taskLoc = 2;   // Bot is now at taskLoc L2
-        moveBot(MOVE_FORWARD); // Start moving forward
+        setMove(MOVE_FORWARD); // Start moving forward
       } 
       break;
     case 2:
@@ -309,14 +256,14 @@ void navigateTask()
         turnLeft();    
         taskLoc = -1;      // Reset taskLoc
         increaseMainLoc(); // Increments mainLoc by 1
-        moveBot(MOVE_FORWARD); // Start moving forward
+        setMove(MOVE_FORWARD); // Start moving forward
       } 
       else if (isTurn() == AT_RIGHT) // If left turn detected
       {
         turnRight();       
         taskLoc = -1;      // Reset taskLoc
         increaseMainLoc(); // Increments mainLoc by 1
-        moveBot(MOVE_FORWARD); // Start moving forward
+        setMove(MOVE_FORWARD); // Start moving forward
       } 
       break;
   } 

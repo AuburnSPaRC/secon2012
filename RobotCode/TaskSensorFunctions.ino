@@ -1,82 +1,66 @@
-/**********************************************************************
-*    Code is a collaboration of work by Ben Straub, Christopher James, 
-*    Tyler Crumpton, Kayla Frost, and Ray Preston.
+/**  Code for controlling the sensors that read the four task boxes.
 *
-*    This code is for the controlling the sensors that read the four
-*    task boxes.
-*    The device responds to character messages sent via serial, sending
-*    a response back over the serial.  For documentation on the list of
-*    transmitted character, check the wiki on redmine.
-*    For a schematic of the circuit this code is intended for, check
-*    redmine.
-**********************************************************************/
+* This code is for the controlling the sensors that read the four task boxes: voltage, 
+* temperature, waveform, and capcitance. For a schematic of the circuit this code is 
+* intended for, check redmine.
+*
+* Depends: math.h
+*          OneWire.h
+*
+* Credits: Ben Straub, Christopher James, Tyler Crumpton, Kayla Frost, and Ray Preston.
+*
+*/
 
-////////////////////////
-//  PIN BUDGET        //
-////////////////////////
-// D0-D7     Waveform       Data lines to ADC
-// D8-D10    Waveform       Control lines to ADC
-// D11       Temperature    One-wire interface
-// D12-D13   Serial         Software serial for tx/rx of commands
-// A0        Voltage        To measure the recitified, divided voltage
-// A1-A3     Capacitance    Uses an RC circuit to measure capacitance
-// A4-A5     *unused*       *unused*
+#include "math.h"      // Needed to perform log() operation.
+#include <OneWire.h>   // For the one-wire interface with the temperature sensor.
+
+// --- Sensor Pin Definitions ---
+#ifndef OVERWRITE_SENSOR_PINS
+  // Waveform Pins (D0-D7 also used, PORTB):
+  #define PIN_RD   8   // (DIG) DPin 8  - Connected to RD of the MAX153
+  #define PIN_INT  9   // (DIG) DPin 9  - Connected to INT of the MAX 153
+  #define PIN_CS   10  // (DIG) DPin 10 - Connected to CS of MAX 153
+  // Capcitance Pins:
+  #define PIN_CR1  A1  // (ANA) APin 1  - Samples the cap voltage (analog)
+  #define PIN_CR2  A2  // (DIG) APin 2  - Discharges the capacitor (digital)
+  #define PIN_CR3  A3  // (DIG) APin 3  - Charges the capacitor (digital)
+  // Voltage Pins:
+  #define PIN_VOLT A0  // (ANA) APin0   - Measure voltage
+  // Temperature Pins:
+  #define PIN_TEMP 11  // (DIG) DPin11  - For measuring temperature
+#endif
 
 
-////////////////////////
-//  #INCLUDES         //
-////////////////////////
-#include "math.h"            //needed to perform log() operation.
-#include <OneWire.h>         //for the one-wire interface with the temperature sensor
+// --- Constants ---
+#define LEFT  true             // Left direction
+#define RIGHT false            // Right direction
+#define ERROR LEFT             // Default direction when sensor reading fails
 
-////////////////////////
-//  Defined           //
-//    Constants       //
-////////////////////////
-// -Serial code----------------
-#define pin_RX 12             //pin 12 - RX for serial communication
-#define pin_TX 13             //pin 13 - TX for serial communication
-#define ERROR false
-#define LEFT true
-#define RIGHT false
-// -waveform code--------------
-#define pin_RD 8              //pin 8 - connected to RD of the MAX153
-#define pin_INT 9             //pin 9 - connected to INT of the MAX 153
-#define pin_CS 10             //pin 10 - connected to CS of MAX 153
-#define RD_low B11111110      //to set RD low, PORTB &= RD_low
-#define RD_high  B00000001    //to set RD high, PORTB &= RD_high
-#define INT_low B00000010     //if INT is low, PORTB & INT_low will = 0
-#define Vsqmax 185            //maximum square wave voltage level
-#define Vsqmin 47             //minimum square wave voltage level
-#define num_samples 500       //number of samples
-#define sq_thresh_percent .65 //x% of reading must be square to be a square wave
-#define saw_thresh_percent .35
-#define thresh_volt 0.15      //x% within the min or max = square, otherwise sawtooth
+// Waveform Constants:
+#define RD_LOW      B11111110  // To set RD low, PORTB &= RD_LOW
+#define RD_HIGH     B00000001  // To set RD high, PORTB &= RD_HIGH
+#define INT_LOW     B00000010  // If INT is low, PORTB & INT_LOW will = 0
+#define V_SQ_MAX    185        // Maximum square wave voltage level
+#define V_SQ_MIN    47         // Minimum square wave voltage level
+#define NUM_SAMPLES 500        // Number of samples
+#define VOLT_THRESH 0.15       // Voltage threshold
+#define SQ_THRESH_PERCENT  .65 // X% of reading must be square to be a square wave
+#define SAW_THRESH_PERCENT .35 // X% within the min or max = square, otherwise sawtooth
 
-// -capRead code---------------
-#define pin_CR1 A1            //samples the cap voltage (analog)
-#define pin_CR2 A2            //discharges the capacitor (digital)
-#define pin_CR3 A3            //charges the capacitor (digital)
-#define MidCap 0.5            //uF ; above this is right, below is left
-#define R 470.0               //Ohms ; Resistor that the cap charges through
+// Capcitor Constants:
+#define MidCap      0.5        // uF ; above this is right, below is left
+#define R           470.0      // Ohms ; Resistor that the cap charges through
 
-// -voltRead code--------------
-#define pin_volt A0
-#define Voltmax 15            // The max voltage for the voltage task
-#define Vdiode 0.57            // This is the turn on voltage for the diodes used.
+// Voltage Constants:
+#define Voltmax     15         // The max voltage for the voltage task
+#define Vdiode      0.57       // This is the turn on voltage for the diodes used.
 
-// -temperature code-----------
-#define pin_temp 11
-const float TEMP_RANGE = 5.55555; // Optimal minimum range above or below room temp (5.55C=10F)
-// Tolerance from optimal level (ex: temperature of +5C will trigger if TEMP_RANGE is 5.55C)
-const float TRIGGER = 1.0;
-// Family ID of DS18B20 Temperature Sensor
-const byte DS18B20_ID = 0x28;                                                             //
-// Unique ID of plate sensor (8 bytes)                                                  ////
-byte ID_AMBIENT[8] = {0x28, 0xD8, 0xF1, 0x87, 0x3, 0x0, 0x0, 0xAB};                  ////////////////----PUT TEMP SENSOR ROM ID'S HERE!!!!
-// Unique ID of ambient sensor (8 bytes)                                                ////
-byte ID_PLATE[8] = {0x28, 0xF0, 0x3E, 0x77, 0x3, 0x0, 0x0, 0x80};                         //
-//byte ID_PLATE[8] = {0x28, 0xF9, 0x5F, 0x61, 0x3, 0x0, 0x0, 0xFB};
+// Temperature Constants:
+#define TEMP_RANGE  5.55       // Optimal minimum range above or below room temp (5.55C=10F)
+#define TRIGGER     1.0        // Tolerance from TEMP_RANGE level 
+#define DS18B20_ID  0x28       // Family ID of DS18B20 Temperature Sensor
+byte ID_AMBIENT[8] = {0x28, 0xD8, 0xF1, 0x87, 0x3, 0x0, 0x0, 0xAB}; // ID of ambient sensor.
+byte ID_PLATE[8] = {0x28, 0xF0, 0x3E, 0x77, 0x3, 0x0, 0x0, 0x80};   // ID of plate sensor.
 
 
 ////////////////////////
@@ -95,15 +79,15 @@ byte ID_PLATE[8] = {0x28, 0xF0, 0x3E, 0x77, 0x3, 0x0, 0x0, 0x80};               
 
 
 // Global variables
-OneWire ds(pin_temp);
+OneWire ds(PIN_TEMP);
 boolean accurateFlag;  // Is the turn decision accurate? (true for 'yes')
 
 boolean readWaveform()
 {
   // --- Setup ---
-  pinMode(pin_CS, OUTPUT); //Pin 12 will enable / disable the MAX 153
-  pinMode(pin_RD, OUTPUT); //Pin 10 will be low to read in our values, and high when finished (RD)
-  pinMode(pin_INT, INPUT);  //Pin 11 will read the ADC's interrupt output to see when to stop looping (INT)
+  pinMode(PIN_CS, OUTPUT); //Pin 12 will enable / disable the MAX 153
+  pinMode(PIN_RD, OUTPUT); //Pin 10 will be low to read in our values, and high when finished (RD)
+  pinMode(PIN_INT, INPUT);  //Pin 11 will read the ADC's interrupt output to see when to stop looping (INT)
   DDRD = 0;  //Sets Port D to be an input; will read D0 - D7
   // -------------
 
@@ -113,40 +97,40 @@ boolean readWaveform()
   byte val = 0;
   
   DDRD = 0;  //PORT D as input 
-  digitalWrite(pin_CS,LOW); //enable ADC chip
+  digitalWrite(PIN_CS,LOW); //enable ADC chip
   delay(1);  //give it time to start up
-  for (int i=0; i<num_samples; i++)
+  for (int i=0; i<NUM_SAMPLES; i++)
   {
     unsigned int blah = 0;  //we should probably figure out how to get rid of this without it messing up
     val = 0;
     //digitalWrite(pin_RD, LOW);  //write RD LOW to read in data
-    PORTB &= RD_low;  // replaces the commented line above
+    PORTB &= RD_LOW;  // replaces the commented line above
     //while(digitalRead(pin_INT)) {} //while INT is HIGH, the code waits
     while(PORTB & B00001000) {}  // replaces the commented line above
     delayMicroseconds(4);
     val = PIND;  //read D0-D7
     blah = (unsigned int)val;
     //digitalWrite(pin_RD, HIGH); //stop reading in data
-    PORTB |= RD_high;  // replaces the commented line above
+    PORTB |= RD_HIGH;  // replaces the commented line above
     
-    if ((blah*1.0 >= (Vsqmax - Vsqmax*thresh_volt)) && 
-        (blah*1.0 <= (Vsqmax + Vsqmax*thresh_volt)))  //if voltage is within 10% of square wave maximum
+    if ((blah*1.0 >= (V_SQ_MAX - V_SQ_MAX*VOLT_THRESH)) && 
+        (blah*1.0 <= (V_SQ_MAX + V_SQ_MAX*VOLT_THRESH)))  //if voltage is within 10% of square wave maximum
       sqcount++;
-    else if ((blah*1.0 >= (Vsqmin - Vsqmax*thresh_volt)) && 
-             (blah*1.0 <= (Vsqmin + Vsqmax*thresh_volt)))  //if voltage is within 10% of square wave minimum
+    else if ((blah*1.0 >= (V_SQ_MIN - V_SQ_MAX*VOLT_THRESH)) && 
+             (blah*1.0 <= (V_SQ_MIN + V_SQ_MAX*VOLT_THRESH)))  //if voltage is within 10% of square wave minimum
       sqcount++;
     else  //if voltage is neither, implying that it must be inbetween 
       sawcount++;
   }
   
-  digitalWrite(pin_CS,HIGH);  //disables the ADC
+  digitalWrite(PIN_CS,HIGH);  //disables the ADC
     
-  if (sqcount > num_samples*(sq_thresh_percent))   //if x% of samples are within range, then it must be a square wave
+  if (sqcount > NUM_SAMPLES*(SQ_THRESH_PERCENT))   //if x% of samples are within range, then it must be a square wave
   {
     accurateFlag = true;
     return RIGHT;
   }
-  else if (sawcount > num_samples*(saw_thresh_percent))   //if x% of samples are NOT within range, then it must be a sawtooth wave
+  else if (sawcount > NUM_SAMPLES*(SAW_THRESH_PERCENT))   //if x% of samples are NOT within range, then it must be a sawtooth wave
   {
     accurateFlag = true;
     return LEFT;
@@ -161,9 +145,9 @@ boolean readWaveform()
 boolean readCapacitance()
 {
   // --- Setup ---
-  pinMode(pin_CR2,INPUT);
-  pinMode(pin_CR3,INPUT);
-  pinMode(pin_CR1,INPUT);
+  pinMode(PIN_CR2,INPUT);
+  pinMode(PIN_CR3,INPUT);
+  pinMode(PIN_CR1,INPUT);
   // -------------
   
     //declare variables
@@ -171,19 +155,19 @@ boolean readCapacitance()
   float C;     //holds the calculated capacitance (in uF)
   
   //setup
-  pinMode(pin_CR2,OUTPUT);
-  pinMode(pin_CR3,OUTPUT);
-  digitalWrite(pin_CR1,LOW);
-  pinMode(pin_CR1,INPUT);
-  digitalWrite(pin_CR2,LOW);
+  pinMode(PIN_CR2,OUTPUT);
+  pinMode(PIN_CR3,OUTPUT);
+  digitalWrite(PIN_CR1,LOW);
+  pinMode(PIN_CR1,INPUT);
+  digitalWrite(PIN_CR2,LOW);
   
-  digitalWrite(pin_CR3,LOW); //discharge cap
+  digitalWrite(PIN_CR3,LOW); //discharge cap
   delay(1);  //make sure it's fully discharged
-  pinMode(pin_CR3,INPUT); //stop discharging by setting this pin to a high impedance state
+  pinMode(PIN_CR3,INPUT); //stop discharging by setting this pin to a high impedance state
   delayMicroseconds(4);
-  digitalWrite(pin_CR2,HIGH); //start charging
-  V1 = analogRead(pin_CR1); // get first reading
-  V2 = analogRead(pin_CR1); // occurs 112us after first reading
+  digitalWrite(PIN_CR2,HIGH); //start charging
+  V1 = analogRead(PIN_CR1); // get first reading
+  V2 = analogRead(PIN_CR1); // occurs 112us after first reading
   
   C = 112.0 / (R * log(float(1023-V1)/float(1023-V2)));
   // ^ fancy mathematics
@@ -218,12 +202,12 @@ boolean readCapacitance()
 boolean readVoltage()
 {
   // --- Setup ---
-  pinMode(pin_volt,INPUT);
+  pinMode(PIN_VOLT,INPUT);
   // -------------  
   
   int Vin;
   double vActual;
-  Vin = analogRead(pin_volt);
+  Vin = analogRead(PIN_VOLT);
   vActual = ((3*5*Vin)/1023) + 2*Vdiode; //find and put Vactual in fullscale voltage
   
   

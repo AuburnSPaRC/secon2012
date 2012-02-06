@@ -29,6 +29,8 @@ void setMove(int moveType)
       forwardSpeed = 0;
       leftDelta    = TURN_SPEED * MAX_VELOCITY;
       rightDelta   = -TURN_SPEED * MAX_VELOCITY;
+//      leftDelta=0;
+//      rightDelta=0;
       break;
     case MOVE_FORWARD:
       forwardSpeed = FULL_SPEED * MAX_VELOCITY;
@@ -46,23 +48,48 @@ void setMove(int moveType)
 // Turn bot 90 degrees to the left
 void turnLeft()
 {
-  //TODO
+  //TODO: Implement better turning  
+  setMove(TURN_LEFT);
+  delay(TURN_TIME);
 }
 
 // Turn bot 90 degrees to the right
 void turnRight()
 {
-  //TODO
+  //TODO: Implement better turning
+  setMove(TURN_RIGHT);
+  delay(TURN_TIME);
 }
 
 //Moves the bot up to the task sensors for a reading
 void moveToSensor()
 {
-  //TODO
+  //TODO: Add actual implementation
+  setMove(STOP);
+  delay(3000);
 }
 
 //Moves the bot back from the task to the 'T'
 void moveFromSensor()
 {
   //TODO
+}
+
+// Spins each wheel 10 times for speed measurement.
+// NOTE: Requires #define CALIBRATE_MOTORS
+void motorCalibrate()
+{
+  #ifdef CALIBRATE_MOTORS
+    while(1)
+    {
+      setMove(TURN_RIGHT);
+      delay(20 * TURN_TIME);
+      setMove(STOP);
+      delay(2000);
+      setMove(TURN_LEFT);
+      delay(20 * TURN_TIME);
+      setMove(STOP);
+      delay(2000);
+    }  
+  #endif
 }

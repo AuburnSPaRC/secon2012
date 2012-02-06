@@ -17,6 +17,9 @@
 #include <PID_v1.h>
 #include <PololuQTRSensors.h>
 
+//#define CALBRATE_MOTORS      // Run in motor calibration mode.
+//#define DEBUG_MOTOR_SPEED    // Display motor speeds in Serial window.
+
 #define NUM_SENSORS   8     // number of sensors used on each array
 #define TIMEOUT       2500  // waits for 2500 us for sensor outputs to go low
 #define MID_LINE      3500  // value of sensor when line is centered (0-7000)
@@ -42,11 +45,14 @@
 
 #define MAX_VELOCITY  255  // Maximum motor velocity
 
-#define FULL_SPEED    0.75 // Fraction of MAX_VELOCITY that is 'full' speed 
-#define TURN_SPEED    0.90 // Fraction of MAX_VELOCITY that is 'turning' speed 
+#define FULL_SPEED    0.55 // Fraction of MAX_VELOCITY that is 'full' speed 
+#define TURN_SPEED    0.35 // Fraction of MAX_VELOCITY that is 'turning' speed 
+#define TURN_TIME     322  // Number of mSeconds to turn 90 degrees
 
 // Maximum difference in wheel speeds when line-following
 #define MAX_PID_DELTA (1-FULL_SPEED)*MAX_VELOCITY  
+// PWM offset for motor speeds to be equal (Left motor is faster = +)
+#define MOTOR_OFFSET  0
 
 // Course Locations
 boolean leftRightLoc = RIGHT;  // (RIGHT or LEFT)
@@ -54,9 +60,9 @@ short   taskLoc      = -1;     // (-1 to 2)
 short   mainLoc      = 0;      // (0 to 7)
 
 // PID Coeffs
-double KP = 1;
-double KI = 0.05;
-double KD = 0.25;
+double KP = .015;;
+double KI = 0;
+double KD = .001;
 
 // Movement speeds
 double leftDelta = 0;

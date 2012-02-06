@@ -95,6 +95,8 @@ void setup()
   pinMode(RIGHT_PWM_PIN, OUTPUT);
   pinMode(RIGHT_DIR_PIN, OUTPUT);
   
+  motorCalibrate();          // Does nothing ifdef CALIBRATE_MOTORS
+  
   setpointPID = MID_LINE;    // Set the point we want our PID loop to adjust to
   
   Serial.begin(9600);        // Begin serial comm for debugging  
@@ -180,8 +182,11 @@ void followLine()
 
   inputPID = position;            // set PID input to position of line
   lfPID.Compute();                // compute correction, store in outputPID
-  rightDelta = outputPID;         // sets right wheel's speed variation
-  leftDelta  = -outputPID;        // sets left wheel's speed variation
+  if (outputPID < 0)
+    rightDelta = outputPID;         // sets right wheel's speed variation
+  else
+    leftDelta  = -outputPID;        // sets left wheel's speed variation
+  updateMotors();
 }
 
 //Take a reading from the task sensors and makes L/R decision 

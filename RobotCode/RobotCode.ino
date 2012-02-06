@@ -168,10 +168,24 @@ int isTurn()
 {
   boolean isLeft  = (fSensorValues[0] < REFLECT_THRESHOLD);
   boolean isRight = (fSensorValues[7] < REFLECT_THRESHOLD);
-  if (isLeft && isRight) {return AT_T;}
-  else if (isLeft) {return AT_LEFT;}
-  else if (isRight) {return AT_RIGHT;}
-  else {return ON_LINE;}
+  boolean isOff = true;
+  
+  // Checks to see if every sensor is above threshold:
+  for (int i = 0; i < NUM_SENSORS; ++i)
+  {
+    isOff &= (fSensorValues[i] >= REFLECT_THRESHOLD);
+  }
+  
+  if (isLeft && isRight) 
+    return AT_T;
+  else if (isLeft) 
+    return AT_LEFT;
+  else if (isRight) 
+    return AT_RIGHT;
+  else if (isOff)
+    return OFF_LINE;
+  else 
+    return ON_LINE;
 }
 
 // Does PID for line folliwing and sets the motor delta speeds.

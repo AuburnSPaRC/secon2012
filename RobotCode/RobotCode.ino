@@ -32,10 +32,11 @@
 #define RIGHT   false   // Right direction
 
 // Turn Conditions
-#define ON_LINE       0 // Bot is on line or completely off
+#define ON_LINE       0 // Bot is on the line
 #define AT_T          1 // Bot is at a T-intersection
 #define AT_LEFT       2 // Bot is at left turn
 #define AT_RIGHT      3 // Bot is at right turn
+#define OFF_LINE      4 // Bot is off the line
 
 // Movement Actions
 #define STOP          0 // Bot completely stops

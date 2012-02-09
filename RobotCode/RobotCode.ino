@@ -126,6 +126,26 @@ void setup()
   setMove(MOVE_FORWARD);
 }
 
+void dyn_PID()
+{
+  if(messageBuild() > 0)
+  {  
+    switch (messageGetChar()) { // Gets the next word as a character
+      case 's' : // Set the PID values
+      KP = messageGetInt(); // Gets the next word as an integer
+      KI = messageGetInt();
+      KD = messageGetInt();
+      break;  // Break from the switch
+   
+    case 'd' :  // Display the current PID coefficients
+      printf("KP\t%f\n",KP);
+      printf("KI\t%f\n",KI);
+      printf("KD\t%f\n",KD);
+    }
+  }
+  
+}
+
 void loop()
 { 
    switch (mainLoc)
@@ -311,24 +331,3 @@ void increaseMainLoc()
   ++mainLoc;    // Increment mainLoc
   mainLoc %= 8; // Make sure mainLoc is never > 7
 }
-
-void dyn_PID()
-{
-  if(messageBuild() > 0)
-  {  
-    switch (messageGetChar()) { // Gets the next word as a character
-      case 's' : // Set the PID values
-      KP = messageGetInt(); // Gets the next word as an integer
-      KI = messageGetInt();
-      KD = messageGetInt();
-      break;  // Break from the switch
-   
-    case 'd' :  // Display the current PID coefficients
-      printf("KP\t%f\n",KP);
-      printf("KI\t%f\n",KI);
-      printf("KD\t%f\n",KD);
-    }
-  }
-  
-}
-

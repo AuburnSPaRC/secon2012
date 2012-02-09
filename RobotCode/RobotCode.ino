@@ -128,7 +128,6 @@ void setup()
 
 void loop()
 { 
-  //dynPID(); 
    switch (mainLoc)
   {
     case 0: // At mainLoc M0
@@ -168,6 +167,11 @@ void loop()
       setMove(MOVE_FORWARD); // Begin moving forward again
       break;
   }
+    // dynPID(); //Not sure why it isn't working. Error is:
+    // RobotCode.cpp: In function 'void loop()':
+    // RobotCode:169: error: 'dynPID' was not declared in this scope
+
+    
 }
 
 // Checks to see if the robot is at a turn or a 'T', by checking the outer sensors.
@@ -308,20 +312,22 @@ void increaseMainLoc()
   mainLoc %= 8; // Make sure mainLoc is never > 7
 }
 
-void dyn_PID(){
-  switch (messageGetChar()) { // Gets the next word as a character
-
-    case 's' : // Set the PID values
-
-    KP = messageGetInt(); // Gets the next word as an integer
-    KI = messageGetInt();
-    KD = messageGetInt();
-    break;  // Break from the switch
+void dyn_PID()
+{
+  if(messageBuild() > 0)
+  {  
+    switch (messageGetChar()) { // Gets the next word as a character
+      case 's' : // Set the PID values
+      KP = messageGetInt(); // Gets the next word as an integer
+      KI = messageGetInt();
+      KD = messageGetInt();
+      break;  // Break from the switch
    
-  case 'd' :  // Display the current PID coefficients
-  printf("KP\t%f\n",KP);
-  printf("KI\t%f\n",KI);
-  printf("KD\t%f\n",KD);
+    case 'd' :  // Display the current PID coefficients
+      printf("KP\t%f\n",KP);
+      printf("KI\t%f\n",KI);
+      printf("KD\t%f\n",KD);
+    }
   }
   
 }

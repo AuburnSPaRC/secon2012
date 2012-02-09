@@ -128,7 +128,7 @@ void setup()
 
 void loop()
 { 
-  dynPID(); 
+  //dynPID(); 
    switch (mainLoc)
   {
     case 0: // At mainLoc M0
@@ -308,7 +308,7 @@ void increaseMainLoc()
   mainLoc %= 8; // Make sure mainLoc is never > 7
 }
 
-void dyn_PID {
+void dyn_PID(){
   switch (messageGetChar()) { // Gets the next word as a character
 
     case 's' : // Set the PID values

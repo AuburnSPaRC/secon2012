@@ -13,7 +13,7 @@
 * Credits: Tyler Crumpton
 *
 */
-
+#include <SimpleMessageSystem.h>
 #include <PID_v1.h>
 #include <PololuQTRSensors.h>
 
@@ -55,13 +55,19 @@
 // PWM offset for motor speeds to be equal (Left motor is faster = +)
 #define MOTOR_OFFSET  0
 
+// Simple Message Interface Variables
+// TODO
+
+
+
 // Course Locations
 boolean leftRightLoc = RIGHT;  // (RIGHT or LEFT)
 short   taskLoc      = -1;     // (-1 to 2)
 short   mainLoc      = 0;      // (0 to 7)
 
 // PID Coeffs
-double KP = .015;;
+
+double KP = .015;
 double KI = 0;
 double KD = .001;
 
@@ -122,7 +128,8 @@ void setup()
 
 void loop()
 { 
-  switch (mainLoc)
+  dynPID(); 
+   switch (mainLoc)
   {
     case 0: // At mainLoc M0
       followLine(); // Follow the line until turn is detected
@@ -301,4 +308,21 @@ void increaseMainLoc()
   mainLoc %= 8; // Make sure mainLoc is never > 7
 }
 
+void dyn_PID {
+  switch (messageGetChar()) { // Gets the next word as a character
+
+    case 's' : // Set the PID values
+
+    KP = messageGetInt(); // Gets the next word as an integer
+    KI = messageGetInt();
+    KD = messageGetInt();
+    break;  // Break from the switch
+   
+  case 'd' :  // Display the current PID coefficients
+  printf("KP\t%f\n",KP);
+  printf("KI\t%f\n",KI);
+  printf("KD\t%f\n",KD);
+  }
+  
+}
 

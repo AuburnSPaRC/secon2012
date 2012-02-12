@@ -13,7 +13,7 @@
 * Credits: Tyler Crumpton
 *
 */
-
+#include <SimpleMessageSystem.h>
 #include <PID_v1.h>
 #include <PololuQTRSensors.h>
 
@@ -69,6 +69,11 @@
 #define MAX_PID_DELTA (1-FULL_SPEED)*MAX_VELOCITY  
 // PWM offset for motor speeds to be equal (Left motor is faster = +)
 #define MOTOR_OFFSET  0
+
+// Simple Message Interface Variables
+// TODO
+
+
 
 // Course Locations
 boolean leftRightLoc = RIGHT;  // (RIGHT or LEFT)
@@ -156,6 +161,24 @@ void setup()
   // Start movement (currently starting at mainLoc 'M0')
   mainLoc = 0;
   setMove(MOVE_FORWARD);
+ 
+}
+void dynamic_PID(){ // Sets the PID coefficients dynamically via a serial command interface...
+  if(messageBuild() > 0){  
+     switch ( messageGetChar() ) { // Gets the next word as a character
+       case 's' : // Set the PID values
+         KP = messageGetInt(); // Gets the next word as an integer
+         KI = messageGetInt();
+         KD = messageGetInt();
+      break;  // Break from the switch
+ 
+      case 'd' :  // Display the current PID coefficients
+        printf("KP\t%f\n",KP);
+        printf("KI\t%f\n",KI);
+        printf("KD\t%f\n",KD);
+      break;
+    }
+  }
 }
 
 void loop()
@@ -164,6 +187,7 @@ void loop()
   //if (delayCounter>200)
     //digitalWrite(TEST_LED_PIN,HIGH);
   int turnType = isTurn();
+  dynamic_PID();
   switch (mainLoc)
   {
     case 0: // At mainLoc M0

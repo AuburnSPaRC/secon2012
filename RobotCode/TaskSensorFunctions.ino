@@ -20,6 +20,17 @@
   #define PIN_RD   8   // (DIG) DPin 8  - Connected to RD of the MAX153
   #define PIN_INT  9   // (DIG) DPin 9  - Connected to INT of the MAX 153
   #define PIN_CS   10  // (DIG) DPin 10 - Connected to CS of MAX 153
+  #define ADC_PORT PORTA
+  #define ADC_PIN PINA
+  #define ADC_DDR DDRA
+  #define ADC_RD_PORT PORTC
+  #define ADC_RD_PIN PINC
+  #define ADC_RD_SET_MASK 0b10000000
+  #define ADC_RD_CLR_MASK 0b01111111
+  #define ADC_INT_PORT PORTC
+  #define ADC_INT_PIN PINC
+  #define ADC_INT_SET_MASK 0b00100000
+  #define ADC_INT_CLR_MASK 0b11011111
   // Capcitance Pins:
   #define PIN_CR1  A1  // (ANA) APin 1  - Samples the cap voltage (analog)
   #define PIN_CR2  A2  // (DIG) APin 2  - Discharges the capacitor (digital)
@@ -28,6 +39,7 @@
   #define PIN_VOLT A0  // (ANA) APin0   - Measure voltage
   // Temperature Pins:
   #define PIN_TEMP 11  // (DIG) DPin11  - For measuring temperature
+  
 #endif
 
 
@@ -37,9 +49,6 @@
 #define ERROR LEFT             // Default direction when sensor reading fails
 
 // Waveform Constants:
-#define RD_LOW      B11111110  // To set RD low, PORTB &= RD_LOW
-#define RD_HIGH     B00000001  // To set RD high, PORTB &= RD_HIGH
-#define INT_LOW     B00000010  // If INT is low, PORTB & INT_LOW will = 0
 #define V_SQ_MAX    185        // Maximum square wave voltage level
 #define V_SQ_MIN    47         // Minimum square wave voltage level
 #define NUM_SAMPLES 500        // Number of samples
@@ -88,7 +97,9 @@ boolean readWaveform()
   pinMode(PIN_CS, OUTPUT); //Pin 12 will enable / disable the MAX 153
   pinMode(PIN_RD, OUTPUT); //Pin 10 will be low to read in our values, and high when finished (RD)
   pinMode(PIN_INT, INPUT);  //Pin 11 will read the ADC's interrupt output to see when to stop looping (INT)
-  DDRD = 0;  //Sets Port D to be an input; will read D0 - D7
+  ADC_DDR = 0;  //Sets ADC Port to be an input
+  digitalWrite(RELAY_K1_PIN, 0);
+  digitalWrite(RELAY_K2_PIN, 0);
   // -------------
 
   int sqcount = 0;
@@ -96,7 +107,7 @@ boolean readWaveform()
   int my_status;
   byte val = 0;
   
-  DDRD = 0;  //PORT D as input 
+  ADC_DDR = 0;  //ADC_PORT as input
   digitalWrite(PIN_CS,LOW); //enable ADC chip
   delay(1);  //give it time to start up
   for (int i=0; i<NUM_SAMPLES; i++)
@@ -104,14 +115,14 @@ boolean readWaveform()
     unsigned int blah = 0;  //we should probably figure out how to get rid of this without it messing up
     val = 0;
     //digitalWrite(pin_RD, LOW);  //write RD LOW to read in data
-    PORTB &= RD_LOW;  // replaces the commented line above
+    ADC_RD_PORT &= ADC_RD_CLR_MASK;  // replaces the commented line above
     //while(digitalRead(pin_INT)) {} //while INT is HIGH, the code waits
-    while(PORTB & B00001000) {}  // replaces the commented line above
+    while(ADC_INT_PORT & ADC_INT_SET_MASK) {}  // replaces the commented line above
     delayMicroseconds(4);
-    val = PIND;  //read D0-D7
-    blah = (unsigned int)val;
+    val = ADC_PIN;  //read adc pins
+    blah = (unsigned int)val;  //today's non-descriptive variable name is brought to you by Ben Straub
     //digitalWrite(pin_RD, HIGH); //stop reading in data
-    PORTB |= RD_HIGH;  // replaces the commented line above
+    ADC_RD_PORT |= ADC_RD_SET_MASK;  // replaces the commented line above
     
     if ((blah*1.0 >= (V_SQ_MAX - V_SQ_MAX*VOLT_THRESH)) && 
         (blah*1.0 <= (V_SQ_MAX + V_SQ_MAX*VOLT_THRESH)))  //if voltage is within 10% of square wave maximum
@@ -148,6 +159,8 @@ boolean readCapacitance()
   pinMode(PIN_CR2,INPUT);
   pinMode(PIN_CR3,INPUT);
   pinMode(PIN_CR1,INPUT);
+  digitalWrite(RELAY_K1_PIN, 1);
+  digitalWrite(RELAY_K2_PIN, 0);
   // -------------
   
     //declare variables
@@ -203,6 +216,8 @@ boolean readVoltage()
 {
   // --- Setup ---
   pinMode(PIN_VOLT,INPUT);
+  digitalWrite(RELAY_K1_PIN, 0);
+  digitalWrite(RELAY_K2_PIN, 1);
   // -------------  
   
   int Vin;
@@ -231,6 +246,9 @@ boolean readVoltage()
 boolean readTemperature() 
 {
   float tempPlate, tempAmbient;
+  
+  digitalWrite(RELAY_K1_PIN, 0);
+  digitalWrite(RELAY_K2_PIN, 0);
   
   ds.reset();
   ds.skip();

@@ -9,12 +9,12 @@
 
 // --- Motor Pin Definitions ---
 #ifndef OVERWRITE_SENSOR_PINS
-  #define LEFT_PWM_PIN   7  // (PWM) DPin 10  - Left motor PWM speed control
-  #define LEFT_DIR_PIN   6  // (DIG) DPin 11  - Left motor direction control
-  #define LEFT_EN_PIN    5  // (DIG) DPin 12  - Left motor enable control
+  #define LEFT_PWM_PIN   8  // Green(PWM) DPin 10  - Left motor PWM speed control
+  #define LEFT_DIR_PIN   7  // (DIG) DPin 11  - Left motor direction control
+  #define LEFT_EN_PIN    6  // (DIG) DPin 12  - Left motor enable control
   #define RIGHT_PWM_PIN  2  // (PWM) DPin 13  - Right motor PWM speed control 
   #define RIGHT_DIR_PIN  3  // (DIG) DPin 14  - Right motor direction control
-  #define RIGHT_EN_PIN   4  // (DIG) DPin 15  - Right motor enable control
+  #define RIGHT_EN_PIN   4  // Blue(DIG) DPin 15  - Right motor enable control
 #endif
 
 // Converts the value between +/- MAX_VELOCITY to an actual PWM signal and direction
@@ -24,12 +24,12 @@ void updateMotors()
   double tempRightSpeed = forwardSpeed + rightDelta;  // Reft motor speed from -255 to 255
   
   #ifdef DEBUG_MOTOR_SPEED
-    Serial.print("Left: ");
+    Serial.print("LeftD: ");
     Serial.print(leftDelta);
-    Serial.print("\tRight: ");
+    Serial.print("\tRightD: ");
     Serial.print(rightDelta);
     
-    Serial.print("\t\t\tLeft: ");
+    Serial.print("\t\tLeft: ");
     Serial.print(tempLeftSpeed);
     Serial.print("\tRight: ");
     Serial.println(tempRightSpeed);
@@ -53,7 +53,7 @@ void updateMotors()
   if (tempRightSpeed < 0)
   {
     digitalWrite(RIGHT_DIR_PIN, LOW);      // If negative, direction = LOW
-    tempLeftSpeed = byte(abs(tempLeftSpeed)); // PWM=255 means full speed when DIR=LOW
+    tempRightSpeed = byte(abs(tempRightSpeed)); // PWM=255 means full speed when DIR=LOW
     tempRightSpeed += MOTOR_OFFSET;
   }
   else 

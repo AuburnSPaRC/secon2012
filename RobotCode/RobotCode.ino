@@ -13,7 +13,6 @@
 * Credits: Tyler Crumpton
 *
 */
-#include <SimpleMessageSystem.h>
 #include <PID_v1.h>
 #include <PololuQTRSensors.h>
 
@@ -70,8 +69,13 @@
 // PWM offset for motor speeds to be equal (Left motor is faster = +)
 #define MOTOR_OFFSET  0
 
-// Simple Message Interface Variables
-// TODO
+union u_double
+{
+  byte b[4];
+  float dval;
+};  //A structure to read in floats from the serial ports
+  
+
 
 
 
@@ -163,21 +167,42 @@ void setup()
   setMove(MOVE_FORWARD);
  
 }
-void dynamic_PID(){ // Sets the PID coefficients dynamically via a serial command interface...
-  if(messageBuild() > 0){  
-     switch ( messageGetChar() ) { // Gets the next word as a character
-       case 's' : // Set the PID values
-         KP = messageGetInt(); // Gets the next word as an integer
-         KI = messageGetInt();
-         KD = messageGetInt();
-      break;  // Break from the switch
- 
-      case 'd' :  // Display the current PID coefficients
-        printf("KP\t%f\n",KP);
-        printf("KI\t%f\n",KI);
-        printf("KD\t%f\n",KD);
-      break;
-    }
+
+
+void dynamic_PID() // Sets the PID coefficients dynamically via a serial command interface...
+{
+  char command;			//The command coming in
+  int i,j;			//Looping variables
+  u_double dVals[3];		//Holds floating or double variables recieved
+  
+   
+  
+  if(Serial.available())		//Are there messages coming in?
+  {
+    delay(100);				//Wait a tad to let them in
+      command=Serial.read();		//Read the command prefix
+      switch (command)			
+      {
+        case 'p':			//Just a test command
+          Serial.print("Print!");
+          break;
+        
+        case 'd':			//Change PID values
+          if(Serial.available()>=12)	//We are getting three floats so wait til we get all their data
+          {
+            for(i=0;i<3;i++)		//Then read it in
+            {
+              for(j=0;j<4;j++)
+              {
+                dVals[i].b[j]=Serial.read();
+              }
+              Serial.print("\n");		//For now, we want to read them back out to make sure it worked
+              Serial.print(dVals[i].dval);
+              Serial.print("\n");Serial.flush();
+            }
+          }
+          break;
+       }
   }
 }
 

@@ -279,7 +279,7 @@ int isTurn()
   boolean isOff = true;
   
   // Checks to see if every sensor is above threshold:
-  for (int i = 0; i < NUM_SENSORS; ++i)
+  for (int i = 0; i < NUM_SENSORS; i++)
   {
     isOff &= (fSensorValues[i] >= REFLECT_THRESHOLD);
   }

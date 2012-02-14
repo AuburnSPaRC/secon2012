@@ -208,21 +208,18 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
 
 void loop()
 { 
-  delayCounter++;
-  //if (delayCounter>200)
-    //digitalWrite(TEST_LED_PIN,HIGH);
+
   int turnType = isTurn();
-  dynamic_PID();
+  //dynamic_PID();
   switch (mainLoc)
   {
     case 0: // At mainLoc M0
       followLine(); // Follow the line until turn is detected
-      if ((turnType == AT_RIGHT || turnType == OFF_LINE) && delayCounter > ML_ZERO_COUNT) 
+      if (turnType == AT_RIGHT || turnType == OFF_LINE) 
       {
         turnRight(); // Should only detect a right turn
         mainLoc = 1; // Bot is now at mainLoc M1
         setMove(MOVE_FORWARD); // Begin moving forward again
-        delayCounter = 0;
       }
       break;
     case 1: // At mainLoc M1
@@ -233,22 +230,21 @@ void loop()
       break;
     case 3: // At mainLoc M3
       followLine(); // Follow the line unless turn is detected
-      if ((turnType == AT_RIGHT || turnType == OFF_LINE) && delayCounter > ML_THREE_COUNT) 
+      if (turnType == AT_RIGHT || turnType == OFF_LINE)
       {
         turnRight(); // Should only detect a right turn
         mainLoc = 4; // Bot is now at mainLoc M4
         setMove(MOVE_FORWARD); // Begin moving forward again
-        delayCounter = 0;
       }
       break;
     case 4: // At mainLoc M4
       followLine(); // Follow the line unless turn is detected
-      if ((turnType == AT_RIGHT || turnType == OFF_LINE) && delayCounter > ML_FOUR_COUNT) 
+      if (turnType == AT_RIGHT || turnType == OFF_LINE)
       {
         turnRight(); // Should only detect a right turn
         mainLoc = 5; // Bot is now at mainLoc M5
         setMove(MOVE_FORWARD); // Begin moving forward again
-        delayCounter = 0;
+
       }
       break;
     case 5: // At mainLoc M5
@@ -259,12 +255,11 @@ void loop()
       break;
     case 7: // At mainLoc M7
       followLine(); // Follow the line unless turn is detected
-      if ((turnType == AT_RIGHT || turnType == OFF_LINE) && delayCounter > ML_SEVEN_COUNT) 
+      if (turnType == AT_RIGHT || turnType == OFF_LINE) 
       {
         turnRight(); // Should only detect a right turn
         mainLoc = 0; // Bot is now at mainLoc M0
         setMove(MOVE_FORWARD); // Begin moving forward again
-        delayCounter = 0;
       }
       break;
   }
@@ -373,7 +368,7 @@ void navigateTask()
   {
     case -1:
       followLine(); // Follow the line until 'T' is detected
-      if ((turnType == AT_T || turnType == OFF_LINE) && delayCounter > TL_NEGONE_COUNT)
+      if (turnType == AT_T || turnType == OFF_LINE)
       {
         moveToSensor();
         takeReading();
@@ -390,70 +385,61 @@ void navigateTask()
         }
         taskLoc = 0; // Bot is now at taskLoc L/R0
         setMove(MOVE_FORWARD);
-        delayCounter = 0;
       }
       break;  
     case 0:
-      moveToTurn(); // Follow the line until turn is detected
-      //if (delayCounter > TL_ZERO_COUNT)
-      //{  
-        if (leftRightLoc == RIGHT)// && (turnType == AT_LEFT))// || turnType == OFF_LINE)) // If left turn detected
-        {
-          turnLeft(); 
-          taskLoc = 1;  // Bot is now at taskLoc R1
-          setMove(MOVE_FORWARD); // Start moving forward
-          delayCounter = 0; // Reset the delay counter
-        } 
-        else if (leftRightLoc == LEFT)// && (turnType == AT_RIGHT))// || turnType == OFF_LINE)) // If left turn detected
-        {
-          turnRight(); 
-          taskLoc = 1;   // Bot is now at taskLoc L1
-          setMove(MOVE_FORWARD); // Start moving forward
-          delayCounter = 0; // Reset the delay counter
-        }
-      //}
+      moveToTurn(); // Follow the line until turn is detected 
+      if (leftRightLoc == RIGHT)// && (turnType == AT_LEFT))// || turnType == OFF_LINE)) // If left turn detected
+      {
+        turnLeft(); 
+        taskLoc = 1;  // Bot is now at taskLoc R1
+        setMove(MOVE_FORWARD); // Start moving forward
+        delayCounter = 0; // Reset the delay counter
+      } 
+      else if (leftRightLoc == LEFT)// && (turnType == AT_RIGHT))// || turnType == OFF_LINE)) // If left turn detected
+      {
+        turnRight(); 
+        taskLoc = 1;   // Bot is now at taskLoc L1
+        setMove(MOVE_FORWARD); // Start moving forward
+        delayCounter = 0; // Reset the delay counter
+      }
+    
       break;
     case 1:
       followLine(); // Follow the line until turn is detected
-      if (delayCounter > TL_ONE_COUNT)
+      if (leftRightLoc == RIGHT && (turnType == AT_LEFT))// || turnType == OFF_LINE)) // If left turn detected
       {
-        if (leftRightLoc == RIGHT && (turnType == AT_LEFT))// || turnType == OFF_LINE)) // If left turn detected
-        {
-          turnLeft();    
-          taskLoc = 2;   // Bot is now at taskLoc R2
-          setMove(MOVE_FORWARD); // Start moving forward
-          delayCounter = 0; // Reset the delay counter
-        } 
-        else if (leftRightLoc == LEFT && (turnType == AT_RIGHT))// || turnType == OFF_LINE)) // If left turn detected
-        {
-          turnRight();  
-          taskLoc = 2;   // Bot is now at taskLoc L2
-          setMove(MOVE_FORWARD); // Start moving forward
-          delayCounter = 0; // Reset the delay counter
-        } 
-      }
+        turnLeft();    
+        taskLoc = 2;   // Bot is now at taskLoc R2
+        setMove(MOVE_FORWARD); // Start moving forward
+      } 
+      else if (leftRightLoc == LEFT && (turnType == AT_RIGHT))// || turnType == OFF_LINE)) // If left turn detected
+      {
+        turnRight();  
+        taskLoc = 2;   // Bot is now at taskLoc L2
+        setMove(MOVE_FORWARD); // Start moving forward
+        delayCounter = 0; // Reset the delay counter
+      } 
+      
       break;
     case 2:
       followLine(); // Follow the line until turn is detected
-      if (delayCounter > TL_TWO_COUNT)
+      if (leftRightLoc == RIGHT && (turnType == AT_RIGHT))// || turnType == OFF_LINE)) // If left turn detected
       {
-        if (leftRightLoc == RIGHT && (turnType == AT_RIGHT))// || turnType == OFF_LINE)) // If left turn detected
-        {
-          turnRight();    
-          taskLoc = -1;      // Reset taskLoc
-          increaseMainLoc(); // Increments mainLoc by 1
-          setMove(MOVE_FORWARD); // Start moving forward
-          delayCounter = 0; // Reset the delay counter
-        } 
-        else if (leftRightLoc == LEFT && (turnType == AT_LEFT))// || turnType == OFF_LINE)) // If left turn detected
-        {
-          turnLeft();       
-          taskLoc = -1;      // Reset taskLoc
-          increaseMainLoc(); // Increments mainLoc by 1
-          setMove(MOVE_FORWARD); // Start moving forward
-          delayCounter = 0; // Reset the delay counter
-        } 
-      }
+        turnRight();    
+        taskLoc = -1;      // Reset taskLoc
+        increaseMainLoc(); // Increments mainLoc by 1
+        setMove(MOVE_FORWARD); // Start moving forward
+        delayCounter = 0; // Reset the delay counter
+      } 
+      else if (leftRightLoc == LEFT && (turnType == AT_LEFT))// || turnType == OFF_LINE)) // If left turn detected
+      {
+        turnLeft();       
+        taskLoc = -1;      // Reset taskLoc
+        increaseMainLoc(); // Increments mainLoc by 1
+        setMove(MOVE_FORWARD); // Start moving forward
+        delayCounter = 0; // Reset the delay counter
+      } 
       break;
   } 
 }

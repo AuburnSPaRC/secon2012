@@ -23,7 +23,7 @@ class DebuggerGUI(object):
 		self.D=builder.get_object("D")
 		self.window.set_position(gtk.WIN_POS_CENTER)
 		self.window.show_all()
-		#self.summary_window.show_all()
+		self.summary_window.show_all()
 		
 
 	

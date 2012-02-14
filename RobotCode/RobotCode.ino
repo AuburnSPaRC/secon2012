@@ -209,60 +209,7 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
 void loop()
 { 
 
-  int turnType = isTurn();
-  //dynamic_PID();
-  switch (mainLoc)
-  {
-    case 0: // At mainLoc M0
-      followLine(); // Follow the line until turn is detected
-      if (turnType == AT_RIGHT || turnType == OFF_LINE) 
-      {
-        turnRight(); // Should only detect a right turn
-        mainLoc = 1; // Bot is now at mainLoc M1
-        setMove(MOVE_FORWARD); // Begin moving forward again
-      }
-      break;
-    case 1: // At mainLoc M1
-      navigateTask();
-      break;
-    case 2: // At mainLoc M2
-      navigateTask();
-      break;
-    case 3: // At mainLoc M3
-      followLine(); // Follow the line unless turn is detected
-      if (turnType == AT_RIGHT || turnType == OFF_LINE)
-      {
-        turnRight(); // Should only detect a right turn
-        mainLoc = 4; // Bot is now at mainLoc M4
-        setMove(MOVE_FORWARD); // Begin moving forward again
-      }
-      break;
-    case 4: // At mainLoc M4
-      followLine(); // Follow the line unless turn is detected
-      if (turnType == AT_RIGHT || turnType == OFF_LINE)
-      {
-        turnRight(); // Should only detect a right turn
-        mainLoc = 5; // Bot is now at mainLoc M5
-        setMove(MOVE_FORWARD); // Begin moving forward again
 
-      }
-      break;
-    case 5: // At mainLoc M5
-      navigateTask();
-      break;
-    case 6: // At mainLoc M6
-      navigateTask();
-      break;
-    case 7: // At mainLoc M7
-      followLine(); // Follow the line unless turn is detected
-      if (turnType == AT_RIGHT || turnType == OFF_LINE) 
-      {
-        turnRight(); // Should only detect a right turn
-        mainLoc = 0; // Bot is now at mainLoc M0
-        setMove(MOVE_FORWARD); // Begin moving forward again
-      }
-      break;
-  }
 }
 
 // Checks to see if the robot is at a turn or a 'T', by checking the outer sensors.

@@ -17,12 +17,20 @@ class DebuggerGUI(object):
 		builder.connect_signals(self)
 		self.window=builder.get_object("MainWindow")
 		self.summary_window=builder.get_object("SummaryWindow")
-		self.turn_window=builder.get_object("TurnTypeWindow")
-		self.P=builder.get_object("P")
-		self.I=builder.get_object("I")
-		self.D=builder.get_object("D")
-		self.window.set_position(gtk.WIN_POS_CENTER)
-		self.window.show_all()
+		self.turn_window=builder.get_object("TerminationWindow")
+		self.termination_combo=builder.get_object("termination_combo")
+
+
+		#Add List To Termination Table
+		self.termination_combo.set_active(0)
+		cell = gtk.CellRendererText()
+		self.termination_combo.pack_start(cell, True)
+		self.termination_combo.add_attribute(cell, "text", 0)
+		###############################################
+
+		
+		self.window.set_position(gtk.WIN_POS_CENTER)	#Center the window on-screen
+		self.window.show_all()				#Show the window
 		#self.summary_window.show_all()
 		
 
@@ -43,6 +51,12 @@ class DebuggerGUI(object):
 	def callback_exit(self, widget, callback_data=None):
 		gtk.main_quit()
 	
+	#New Position, load data
+	def callback_pos_changed(self, widget, callback_data=None):
+		f=open("settings.txt","r");
+		line=f.readline();
+		print line;
+		f.close();
 
 
 

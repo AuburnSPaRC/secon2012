@@ -1,5 +1,7 @@
 #include <EEPROM.h>
 
+#define FTA_CYCLE_SIZE  7 // Defines the size (in bytes) of the ftaCycle struct.
+
 // Container for the "follow, terminate, action" cycle values.
 struct ftaCycle{
   byte follow;      // "Line-following" vs. "simple encoder travel"
@@ -12,8 +14,19 @@ struct ftaCycle{
 // Executes the three-stage cycle (follow, terminate, action) for a given segment of course.
 void executeSegment(int segment)
 {
-  // STEPS:
-  // Retrieve FTA information from EEPROM.
+  // Retrieve FTA information from EEPROM:
+  ftaCycle current;
+  current.follow = EEPROM.read(segment * FTA_CYCLE_SIZE);          // Read the follow type
+  current.terminate = EEPROM.read((segment * FTA_CYCLE_SIZE) + 1); // Read the termination type
+  current.action = EEPROM.read((segment * FTA_CYCLE_SIZE) + 2);    // Read the action type
+  byte tempMSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 3);      // Read MSB of leftAmount
+  byte tempLSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 4);      // Read LSB of leftAmount
+  current.leftAmount = word(tempMSB,tempLSB);            // Combine MSB and LSB
+  tempMSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 5); // Read MSB of righttAmount
+  tempLSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 6); // Read LSB of righttAmount
+  current.rightAmount = word(tempMSB,tempLSB);           // Combine MSB and LSB
+  
+  // TODO:
   // Execute follow-type until termination occurs.
   // Perform appropriate action.
   

@@ -34,13 +34,6 @@
 #define LEFT    true    // Left direction 
 #define RIGHT   false   // Right direction
 
-// Turn Conditions
-#define ON_LINE       0 // Bot is on the line
-#define AT_T          1 // Bot is at a T-intersection
-#define AT_LEFT       2 // Bot is at left turn
-#define AT_RIGHT      3 // Bot is at right turn
-#define OFF_LINE      4 // Bot is off the line
-
 // Movement Actions
 #define STOP          0 // Bot completely stops
 #define TURN_LEFT     1 // Bot turns ~90 degrees left
@@ -212,31 +205,7 @@ void loop()
 
 }
 
-// Checks to see if the robot is at a turn or a 'T', by checking the outer sensors.
-// NOTE: This assumes white line on black surface.
-int isTurn()
-{
-  boolean isLeft  = (fSensorValues[0] < REFLECT_THRESHOLD);
-  boolean isRight = (fSensorValues[7] < REFLECT_THRESHOLD);
-  boolean isOff = true;
-  
-  // Checks to see if every sensor is above threshold:
-  for (int i = 0; i < NUM_SENSORS; i++)
-  {
-    isOff &= (fSensorValues[i] >= REFLECT_THRESHOLD);
-  }
-  
-  if (isLeft && isRight) 
-    return AT_T;
-  else if (isLeft) 
-    return AT_LEFT;
-  else if (isRight) 
-    return AT_RIGHT;
-  else if (isOff)
-    return OFF_LINE;
-  else 
-    return ON_LINE;
-}
+
 
 // Does PID for line folliwing and sets the motor delta speeds.
 void followLine()
@@ -307,89 +276,7 @@ void takeReading()
   digitalWrite(RELAY_K2_PIN, 0);
 }
 
-// Navigate around the task and take the sensor measurement
-void navigateTask()
-{
-  int turnType = isTurn();
-  switch (taskLoc)
-  {
-    case -1:
-      followLine(); // Follow the line until 'T' is detected
-      if (turnType == AT_T || turnType == OFF_LINE)
-      {
-        moveToSensor();
-        takeReading();
-        moveFromSensor();
-        if (leftRightLoc == LEFT)
-        { 
-          turnLeftWheel(-6);
-          turnRightWheel(32);
-        }
-        else 
-        {
-          turnRightWheel(-6);
-          turnLeftWheel(32);
-        }
-        taskLoc = 0; // Bot is now at taskLoc L/R0
-        setMove(MOVE_FORWARD);
-      }
-      break;  
-    case 0:
-      moveToTurn(); // Follow the line until turn is detected 
-      if (leftRightLoc == RIGHT)// && (turnType == AT_LEFT))// || turnType == OFF_LINE)) // If left turn detected
-      {
-        turnLeft(); 
-        taskLoc = 1;  // Bot is now at taskLoc R1
-        setMove(MOVE_FORWARD); // Start moving forward
-        delayCounter = 0; // Reset the delay counter
-      } 
-      else if (leftRightLoc == LEFT)// && (turnType == AT_RIGHT))// || turnType == OFF_LINE)) // If left turn detected
-      {
-        turnRight(); 
-        taskLoc = 1;   // Bot is now at taskLoc L1
-        setMove(MOVE_FORWARD); // Start moving forward
-        delayCounter = 0; // Reset the delay counter
-      }
-    
-      break;
-    case 1:
-      followLine(); // Follow the line until turn is detected
-      if (leftRightLoc == RIGHT && (turnType == AT_LEFT))// || turnType == OFF_LINE)) // If left turn detected
-      {
-        turnLeft();    
-        taskLoc = 2;   // Bot is now at taskLoc R2
-        setMove(MOVE_FORWARD); // Start moving forward
-      } 
-      else if (leftRightLoc == LEFT && (turnType == AT_RIGHT))// || turnType == OFF_LINE)) // If left turn detected
-      {
-        turnRight();  
-        taskLoc = 2;   // Bot is now at taskLoc L2
-        setMove(MOVE_FORWARD); // Start moving forward
-        delayCounter = 0; // Reset the delay counter
-      } 
-      
-      break;
-    case 2:
-      followLine(); // Follow the line until turn is detected
-      if (leftRightLoc == RIGHT && (turnType == AT_RIGHT))// || turnType == OFF_LINE)) // If left turn detected
-      {
-        turnRight();    
-        taskLoc = -1;      // Reset taskLoc
-        increaseMainLoc(); // Increments mainLoc by 1
-        setMove(MOVE_FORWARD); // Start moving forward
-        delayCounter = 0; // Reset the delay counter
-      } 
-      else if (leftRightLoc == LEFT && (turnType == AT_LEFT))// || turnType == OFF_LINE)) // If left turn detected
-      {
-        turnLeft();       
-        taskLoc = -1;      // Reset taskLoc
-        increaseMainLoc(); // Increments mainLoc by 1
-        setMove(MOVE_FORWARD); // Start moving forward
-        delayCounter = 0; // Reset the delay counter
-      } 
-      break;
-  } 
-}
+
 
 void increaseMainLoc()
 {

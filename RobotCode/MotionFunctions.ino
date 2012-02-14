@@ -29,8 +29,6 @@ void setMove(int moveType)
       forwardSpeed = 0;
       leftDelta    = TURN_SPEED * MAX_VELOCITY;
       rightDelta   = -TURN_SPEED * MAX_VELOCITY;
-//      leftDelta=0;
-//      rightDelta=0;
       break;
     case MOVE_FORWARD:
       forwardSpeed = FULL_SPEED * MAX_VELOCITY;
@@ -275,96 +273,96 @@ void turnRightWheel(int stops)
   lfPID.SetMode(AUTOMATIC);  // turn on the PID
 }
 
-void moveToTurn()
-{
-  lfPID.SetMode(MANUAL);  // turn off the PID
-  lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
-  rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-  setMove(MOVE_FORWARD);
-  int lCount = 5; 
-  int rCount = 5;
-  int multiplier = 4;
-  boolean lLastColor = lEncoderValues[0] > 500;
-  boolean rLastColor = rEncoderValues[0] > 500;
-  while(multiplier > 0)
-  {
-    while(rCount > 0 || lCount >  0)
-    {
-      fSensor.readCalibrated(fSensorValues, QTR_EMITTERS_ON);
-      if (isTurn() == OFF_LINE)
-      {
-        rCount = lCount = multiplier = 0;
-        break; 
-      }
-      if (lCount == 0)
-      {
-        leftDelta = 0;
-        updateMotors();
-      }
-      if (rCount == 0)
-      {
-        rightDelta = 0;
-        updateMotors();
-      }
-      
-      lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
-      rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-      
-      if (lLastColor)
-      {
-        if (lEncoderValues[0] < 300)
-        {
-          lLastColor = !lLastColor;
-          lCount--;
-        }
-      }
-      else
-      {
-        if (lEncoderValues[0] > 700)
-        {
-          lLastColor = !lLastColor;
-          lCount--;
-        }
-      }
-      
-      if (rLastColor)
-      {
-        if (rEncoderValues[0] < 300)
-        {
-          rLastColor = !rLastColor;
-          rCount--;
-        }
-      }
-      else
-      {
-        if (rEncoderValues[0] > 700)
-        {
-          rLastColor = !rLastColor;
-          rCount--;
-        }
-      }
-        
-    }
-    
-    multiplier--;
-  }
-  setMove(STOP);
-  lfPID.SetMode(AUTOMATIC);  // turn on the PID    
-}
+//void moveToTurn()
+//{
+//  lfPID.SetMode(MANUAL);  // turn off the PID
+//  lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+//  rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+//  setMove(MOVE_FORWARD);
+//  int lCount = 5; 
+//  int rCount = 5;
+//  int multiplier = 4;
+//  boolean lLastColor = lEncoderValues[0] > 500;
+//  boolean rLastColor = rEncoderValues[0] > 500;
+//  while(multiplier > 0)
+//  {
+//    while(rCount > 0 || lCount >  0)
+//    {
+//      fSensor.readCalibrated(fSensorValues, QTR_EMITTERS_ON);
+//      if (isTurn() == OFF_LINE)
+//      {
+//        rCount = lCount = multiplier = 0;
+//        break; 
+//      }
+//      if (lCount == 0)
+//      {
+//        leftDelta = 0;
+//        updateMotors();
+//      }
+//      if (rCount == 0)
+//      {
+//        rightDelta = 0;
+//        updateMotors();
+//      }
+//      
+//      lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+//      rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+//      
+//      if (lLastColor)
+//      {
+//        if (lEncoderValues[0] < 300)
+//        {
+//          lLastColor = !lLastColor;
+//          lCount--;
+//        }
+//      }
+//      else
+//      {
+//        if (lEncoderValues[0] > 700)
+//        {
+//          lLastColor = !lLastColor;
+//          lCount--;
+//        }
+//      }
+//      
+//      if (rLastColor)
+//      {
+//        if (rEncoderValues[0] < 300)
+//        {
+//          rLastColor = !rLastColor;
+//          rCount--;
+//        }
+//      }
+//      else
+//      {
+//        if (rEncoderValues[0] > 700)
+//        {
+//          rLastColor = !rLastColor;
+//          rCount--;
+//        }
+//      }
+//        
+//    }
+//    
+//    multiplier--;
+//  }
+//  setMove(STOP);
+//  lfPID.SetMode(AUTOMATIC);  // turn on the PID    
+//}
 
-//Moves the bot up to the task sensors for a reading
-void moveToSensor()
-{
-  //TODO: Add actual implementation
-  setMove(STOP);
-  delay(5000);
-}
+////Moves the bot up to the task sensors for a reading
+//void moveToSensor()
+//{
+//  //TODO: Add actual implementation
+//  setMove(STOP);
+//  delay(5000);
+//}
 
-//Moves the bot back from the task to the 'T'
-void moveFromSensor()
-{
-  //TODO
-}
+////Moves the bot back from the task to the 'T'
+//void moveFromSensor()
+//{
+//  //TODO
+//}
 
 // Spins the bot 5 times for speed measurement.
 // NOTE: Requires #define CALIBRATE_MOTORS

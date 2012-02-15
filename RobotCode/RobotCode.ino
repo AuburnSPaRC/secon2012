@@ -15,6 +15,8 @@
 */
 #include <PID_v1.h>
 #include <PololuQTRSensors.h>
+#include <EEPROM.h>
+
 
 //#define CALIBRATE_MOTORS   // Run in motor calibration mode.
 //#define CALIBRATE_ENCODERS  // Run in encoder calibration mode.
@@ -22,6 +24,7 @@
 //#define DEBUG_LINE         // Display line sensor data
 //#define DEBUG_COURSE       // Display info on robot's course location
 
+#define FTA_CYCLE_SIZE  7 // Defines the size (in bytes) of the ftaCycle struct.
 
 #define NUM_SENSORS   8     // number of sensors used on each array
 #define TIMEOUT       2500  // waits for 2500 us for sensor outputs to go low
@@ -66,11 +69,9 @@ union u_double
 {
   byte b[4];
   float dval;
+  int ival;
 };  //A structure to read in floats from the serial ports
   
-
-
-
 
 // Course Locations
 boolean leftRightLoc = RIGHT;  // (RIGHT or LEFT)
@@ -105,6 +106,16 @@ unsigned char rEncoderPins[] = {48};
 #define TEST_LED_PIN   51
 #define LEFT_ENC_PIN   36
 #define RIGHT_ENC_PIN  50
+
+
+// Container for the "follow, terminate, action" cycle values.
+struct ftaCycle{
+  byte follow;      // "Line-following" vs. "simple encoder travel"
+  byte terminate;   // "At right turn", "at left turn", "off the line", etc.
+  byte action;      // "turn in place", "turn left wheel then right", "turn right wheel then left"
+  int leftAmount;   // Number of encoder clicks to turn left wheel forward (negative is backward)
+  int rightAmount;  // Number of encoder clicks to turn right wheel forward (negative is backward)
+};
 
 
 // Sensors (f)(c)0 through (f)(c)7 are connected to (f)(c)SensorPins[]
@@ -162,14 +173,21 @@ void setup()
 }
 
 
+
+
 void dynamic_PID() // Sets the PID coefficients dynamically via a serial command interface...
 {
   char command;			//The command coming in
   int i,j;			//Looping variables
-  u_double dVals[3];		//Holds floating or double variables recieved
+  u_double Vals[3];		//Holds floating or double variables recieved
   
-   
-  
+   //Variables to hold possible incoming data
+  char follow,terminate,action;     
+  int left_amnt,right_amnt,start_pos;
+  float p_val,i_val,d_val;
+  int segment;
+          ftaCycle currentSegment;
+          byte tempMSB,tempLSB;
   if(Serial.available())		//Are there messages coming in?
   {
     delay(100);				//Wait a tad to let them in
@@ -179,30 +197,105 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
         case 'p':			//Just a test command
           Serial.print("Print!");
           break;
+        case 'c':                      //Course Variables
+          if(Serial.available()>=9)	//We are getting three floats so wait til we get all their data
+          {
+            follow=Serial.read();
+            terminate=Serial.read();
+            action=Serial.read();
+            Serial.print(follow);
+            Serial.print("\n");
+            Serial.print(terminate);
+            Serial.print("\n");
+            Serial.print(action);
+            Serial.print("\n");
+            for(i=0;i<3;i++)		//Then read it in
+            {
+              for(j=0;j<2;j++)
+              {
+                Vals[i].b[j]=Serial.read();
+              }
+            }
+            segment=Vals[0].ival;
+            left_amnt=Vals[1].ival;
+            right_amnt=Vals[2].ival;
+            Serial.print(segment);
+            Serial.print("\n");
+            Serial.print(left_amnt);
+            Serial.print("\n");
+            Serial.print(right_amnt);
+            Serial.print("\n");
+            
+          }
+          break;
         
-        case 'd':			//Change PID values
-          if(Serial.available()>=12)	//We are getting three floats so wait til we get all their data
+        case 'g':			//Global variables
+          if(Serial.available()>=14)	//We are getting three floats and an int so wait til we get all their data
           {
             for(i=0;i<3;i++)		//Then read it in
             {
               for(j=0;j<4;j++)
               {
-                dVals[i].b[j]=Serial.read();
+                Vals[i].b[j]=Serial.read();
               }
               Serial.print("\n");		//For now, we want to read them back out to make sure it worked
-              Serial.print(dVals[i].dval);
+              Serial.print(Vals[i].dval);
               Serial.print("\n");Serial.flush();
             }
+            for(j=0;j<2;j++)
+            {
+              Vals[3].b[j]=Serial.read();
+            }
+            Serial.print("\n");		//For now, we want to read them back out to make sure it worked
+            Serial.print(Vals[3].ival);
+            Serial.print("\n");Serial.flush();
           }
           break;
        }
+       
+       //Now store the values in EEProm
+      switch (command)			
+      {
+        case 'c': 
+        /*  EEPROM.write(segment * FTA_CYCLE_SIZE,follow);
+          EEPROM.write((segment * FTA_CYCLE_SIZE) + 1,terminate);
+          EEPROM.write((segment * FTA_CYCLE_SIZE) + 2, action);
+          EEPROM.write((segment * FTA_CYCLE_SIZE) + 3, left_amnt);
+          EEPROM.write((segment * FTA_CYCLE_SIZE) + 5, right_amnt);
+            // --- Retrieve FTA information from EEPROM: ---
+
+        currentSegment.follow = EEPROM.read(segment * FTA_CYCLE_SIZE);          // Read the follow type
+        currentSegment.terminate = EEPROM.read((segment * FTA_CYCLE_SIZE) + 1); // Read the termination type
+        currentSegment.action = EEPROM.read((segment * FTA_CYCLE_SIZE) + 2);    // Read the action type
+        tempMSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 3); // Read MSB of leftAmount
+        tempLSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 4); // Read LSB of leftAmount
+        currentSegment.leftAmount = word(tempMSB,tempLSB);     // Combine MSB and LSB
+        tempMSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 5); // Read MSB of rightAmount
+        tempLSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 6); // Read LSB of rightAmount
+        currentSegment.rightAmount = word(tempMSB,tempLSB);    // Combine MSB and LSB
+                Serial.print("\n");
+                        Serial.print("\n");
+        Serial.print(currentSegment.follow);
+        Serial.print("\n");
+        Serial.print(currentSegment.terminate);
+                Serial.print("\n");
+        Serial.print(currentSegment.action);
+                Serial.print("\n");
+        Serial.print(currentSegment.leftAmount);        Serial.print("\n");
+        Serial.print(currentSegment.rightAmount);
+                Serial.print("\n");
+                        Serial.print("\n");*/
+        break;
+        
+        case 'g':
+        break;
+      }
   }
 }
 
 void loop()
 { 
-
-
+  dynamic_PID();
 }
 
 

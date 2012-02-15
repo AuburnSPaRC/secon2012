@@ -17,14 +17,8 @@
 
 
 
-// Container for the "follow, terminate, action" cycle values.
-struct ftaCycle{
-  byte follow;      // "Line-following" vs. "simple encoder travel"
-  byte terminate;   // "At right turn", "at left turn", "off the line", etc.
-  byte action;      // "turn in place", "turn left wheel then right", "turn right wheel then left"
-  int leftAmount;   // Number of encoder clicks to turn left wheel forward (negative is backward)
-  int rightAmount;  // Number of encoder clicks to turn right wheel forward (negative is backward)
-};
+
+
 
 // Executes the three-stage cycle (follow, terminate, action) for a given segment of course.
 void executeSegment(int segment)

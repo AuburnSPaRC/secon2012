@@ -239,12 +239,12 @@ class DebuggerGUI(object):
 
 	#Pressed send in MainWindow
 	def callback_send(self, widget, callback_data=None):
-#		ser=serial.Serial('/dev/ttyACM0',baudrate=9600)
-		info=struct.pack('=cccchh','c',str(enc_fol),str(termination),str(termination_action),left_amnt,right_amnt)
-		s=struct.unpack('=cccchh',info)
-		print s
-#		ser.write(info)
-#		ser.close()
+		if currentStage!=-1:
+	#		ser=serial.Serial('/dev/ttyACM0',baudrate=9600)
+			info=struct.pack('=cccchh','c',str(enc_fol),str(termination),str(termination_action),left_amnt,right_amnt)
+			s=struct.unpack('=cccchh',info)
+	#		ser.write(info)
+	#		ser.close()
 
 if __name__ == "__main__":
 	app=DebuggerGUI()

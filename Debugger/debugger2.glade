@@ -452,7 +452,7 @@
             </child>
             <child>
               <object class="GtkToggleButton" id="follow_enc_main">
-                <property name="label" translatable="yes">Encoders</property>
+                <property name="label" translatable="yes">Following</property>
                 <property name="width_request">100</property>
                 <property name="height_request">30</property>
                 <property name="visible">True</property>

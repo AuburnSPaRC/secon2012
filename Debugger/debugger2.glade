@@ -369,7 +369,7 @@
               </object>
               <packing>
                 <property name="x">350</property>
-                <property name="y">90</property>
+                <property name="y">130</property>
               </packing>
             </child>
             <child>
@@ -464,7 +464,7 @@
               </object>
               <packing>
                 <property name="x">350</property>
-                <property name="y">130</property>
+                <property name="y">90</property>
               </packing>
             </child>
             <child>
@@ -531,6 +531,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">•</property>
+                <signal name="changed" handler="callback_global_changed" swapped="no"/>
               </object>
               <packing>
                 <property name="x">590</property>
@@ -545,6 +546,7 @@
                 <property name="can_focus">True</property>
                 <property name="invisible_char">•</property>
                 <property name="invisible_char_set">True</property>
+                <signal name="changed" handler="callback_global_changed" swapped="no"/>
               </object>
               <packing>
                 <property name="x">810</property>
@@ -559,6 +561,7 @@
                 <property name="can_focus">True</property>
                 <property name="invisible_char">•</property>
                 <property name="invisible_char_set">True</property>
+                <signal name="changed" handler="callback_global_changed" swapped="no"/>
               </object>
               <packing>
                 <property name="x">700</property>
@@ -637,6 +640,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="model">start_list</property>
+                <signal name="changed" handler="callback_global_changed" swapped="no"/>
               </object>
               <packing>
                 <property name="x">725</property>
@@ -904,6 +908,12 @@
         <col id="0">1</col>
       </row>
       <row>
+        <col id="0">2</col>
+      </row>
+      <row>
+        <col id="0">3</col>
+      </row>
+      <row>
         <col id="0">4</col>
       </row>
       <row>
@@ -923,6 +933,12 @@
       </row>
       <row>
         <col id="0">10</col>
+      </row>
+      <row>
+        <col id="0">11</col>
+      </row>
+      <row>
+        <col id="0">12</col>
       </row>
       <row>
         <col id="0">13</col>
@@ -946,6 +962,12 @@
         <col id="0">19</col>
       </row>
       <row>
+        <col id="0">20</col>
+      </row>
+      <row>
+        <col id="0">21</col>
+      </row>
+      <row>
         <col id="0">22</col>
       </row>
       <row>
@@ -965,6 +987,12 @@
       </row>
       <row>
         <col id="0">28</col>
+      </row>
+      <row>
+        <col id="0">29</col>
+      </row>
+      <row>
+        <col id="0">30</col>
       </row>
       <row>
         <col id="0">31</col>

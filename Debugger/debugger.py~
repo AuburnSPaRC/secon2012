@@ -13,6 +13,7 @@ termination=0
 termination_action=0
 left_amnt=0
 right_amnt=0
+start_pos=0
 
 
 class DebuggerGUI(object):       
@@ -23,11 +24,29 @@ class DebuggerGUI(object):
 		#Get Handles to needed objects
 		self.window=builder.get_object("MainWindow")				#Main Window
 		self.summary_window=builder.get_object("SummaryWindow")			#Summary Window
+		self.action_window=builder.get_object("ActionWindow")			#Action Window
 		self.turn_window=builder.get_object("TerminationWindow")		#Termination Type Window
 		self.termination_combo=builder.get_object("termination_combo")		#List Box of Termination Types
+		self.action_list_box=builder.get_object("action_list_box")		#List Box of Action Types
 		self.pos_select=builder.get_object("pos_select")			#Entry Box for current position	
-		self.enc_fol_button=builder.get_object("follow_enc_main")
+		self.enc_fol_button=builder.get_object("follow_enc_main")		#Encoder/Following Toggle Button
+		self.right_amount_action_box=builder.get_object("right_amount_box")	#Right Wheel Clicks Action Amount
+		self.left_amount_action_box=builder.get_object("left_amount_box")	#Left Wheel Clicks Action Amount
+		self.start_list_box=builder.get_object("start_list_box")		#List Box of Start Positions
 
+		#Add List To Action Table
+		self.action_list_box.set_active(start_pos)
+		cell = gtk.CellRendererText()
+		self.action_list_box.pack_start(cell, True)
+		self.action_list_box.add_attribute(cell, "text", 0)
+		###############################################
+
+		#Add List To Action Table
+		self.action_list_box.set_active(termination_action)
+		cell = gtk.CellRendererText()
+		self.action_list_box.pack_start(cell, True)
+		self.action_list_box.add_attribute(cell, "text", 0)
+		###############################################
 
 		#Add List To Termination Table
 		self.termination_combo.set_active(termination)
@@ -41,29 +60,54 @@ class DebuggerGUI(object):
 		self.window.show_all()				#Show the window
 		#self.summary_window.show_all()
 		
+
+	#Action Window Opened
+	def callback_action(self, widget, callback_data=None):
+		self.action_list_box.set_active(termination_action)
+		self.left_amount_action_box.set_text(str(left_amnt))
+		self.right_amount_action_box.set_text(str(right_amnt))
+		self.action_window.show_all()
+	#############################################################
+
+	#Action Window OK
+	def callback_end_ok(self, widget, callback_data=None):
+		global termination_action
+		global left_amnt
+		global right_amnt
+		if currentStage!=-1:
+			left_amnt=int(self.left_amount_action_box.get_text())
+			right_amnt=int(self.right_amount_action_box.get_text())
+			termination_action=self.action_list_box.get_active()
+		self.action_window.hide_all()
+	#############################################################
+
+	def callback_end_cancel(self, widget, callback_data=None):
+		self.action_window.hide_all()
+		
 	#Toggled line following/encoders
 	def callback_toggle_following(self, widget, callback_data=None):
 		global enc_fol
-		if enc_fol == 0:
-			self.enc_fol_button.set_label("Encoders")
-			enc_fol=1
-		else:
-			self.enc_fol_button.set_label("Following")
-			enc_fol=0
+		if currentStage!=-1:
+			if enc_fol == 0:
+				self.enc_fol_button.set_label("Encoders")
+				enc_fol=1
+			else:
+				self.enc_fol_button.set_label("Following")
+				enc_fol=0
 			
+
 
 
 	#Pressed the termination window button	
 	def callback_termination(self, widget, callback_data=None):
-		print termination
 		self.termination_combo.set_active(termination)
 		self.turn_window.show_all()
 
 	#Pressed Ok in the termination window
 	def callback_termination_ok(self,widget,callback_data=None):
 		global termination
-		termination=self.termination_combo.get_active()
-		print termination
+		if currentStage!=-1:
+			termination=self.termination_combo.get_active()
 		self.turn_window.hide_all();
 
 	#Pressed Cancel in the termination window
@@ -77,20 +121,27 @@ class DebuggerGUI(object):
 
 	#Save data
 	def callback_save_data(self,widget,callback_data=None):
-		l=0
-		f=open("settings.txt","r")
-		lines=f.readlines()
-		f.close()	
+		if currentStage!=-1:
+			l=0
+			f=open("settings.txt","r")
+			lines=f.readlines()
+			f.close()	
 
-		f=open("settings.txt","w")
-		while l<=37:
-			if l==currentStage:
-				f.write("CurrentStage!")
-			else:
-				f.write(lines[l])	
-			l=l+1;
-		f.close()
-		
+			f=open("settings.txt","w")
+			while l<=37:
+				if l==currentStage:
+					f.write(str(enc_fol)+" "+str(termination)+" "+str(termination_action)+" "+str(left_amnt)+" "+str(right_amnt)+"\n")
+				else:
+					f.write(lines[l])	
+				l=l+1;
+			f.flush()
+			f.close()
+		else:
+			print "No state set."
+	####################################################################3
+
+	
+
 	#New Position, load data
 	def callback_pos_changed(self, widget, callback_data=None):
 		global currentStage	#The current stage we are working on
@@ -101,36 +152,38 @@ class DebuggerGUI(object):
 		global right_amnt
 
 		l=0
-		currentStage=int(self.pos_select.get_text())
-		if currentStage>37:
-			self.pos_select.set_text("37")
-			currentStage=37
-		if currentStage<0:
-			self.pos_select.set_text("0")
-			currentStage=0
+		if(str.isdigit(self.pos_select.get_text())):
+			currentStage=int(self.pos_select.get_text())
+			if currentStage>37:
+				self.pos_select.set_text("37")
+				currentStage=37
+			if currentStage<0:
+				self.pos_select.set_text("0")
+				currentStage=0
 
-		f=open("settings.txt","r")
-		line=f.readline()
-		while l < currentStage:
+			f=open("settings.txt","r")
 			line=f.readline()
-			l=l+1;
+			while l < currentStage:
+				line=f.readline()
+				l=l+1;
 			
-		linelist=string.split(line)
-		print linelist
-		f.close()
-		
-		#Set the values from saved data
-		enc_fol=linelist[0]
-		termination=linelist[1]
-		termination_action=linelist[2]
-		left_amnt=linelist[3]
-		right_amnt=linelist[4]
+			linelist=string.split(line)
+			f.close()
+			
+			#Set the values from saved data
+			enc_fol=int(linelist[0])
+			termination=int(linelist[1])
+			termination_action=int(linelist[2])
+			left_amnt=int(linelist[3])
+			right_amnt=int(linelist[4])
+			
 
-		#Set the buttons and values correctly in the GUI
-		if enc_fol == 0:
-			self.enc_fol_button.set_label("Encoders")
-		else:
-			self.enc_fol_button.set_label("Following")
+			#Set the buttons and values correctly in the GUI
+			if enc_fol == 0:
+				self.enc_fol_button.set_label("Following")
+			else:
+				self.enc_fol_button.set_label("Encoders")
+				
 
 		
 

@@ -206,51 +206,6 @@ void loop()
 }
 
 
-
-// Does PID for line folliwing and sets the motor delta speeds.
-void followLine()
-{
-  // Read calibrated front sensor values and obtain a measure of the line position from 0 to 7000
-  unsigned int position = fSensor.readLine(fSensorValues, QTR_EMITTERS_ON, WHITE_LINE);                            
-
-  inputPID = position;            // set PID input to position of line
-  lfPID.Compute();                // compute correction, store in outputPID
-  if (outputPID < 0)
-    rightDelta = outputPID;         // sets right wheel's speed variation
-  else
-    leftDelta  = -outputPID;        // sets left wheel's speed variation
-  updateMotors();
-  
-  #ifdef DEBUG_LINE
-    Serial.print("Position: ");
-    Serial.print(position);
-    Serial.print("S[0]: ");
-    Serial.print(fSensorValues[0]);
-    Serial.print("\tS[1]: ");
-    Serial.print(fSensorValues[1]);
-    Serial.print("\tS[2]: ");
-    Serial.print(fSensorValues[2]);
-    Serial.print("\tS[3]: ");
-    Serial.print(fSensorValues[3]);
-    Serial.print("\tS[4]: ");
-    Serial.print(fSensorValues[4]);
-    Serial.print("\tS[5]: ");
-    Serial.print(fSensorValues[5]);
-    Serial.print("\tS[6]: ");
-    Serial.print(fSensorValues[6]);
-    Serial.print("\tS[7]: ");
-    Serial.println(fSensorValues[7]);    
-  #endif  
-  #ifdef DEBUG_COURSE
-    Serial.print("Counter: ");
-    Serial.print(delayCounter);
-    Serial.print("\tMainLoc: M");
-    Serial.print(mainLoc);
-    Serial.print("\tTaskLoc: T");
-    Serial.println(taskLoc);
-  #endif
-}
-
 //Take a reading from the task sensors and makes L/R decision 
 void takeReading()
 {

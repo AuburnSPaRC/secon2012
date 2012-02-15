@@ -3,16 +3,19 @@
 #define FTA_CYCLE_SIZE  7 // Defines the size (in bytes) of the ftaCycle struct.
 
 // Follow types:
-#define FOLLOW_LINE    0
+#define LINE_FOLLOW    0
 #define ENCODER_TRAVEL 1
 
 // Termination types:
 #define ON_LINE       0 // Bot is on the line
-#define AT_T          1 // Bot is at a T-intersection
-#define AT_LEFT       2 // Bot is at left turn
-#define AT_RIGHT      3 // Bot is at right turn
-#define OFF_LINE      4 // Bot is off the line
-#define HIT_SWITCH    5 // Physical switch is triggered
+#define OFF_LINE      1 // Bot is off the line
+#define HIT_SWITCH    2 // Physical switch is triggered
+#define AT_ANY        3 // Bot is at any type of turn (all types above this line do not count)
+#define AT_T          4 // Bot is at a T-intersection
+#define AT_LEFT       5 // Bot is at left turn
+#define AT_RIGHT      6 // Bot is at right turn
+
+
 
 // Container for the "follow, terminate, action" cycle values.
 struct ftaCycle{
@@ -26,28 +29,58 @@ struct ftaCycle{
 // Executes the three-stage cycle (follow, terminate, action) for a given segment of course.
 void executeSegment(int segment)
 {
-  // Retrieve FTA information from EEPROM:
-  ftaCycle current;
-  current.follow = EEPROM.read(segment * FTA_CYCLE_SIZE);          // Read the follow type
-  current.terminate = EEPROM.read((segment * FTA_CYCLE_SIZE) + 1); // Read the termination type
-  current.action = EEPROM.read((segment * FTA_CYCLE_SIZE) + 2);    // Read the action type
-  byte tempMSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 3);      // Read MSB of leftAmount
-  byte tempLSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 4);      // Read LSB of leftAmount
-  current.leftAmount = word(tempMSB,tempLSB);            // Combine MSB and LSB
-  tempMSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 5); // Read MSB of righttAmount
-  tempLSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 6); // Read LSB of righttAmount
-  current.rightAmount = word(tempMSB,tempLSB);           // Combine MSB and LSB
-  
-  // Execute follow-type until termination occurs:
-  
+  // --- Retrieve FTA information from EEPROM: ---
+  ftaCycle currentSegment;
+  currentSegment.follow = EEPROM.read(segment * FTA_CYCLE_SIZE);          // Read the follow type
+  currentSegment.terminate = EEPROM.read((segment * FTA_CYCLE_SIZE) + 1); // Read the termination type
+  currentSegment.action = EEPROM.read((segment * FTA_CYCLE_SIZE) + 2);    // Read the action type
+  byte tempMSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 3); // Read MSB of leftAmount
+  byte tempLSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 4); // Read LSB of leftAmount
+  currentSegment.leftAmount = word(tempMSB,tempLSB);     // Combine MSB and LSB
+  tempMSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 5); // Read MSB of rightAmount
+  tempLSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 6); // Read LSB of rightAmount
+  currentSegment.rightAmount = word(tempMSB,tempLSB);    // Combine MSB and LSB
+
+  // --- Execute line- or encoder-following: ---
+  if (currentSegment.follow == LINE_FOLLOW) // Line-following type movement
+  {
+    // Execute linefollowing until termination occurs:
+    lfPID.SetMode(AUTOMATIC); // Turn on PID
+    int terminationType = checkTermination();
+    if (currentSegment.terminate == AT_ANY) // Special case for AT_ANY
+    {
+      while (terminationType < AT_ANY)
+      {
+        followLine();
+        terminationType = checkTermination();
+      }
+    }
+    else // All other termination types
+    {
+      while (terminationType != currentSegment.terminate)
+      {
+        setMove(MOVE_FORWARD); // Begin moving forward
+        followLine();
+        terminationType = checkTermination();
+      }
+    }
+    setMove(STOP);
+    lfPID.SetMode(MANUAL); // Turn off PID
+  }
+  else  // Encoder-travel type movement
+  {
+    // Execute encoder-following until termination occurs:
+    encoderMoveToTerminate(currentSegment.terminate);
+  }
+
+  // --- Perform appropriate action: ---
   // TODO:
-  // Perform appropriate action.
   
 }
 
 // Checks to see if the robot is at a turn or a 'T', by checking the outer sensors.
 // NOTE: This assumes white line on black surface.
-int isTurn()
+int checkTermination()
 {
   boolean isLeft  = (fSensorValues[0] < REFLECT_THRESHOLD);
   boolean isRight = (fSensorValues[7] < REFLECT_THRESHOLD);

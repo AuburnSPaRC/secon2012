@@ -10,6 +10,15 @@
 *
 */
 
+// Termination types:
+#define ON_LINE       0 // Bot is on the line
+#define OFF_LINE      1 // Bot is off the line
+#define HIT_SWITCH    2 // Physical switch is triggered
+#define AT_ANY        3 // Bot is at any type of turn (all types above this line do not count)
+#define AT_T          4 // Bot is at a T-intersection
+#define AT_LEFT       5 // Bot is at left turn
+#define AT_RIGHT      6 // Bot is at right turn
+
 // Bot move actions
 void setMove(int moveType)
 {
@@ -41,6 +50,128 @@ void setMove(int moveType)
       rightDelta   = 0;
   }
   updateMotors();
+}
+
+// Does PID for line folliwing and sets the motor delta speeds.
+void followLine()
+{
+  // Read calibrated front sensor values and obtain a measure of the line position from 0 to 7000
+  unsigned int position = fSensor.readLine(fSensorValues, QTR_EMITTERS_ON, WHITE_LINE);                            
+
+  inputPID = position;            // set PID input to position of line
+  lfPID.Compute();                // compute correction, store in outputPID
+  if (outputPID < 0)
+    rightDelta = outputPID;         // sets right wheel's speed variation
+  else
+    leftDelta  = -outputPID;        // sets left wheel's speed variation
+  updateMotors();
+  
+  #ifdef DEBUG_LINE
+    Serial.print("Position: ");
+    Serial.print(position);
+    Serial.print("S[0]: ");
+    Serial.print(fSensorValues[0]);
+    Serial.print("\tS[1]: ");
+    Serial.print(fSensorValues[1]);
+    Serial.print("\tS[2]: ");
+    Serial.print(fSensorValues[2]);
+    Serial.print("\tS[3]: ");
+    Serial.print(fSensorValues[3]);
+    Serial.print("\tS[4]: ");
+    Serial.print(fSensorValues[4]);
+    Serial.print("\tS[5]: ");
+    Serial.print(fSensorValues[5]);
+    Serial.print("\tS[6]: ");
+    Serial.print(fSensorValues[6]);
+    Serial.print("\tS[7]: ");
+    Serial.println(fSensorValues[7]);    
+  #endif  
+  #ifdef DEBUG_COURSE
+    Serial.print("Counter: ");
+    Serial.print(delayCounter);
+    Serial.print("\tMainLoc: M");
+    Serial.print(mainLoc);
+    Serial.print("\tTaskLoc: T");
+    Serial.println(taskLoc);
+  #endif
+}
+
+void encoderMoveToTerminate(int desiredTerminationType)
+{
+  lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+  rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+  setMove(MOVE_FORWARD);
+  int lCount = 5; 
+  int rCount = 5;
+  boolean isDone = false;
+  boolean lLastColor = lEncoderValues[0] > 500;
+  boolean rLastColor = rEncoderValues[0] > 500;
+  int currentTerminationType;
+  while(isDone == false)
+  {
+    while(rCount > 0 || lCount >  0)
+    {
+      fSensor.readCalibrated(fSensorValues, QTR_EMITTERS_ON);
+      currentTerminationType = checkTermination();
+      if (currentTerminationType > AT_ANY)
+      {
+        if (desiredTerminationType == AT_ANY || currentTerminationType == desiredTerminationType)
+        {
+          rCount = lCount = 0;
+          isDone = true;
+          break; 
+        }  
+      }
+      if (lCount == 0)
+      {
+        leftDelta = 0;
+        updateMotors();
+      }
+      if (rCount == 0)
+      {
+        rightDelta = 0;
+        updateMotors();
+      }
+      
+      lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+      rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+      
+      if (lLastColor)
+      {
+        if (lEncoderValues[0] < 300)
+        {
+          lLastColor = !lLastColor;
+          lCount--;
+        }
+      }
+      else
+      {
+        if (lEncoderValues[0] > 700)
+        {
+          lLastColor = !lLastColor;
+          lCount--;
+        }
+      }
+      
+      if (rLastColor)
+      {
+        if (rEncoderValues[0] < 300)
+        {
+          rLastColor = !rLastColor;
+          rCount--;
+        }
+      }
+      else
+      {
+        if (rEncoderValues[0] > 700)
+        {
+          rLastColor = !rLastColor;
+          rCount--;
+        }
+      }   
+    }
+  }
+  setMove(STOP);
 }
 
 // Turn bot 90 degrees to the left

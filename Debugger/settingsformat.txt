@@ -1,0 +1,2 @@
+Course: enc/fol termination action left_amnt right_amnt 
+Global: p i d start

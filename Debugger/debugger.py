@@ -14,7 +14,9 @@ termination_action=0
 left_amnt=0
 right_amnt=0
 start_pos=0
-
+p=0;
+i=0;
+d=0;
 
 class DebuggerGUI(object):       
 	def __init__(self):
@@ -33,7 +35,24 @@ class DebuggerGUI(object):
 		self.right_amount_action_box=builder.get_object("right_amount_box")	#Right Wheel Clicks Action Amount
 		self.left_amount_action_box=builder.get_object("left_amount_box")	#Left Wheel Clicks Action Amount
 		self.start_list_box=builder.get_object("start_list_box")		#List Box of Start Positions
+		self.p_box=builder.get_object("p_box")
+		self.i_box=builder.get_object("i_box")
+		self.d_box=builder.get_object("d_box")
 
+
+		#Read in data from global parameters
+		f=open("global_config.txt","r")
+		line=f.readline()
+		linelist=string.split(line)
+		f.close()
+		p=float(linelist[0])
+		i=float(linelist[1])
+		d=float(linelist[2])
+		start_pos=int(linelist[3])	
+		self.p_box.set_text(str(p))
+		self.i_box.set_text(str(i))
+		self.d_box.set_text(str(d))	
+		###################################
 		#Add List To Action Table
 		self.start_list_box.set_active(start_pos)
 		cell = gtk.CellRendererText()
@@ -123,11 +142,11 @@ class DebuggerGUI(object):
 	def callback_save_data(self,widget,callback_data=None):
 		if currentStage!=-1:
 			l=0
-			f=open("settings.txt","r")
+			f=open("course_config.txt","r")
 			lines=f.readlines()
 			f.close()	
 
-			f=open("settings.txt","w")
+			f=open("course_config.txt","w")
 			while l<=37:
 				if l==currentStage:
 					f.write(str(enc_fol)+" "+str(termination)+" "+str(termination_action)+" "+str(left_amnt)+" "+str(right_amnt)+"\n")
@@ -161,7 +180,7 @@ class DebuggerGUI(object):
 				self.pos_select.set_text("0")
 				currentStage=0
 
-			f=open("settings.txt","r")
+			f=open("course_config.txt","r")
 			line=f.readline()
 			while l < currentStage:
 				line=f.readline()
@@ -186,11 +205,26 @@ class DebuggerGUI(object):
 				
 
 		
-
-
-
-
-
+	#Save the global data
+	def callback_save_global_data(self,widget,callback_data=None):
+		global p
+		global i
+		global d
+		global start_pos
+		p=float(self.p_box.get_text())
+		i=float(self.i_box.get_text())
+		d=float(self.d_box.get_text())
+		start_pos=int(self.start_list_box.get_active())
+		f=open("global_config.txt","w")
+		f.write(str(p)+" "+str(i)+" "+str(d)+" "+str(start_pos)+"\n")
+		f.flush()
+		f.close()
+	#########################
+	
+	#Send global data
+	def callback_send_globals(self,widget,callback_data=None):	
+		s=0
+	##################
 
 	#Pressed send in MainWindow
 	def callback_send(self, widget, callback_data=None):

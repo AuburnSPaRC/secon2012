@@ -16,10 +16,6 @@
 #define AT_RIGHT      6 // Bot is at right turn
 
 
-
-
-
-
 // Executes the three-stage cycle (follow, terminate, action) for a given segment of course.
 void executeSegment(int segment)
 {

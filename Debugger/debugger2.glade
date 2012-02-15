@@ -349,6 +349,7 @@
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
                 <signal name="clicked" handler="callback_send" swapped="no"/>
+                <signal name="clicked" handler="callback_save_data" swapped="no"/>
               </object>
               <packing>
                 <property name="x">350</property>
@@ -467,8 +468,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="save_main">
-                <property name="label" translatable="yes">Save Settings</property>
+              <object class="GtkButton" id="save_course_main">
+                <property name="label" translatable="yes">Save Course</property>
                 <property name="width_request">100</property>
                 <property name="height_request">30</property>
                 <property name="visible">True</property>
@@ -524,7 +525,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="P">
+              <object class="GtkEntry" id="p_box">
                 <property name="width_request">50</property>
                 <property name="height_request">20</property>
                 <property name="visible">True</property>
@@ -537,7 +538,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="I">
+              <object class="GtkEntry" id="i_box">
                 <property name="width_request">50</property>
                 <property name="height_request">20</property>
                 <property name="visible">True</property>
@@ -551,7 +552,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="D">
+              <object class="GtkEntry" id="d_box">
                 <property name="width_request">50</property>
                 <property name="height_request">20</property>
                 <property name="visible">True</property>
@@ -640,6 +641,39 @@
               <packing>
                 <property name="x">725</property>
                 <property name="y">175</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="save_global_main">
+                <property name="label" translatable="yes">Save Globals</property>
+                <property name="width_request">100</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <signal name="clicked" handler="callback_save_global_data" swapped="no"/>
+              </object>
+              <packing>
+                <property name="x">640</property>
+                <property name="y">360</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="send_global">
+                <property name="label" translatable="yes">Send Globals</property>
+                <property name="width_request">100</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <signal name="clicked" handler="callback_send_globals" swapped="no"/>
+                <signal name="clicked" handler="callback_save_global_data" swapped="no"/>
+              </object>
+              <packing>
+                <property name="x">760</property>
+                <property name="y">360</property>
               </packing>
             </child>
           </object>

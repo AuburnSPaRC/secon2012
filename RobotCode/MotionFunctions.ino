@@ -34,6 +34,26 @@ void setMove(int moveType)
       leftDelta    = -TURN_SPEED * MAX_VELOCITY;
       rightDelta   = TURN_SPEED * MAX_VELOCITY;
       break;
+    case PIVOT_LEFT_FORWARD:
+      forwardSpeed = 0;
+      leftDelta    = 0;
+      rightDelta   = TURN_SPEED * MAX_VELOCITY;
+      break;
+    case PIVOT_LEFT_BACK:
+      forwardSpeed = 0;
+      leftDelta    = 0;
+      rightDelta   = -TURN_SPEED * MAX_VELOCITY;
+      break;
+    case PIVOT_RIGHT_FORWARD:
+      forwardSpeed = 0;
+      leftDelta    = TURN_SPEED * MAX_VELOCITY;
+      rightDelta   = 0;
+      break;
+    case PIVOT_RIGHT_BACK:
+      forwardSpeed = 0;
+      leftDelta    = -TURN_SPEED * MAX_VELOCITY;
+      rightDelta   = 0;
+      break;
     case TURN_RIGHT:
       forwardSpeed = 0;
       leftDelta    = TURN_SPEED * MAX_VELOCITY;
@@ -174,28 +194,129 @@ void encoderMoveToTerminate(int desiredTerminationType)
   setMove(STOP);
 }
 
-// Turn bot 90 degrees to the left
-void turnLeft()
+// Turn one wheel then the other by number of encoder clicks. 
+// Notes: Positive clicks is forward. If rightFirst is true, turn right wheel first.
+void turnLeftAndRight(int leftClicks, int rightClicks, boolean rightFirst)
 {
-  lfPID.SetMode(MANUAL);  // turn off the PID
-  lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
-  rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-  setMove(TURN_LEFT);
-  //delay(TURN_TIME);
-  int lCount = 19;
-  int rCount = 19;
-  boolean lLastColor = lEncoderValues[0] > 500;
-  boolean rLastColor = rEncoderValues[0] > 500;
+  int lCount = leftClicks;  // Set the left countdown
+  int rCount = rightClicks; // Set the right countdown
+  boolean leftDone, rightDone;
   
+  if (rightFirst) // Skip left and go to right
+  {
+    leftDone = true; 
+    rightDone = false; 
+  }
+  else // Don't skip left; run in code order
+  {
+    leftDone = false;
+    rightDone = false;
+  }
+  
+  for (int i=0; i<2; ++i)
+  {
+    if (!leftDone)
+    {
+      // --- Turning left wheel: ---
+      lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); // Read left encoder sensor
+      
+      if (leftClicks > 0)
+        setMove(PIVOT_RIGHT_FORWARD);
+      else if (leftClicks < 0) 
+        setMove(PIVOT_RIGHT_BACK);
+    
+      boolean lLastColor = lEncoderValues[0] > 500;
+     
+      while(lCount > 0)
+      { 
+        lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+        
+        if (lLastColor)
+        {
+          if (lEncoderValues[0] < 300)
+          {
+            lLastColor = !lLastColor;
+            lCount--;
+          }
+        }
+        else
+        {
+          if (lEncoderValues[0] > 700)
+          {
+            lLastColor = !lLastColor;
+            lCount--;
+          }
+        }
+      }
+      leftDone = true;
+    }
+    
+    if (!rightDone)
+    {
+      // --- Turning right wheel: ---
+      rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); // Read left encoder sensor
+      
+      if (rightClicks > 0)
+        setMove(PIVOT_LEFT_FORWARD);
+      else if (rightClicks < 0) 
+        setMove(PIVOT_LEFT_BACK);
+    
+      boolean rLastColor = rEncoderValues[0] > 500;
+     
+      while(rCount > 0)
+      { 
+        rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+        
+        if (rLastColor)
+        {
+          if (rEncoderValues[0] < 300)
+          {
+            rLastColor = !rLastColor;
+            rCount--;
+          }
+        }
+        else
+        {
+          if (rEncoderValues[0] > 700)
+          {
+            rLastColor = !rLastColor;
+            rCount--;
+          }
+        }
+      }
+      rightDone = true;
+      leftDone = false;
+      if (rightFirst)
+        break; // Break from the for loop, so the turns don't happen twice.
+    }
+  }
+    
+  setMove(STOP);
+}
+
+// Turn in place by number of encoder clicks. (Turn right is positive)
+void turnInPlace(int clicks)
+{
+  int lCount, rCount = clicks; // Set the left and right countdowns
+    
+  lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); // Read left encoder sensor
+  rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); // Read right encoder sensor
+  if (clicks > 0) // Clicks is positive so rotate right
+    setMove(TURN_RIGHT);
+  else if (clicks < 0) // Clicks is negative so rotate left
+    setMove(TURN_LEFT);
+
+  boolean lLastColor = lEncoderValues[0] > 500; // Find initial left color value
+  boolean rLastColor = rEncoderValues[0] > 500; // Find initial right color value
   
   while(rCount > 0 || lCount >  0)
   {
-    if (lCount == 0)
+    if (lCount == 0) // If left finishes first, stop turning left wheel
     {
       leftDelta = 0;
       updateMotors();
     }
-    if (rCount == 0)
+    if (rCount == 0) // If right finishes first, stop turning right wheel
     {
       rightDelta = 0;
       updateMotors();
@@ -240,260 +361,8 @@ void turnLeft()
       
   }
   setMove(STOP);
-  lfPID.SetMode(AUTOMATIC);  // turn on the PID
 }
 
-void turnLeftWheel(int stops)
-{
-  int lCount = stops;
-  lfPID.SetMode(MANUAL);  // turn off the PID
-  lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
-  
-  if (stops > 0)
-  {
-    leftDelta = TURN_SPEED * MAX_VELOCITY;
-  }
-  else
-  {
-    leftDelta = -TURN_SPEED * MAX_VELOCITY;
-    lCount = -lCount;
-  }
-  
-  updateMotors();
-  
-  boolean lLastColor = lEncoderValues[0] > 500;
-  
-  while(lCount >  0)
-  {
-    lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
-
-    if (lLastColor)
-    {
-      if (lEncoderValues[0] < 300)
-      {
-        lLastColor = !lLastColor;
-        lCount--;
-      }
-    }
-    else
-    {
-      if (lEncoderValues[0] > 700)
-      {
-        lLastColor = !lLastColor;
-        lCount--;
-      }
-    }      
-  }
-  setMove(STOP);
-  lfPID.SetMode(AUTOMATIC);  // turn on the PID
-}
-
-// Turn bot 90 degrees to the right
-void turnRight()
-{
-  lfPID.SetMode(MANUAL);  // turn off the PID
-  lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
-  rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-  setMove(TURN_RIGHT);
-  //delay(TURN_TIME);
-  int lCount = 19; 
-  int rCount = 19;
-  boolean lLastColor = lEncoderValues[0] > 500;
-  boolean rLastColor = rEncoderValues[0] > 500;
-  
-  while(rCount > 0 || lCount >  0)
-  {
-    
-    if (lCount == 0)
-    {
-      leftDelta = 0;
-      updateMotors();
-    }
-    if (rCount == 0)
-    {
-      rightDelta = 0;
-      updateMotors();
-    }
-    
-    Serial.println(lCount);
-    
-    lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
-    rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-    
-    Serial.println(lCount);
-    
-    if (lLastColor)
-    {
-      if (lEncoderValues[0] < 300)
-      {
-        lLastColor = !lLastColor;
-        lCount--;
-      }
-    }
-    else
-    {
-      if (lEncoderValues[0] > 700)
-      {
-        lLastColor = !lLastColor;
-        lCount--;
-      }
-    }
-    
-    if (rLastColor)
-    {
-      if (rEncoderValues[0] < 300)
-      {
-        rLastColor = !rLastColor;
-        rCount--;
-      }
-    }
-    else
-    {
-      if (rEncoderValues[0] > 700)
-      {
-        rLastColor = !rLastColor;
-        rCount--;
-      }
-    }
-      
-  }
-  setMove(STOP);
-  lfPID.SetMode(AUTOMATIC);  // turn on the PID
-}
-
-void turnRightWheel(int stops)
-{
-  int rCount = stops;
-  lfPID.SetMode(MANUAL);  // turn off the PID
-  rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-  
-  if (stops > 0)
-    rightDelta = TURN_SPEED * MAX_VELOCITY;
-  else
-  {
-    rightDelta = TURN_SPEED * MAX_VELOCITY;
-    rCount = -rCount;
-  }
-  
-  updateMotors();
-  
-  boolean rLastColor = rEncoderValues[0] > 500;
-  
-  while(rCount >  0)
-  {
-    rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-
-    if (rLastColor)
-    {
-      if (rEncoderValues[0] < 300)
-      {
-        rLastColor = !rLastColor;
-        rCount--;
-      }
-    }
-    else
-    {
-      if (rEncoderValues[0] > 700)
-      {
-        rLastColor = !rLastColor;
-        rCount--;
-      }
-    }      
-  }
-  setMove(STOP);
-  lfPID.SetMode(AUTOMATIC);  // turn on the PID
-}
-
-//void moveToTurn()
-//{
-//  lfPID.SetMode(MANUAL);  // turn off the PID
-//  lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
-//  rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-//  setMove(MOVE_FORWARD);
-//  int lCount = 5; 
-//  int rCount = 5;
-//  int multiplier = 4;
-//  boolean lLastColor = lEncoderValues[0] > 500;
-//  boolean rLastColor = rEncoderValues[0] > 500;
-//  while(multiplier > 0)
-//  {
-//    while(rCount > 0 || lCount >  0)
-//    {
-//      fSensor.readCalibrated(fSensorValues, QTR_EMITTERS_ON);
-//      if (isTurn() == OFF_LINE)
-//      {
-//        rCount = lCount = multiplier = 0;
-//        break; 
-//      }
-//      if (lCount == 0)
-//      {
-//        leftDelta = 0;
-//        updateMotors();
-//      }
-//      if (rCount == 0)
-//      {
-//        rightDelta = 0;
-//        updateMotors();
-//      }
-//      
-//      lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
-//      rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-//      
-//      if (lLastColor)
-//      {
-//        if (lEncoderValues[0] < 300)
-//        {
-//          lLastColor = !lLastColor;
-//          lCount--;
-//        }
-//      }
-//      else
-//      {
-//        if (lEncoderValues[0] > 700)
-//        {
-//          lLastColor = !lLastColor;
-//          lCount--;
-//        }
-//      }
-//      
-//      if (rLastColor)
-//      {
-//        if (rEncoderValues[0] < 300)
-//        {
-//          rLastColor = !rLastColor;
-//          rCount--;
-//        }
-//      }
-//      else
-//      {
-//        if (rEncoderValues[0] > 700)
-//        {
-//          rLastColor = !rLastColor;
-//          rCount--;
-//        }
-//      }
-//        
-//    }
-//    
-//    multiplier--;
-//  }
-//  setMove(STOP);
-//  lfPID.SetMode(AUTOMATIC);  // turn on the PID    
-//}
-
-////Moves the bot up to the task sensors for a reading
-//void moveToSensor()
-//{
-//  //TODO: Add actual implementation
-//  setMove(STOP);
-//  delay(5000);
-//}
-
-////Moves the bot back from the task to the 'T'
-//void moveFromSensor()
-//{
-//  //TODO
-//}
 
 // Spins the bot 5 times for speed measurement.
 // NOTE: Requires #define CALIBRATE_MOTORS

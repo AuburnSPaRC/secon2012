@@ -15,6 +15,11 @@
 #define AT_LEFT       5 // Bot is at left turn
 #define AT_RIGHT      6 // Bot is at right turn
 
+// Action types:
+#define TURN_IN_PLACE   0 // Rotate left or right in place
+#define LEFT_THEN_RIGHT 1 // Turn left wheel then right wheel
+#define RIGHT_THEN_LEFT 2 // Turn right wheel then left wheel
+
 
 // Executes the three-stage cycle (follow, terminate, action) for a given segment of course.
 void executeSegment(int segment)
@@ -64,8 +69,18 @@ void executeSegment(int segment)
   }
 
   // --- Perform appropriate action: ---
-  // TODO:
-  
+  if (currentSegment.action == TURN_IN_PLACE)
+  {
+    turnInPlace(currentSegment.leftAmount);
+  }
+  else if (currentSegment.action == LEFT_THEN_RIGHT)
+  {
+    turnLeftAndRight(currentSegment.leftAmount, currentSegment.rightAmount, false); // False = turn left wheel first
+  }
+  else if (currentSegment.action == TURN_IN_PLACE)
+  {
+    turnLeftAndRight(currentSegment.leftAmount, currentSegment.rightAmount, true); // True = turn right wheel first
+  }
 }
 
 // Checks to see if the robot is at a turn or a 'T', by checking the outer sensors.

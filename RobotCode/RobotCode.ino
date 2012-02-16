@@ -38,10 +38,14 @@
 #define RIGHT   false   // Right direction
 
 // Movement Actions
-#define STOP          0 // Bot completely stops
-#define TURN_LEFT     1 // Bot turns ~90 degrees left
-#define TURN_RIGHT    2 // Bot turns ~90 degrees right
-#define MOVE_FORWARD  3 // Bot moves forward at FULL_SPEED
+#define STOP                0 // Bot completely stops
+#define TURN_LEFT           1 // Bot turns ~90 degrees left
+#define TURN_RIGHT          2 // Bot turns ~90 degrees right
+#define MOVE_FORWARD        3 // Bot moves forward at FULL_SPEED
+#define PIVOT_LEFT_FORWARD  4 // Bot pivots forward on left wheel
+#define PIVOT_LEFT_BACK     5 // Bot pivots back on left wheel
+#define PIVOT_RIGHT_FORWARD 6 // Bot pivots forward on right wheel
+#define PIVOT_RIGHT_BACK    7 // Bot pivots back on right wheel
 
 #define MAX_VELOCITY  255  // Maximum motor velocity
 

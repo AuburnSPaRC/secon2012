@@ -69,15 +69,36 @@ void executeSegment(int segment)
   }
 
   // --- Perform appropriate action: ---
+  if (goLeft) // Swap directions if going left from task
+  { 
+    // Swap left and right amounts:
+    int temp = currentSegment.leftAmount;
+    currentSegment.leftAmount = currentSegment.rightAmount;
+    currentSegment.rightAmount = temp;
+    
+    // Swap LEFT_THEN_RIGHT for RIGHT_THEN_LEFT and vice versa:
+    if (currentSegment.action == LEFT_THEN_RIGHT)
+    {
+      currentSegment.action == RIGHT_THEN_LEFT;
+    }
+    else if (currentSegment.action == RIGHT_THEN_LEFT)
+    {
+      currentSegment.action == LEFT_THEN_RIGHT;
+    }
+  }
+  
   if (currentSegment.action == TURN_IN_PLACE)
   {
-    turnInPlace(currentSegment.leftAmount);
+    if (goLeft) // Swap direction if turning left from box
+      turnInPlace(-(currentSegment.leftAmount));
+    else // No swap needed for going right from box
+      turnInPlace(currentSegment.leftAmount);
   }
   else if (currentSegment.action == LEFT_THEN_RIGHT)
   {
     turnLeftAndRight(currentSegment.leftAmount, currentSegment.rightAmount, false); // False = turn left wheel first
   }
-  else if (currentSegment.action == TURN_IN_PLACE)
+  else if (currentSegment.action == RIGHT_THEN_LEFT)
   {
     turnLeftAndRight(currentSegment.leftAmount, currentSegment.rightAmount, true); // True = turn right wheel first
   }

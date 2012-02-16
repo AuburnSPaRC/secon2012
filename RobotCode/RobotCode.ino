@@ -86,12 +86,13 @@ struct ftaCycle{
   int rightAmount;  // Number of encoder clicks to turn right wheel forward (negative is backward)
 };
 
-// Course Locations
-boolean leftRightLoc = RIGHT;  // (RIGHT or LEFT)
-short   taskLoc      = -1;     // (-1 to 2)
-short   mainLoc      = 0;      // (0 to 7)
+// Course Location (as defined by course_define.jpeg)
+int location = 0; 
 
-// PID Coeffs
+// Determines whether to go left or right after measurement
+boolean goLeft = false;
+
+// Initial PID Coeffs
 double KP = .015; //.015
 double KI = .0001; //.0001
 double KD = .001; //.001
@@ -121,16 +122,11 @@ unsigned char rEncoderPins[] = {48};
 #define RIGHT_ENC_PIN  50
 
 
-
-
-
-// Sensors (f)(c)0 through (f)(c)7 are connected to (f)(c)SensorPins[]
+// Sensors 0 through 7 are connected to fSensorPins[]
 PololuQTRSensorsRC fSensor(fSensorPins, NUM_SENSORS, TIMEOUT); 
-//PololuQTRSensorsRC rSensor(rSensorPins, NUM_SENSORS, TIMEOUT); 
 PololuQTRSensorsRC lEncoder(lEncoderPins, 1, TIMEOUT);//, LEFT_ENC_PIN);
 PololuQTRSensorsRC rEncoder(rEncoderPins, 1, TIMEOUT);//, RIGHT_ENC_PIN); 
 unsigned int fSensorValues[NUM_SENSORS];
-//unsigned int rSensorValues[NUM_SENSORS];
 unsigned int lEncoderValues[1];
 unsigned int rEncoderValues[1];
 
@@ -149,7 +145,6 @@ void setup()
   pinMode(LEFT_DIR_PIN, OUTPUT);
   pinMode(RIGHT_PWM_PIN, OUTPUT);
   pinMode(RIGHT_DIR_PIN, OUTPUT);
-  //pinMode(CAL_LED_PIN, OUTPUT);
   pinMode(RELAY_K1_PIN, OUTPUT);
   pinMode(RELAY_K2_PIN, OUTPUT);
   pinMode(TEST_LED_PIN, OUTPUT);
@@ -164,22 +159,29 @@ void setup()
   motorCalibrate();          // Does nothing ifdef CALIBRATE_MOTORS
   
   setpointPID = MID_LINE;    // Set the point we want our PID loop to adjust to
-    
+   
+  readPID(); // Read in the PID values from EEPROM 
+  lfPID.SetTunings(KP, KI, KD); // Set the PID loops tuning values to the new ones from EEPROM
+  lfPID.SetOutputLimits(-MAX_PID_DELTA, MAX_PID_DELTA); // force PID to the range of motor speeds.   
   lfPID.SetMode(AUTOMATIC);  // turn on the PID
-  lfPID.SetOutputLimits(-MAX_PID_DELTA, MAX_PID_DELTA); // force PID to the range of motor speeds. 
   
   calibrateSensors(); // Calibrate line sensors
   
   delay(5000);
   
-  // Start movement (currently starting at mainLoc 'M0')
-  mainLoc = 0;
+  // Start movement (starting at location defined in EEPROM)
+  location = EEPROM.read(343);
   setMove(MOVE_FORWARD);
  
 }
 
-
-
+void loop()
+{ 
+  dynamic_PID();
+  takeReading();
+  executeSegment(location);
+  increaseLocation();
+}
 
 void dynamic_PID() // Sets the PID coefficients dynamically via a serial command interface...
 {
@@ -302,43 +304,56 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
   }
 }
 
-void loop()
-{ 
-  dynamic_PID();
+// Reads in the PID values from EEPROM
+// Note: "OOooOOOOOooOOH, scary pointer stuff!"
+void readPID()
+{
+  byte parts[12];    // Set up a byte arrary to store the parts
+  int address = 344; // Starting address in EEPROM
+  float *tempPointer = (float*)parts; // float pointer to start of byte array
+  for (int i=0; i<12; ++i) // Read in the parts
+  {
+    parts[i] == EEPROM.read(address);
+    ++address;
+  }
+  
+  KP = *tempPointer; // Set KP to combined four-byte float
+  tempPointer += 4;  // Move pointer to next set of four bytes
+  KI = *tempPointer; // Set KP to combined four-byte float
+  tempPointer += 4;  // Move pointer to next set of four bytes
+  KD = *tempPointer; // Set KP to combined four-byte float
 }
-
-
 //Take a reading from the task sensors and makes L/R decision 
 void takeReading()
 {
-  switch (mainLoc)
+  switch (location)
   {
     case 1: // Voltage Task
-      leftRightLoc = readVoltage();
+      goLeft = readVoltage();
       break;
     case 2: // Capacitance Task 
-      leftRightLoc = readCapacitance();
+      goLeft = readCapacitance();
       break;
     case 5: // Temperature Task
-      leftRightLoc = readTemperature();
+      goLeft = readTemperature();
       break;
     case 6: // Waveform Task
-      leftRightLoc = readWaveform();
+      goLeft = readWaveform();
       break;
     default:
-      // Should not occur, means that takeReading was called at the wrong place.
+      goLeft = false; // Not at a task location.
       break;
   }
   digitalWrite(RELAY_K1_PIN, 0);
   digitalWrite(RELAY_K2_PIN, 0);
 }
 
-
-
-void increaseMainLoc()
+void increaseLocation()
 {
-  ++mainLoc;    // Increment mainLoc
-  mainLoc %= 8; // Make sure mainLoc is never > 7
+  if (goLeft)
+    location += 3;
+  ++location;    // Increment location
+  location %= 38; // Make sure location is never > 37
 }
 
 void calibrateSensors()

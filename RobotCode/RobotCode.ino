@@ -137,6 +137,7 @@ PID lfPID(&inputPID, &outputPID, &setpointPID, KP, KI, KD, DIRECT);
 
 void setup()
 {
+  u_double spv;
   Serial.begin(9600);        // Begin serial comm for debugging  
   delay(500);                // Wait for serial comm to come online
   
@@ -170,7 +171,12 @@ void setup()
   delay(5000);
   
   // Start movement (starting at location defined in EEPROM)
-  location = EEPROM.read(343);
+  spv.b[0]=EEPROM.read(343);
+  spv.b[1]=EEPROM.read(344);
+  location = spv.ival;
+  Serial.print("Location:");
+  Serial.print(location);
+  Serial.print("\n");
   setMove(MOVE_FORWARD);
  
 }
@@ -211,12 +217,12 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
             follow=Serial.read();
             terminate=Serial.read();
             action=Serial.read();
-            /*Serial.print(follow);
+            Serial.print(follow);
             Serial.print("\n");
             Serial.print(terminate);
             Serial.print("\n");
             Serial.print(action);
-            Serial.print("\n");*/        //For debugging purposes
+            Serial.print("\n");        //For debugging purposes
             for(i=0;i<3;i++)		//Then read it in
             {
               for(j=0;j<2;j++)
@@ -227,12 +233,12 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
             segment=Vals[0].ival;
             left_amnt=Vals[1].ival;
             right_amnt=Vals[2].ival;
-            /*Serial.print(segment);  For Debugging Purposes
+            Serial.print(segment);  //For Debugging Purposes
             Serial.print("\n");
             Serial.print(left_amnt);
             Serial.print("\n");
             Serial.print(right_amnt);
-            Serial.print("\n");*/   
+            Serial.print("\n");  
             
           }
           break;
@@ -246,16 +252,14 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
               {
                 Vals[i].b[j]=Serial.read();
               }
-             /* Serial.print("\n");		//For now, we want to read them back out to make sure it worked
-              Serial.print(Vals[i].dval);*/      //Debugging
-              Serial.print("\n");Serial.flush(); 
+
             }
             for(j=0;j<2;j++)
             {
               Vals[3].b[j]=Serial.read();
             }
-            /*Serial.print("\n");		//For now, we want to read them back out to make sure it worked
-            Serial.print(Vals[3].ival);*/    //Debugging
+            Serial.print("\n");		//For now, we want to read them back out to make sure it worked
+            Serial.print(Vals[3].ival);    //Debugging
             Serial.print("\n");Serial.flush();
           }
           break;
@@ -299,6 +303,21 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
         break;
         
         case 'g':
+          EEPROM.write(343,Vals[3].b[0]);
+          EEPROM.write(344,Vals[3].b[1]);
+          int address = 345;
+          for (i = 0; i<3; ++i)
+          {
+            for (j = 0; j<4; ++j)
+            {
+              EEPROM.write(address+j, Vals[i].b[j]);
+            
+            }
+             // Serial.print("\n");		//For now, we want to read them back out to make sure it worked
+             // Serial.println(Vals[i].dval,5);      //Debugging
+             // Serial.print("\n");Serial.flush(); 
+            address += 4;
+          }
         break;
       }
   }
@@ -308,20 +327,27 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
 // Note: "OOooOOOOOooOOH, scary pointer stuff!"
 void readPID()
 {
-  byte parts[12];    // Set up a byte arrary to store the parts
-  int address = 344; // Starting address in EEPROM
-  float *tempPointer = (float*)parts; // float pointer to start of byte array
-  for (int i=0; i<12; ++i) // Read in the parts
+  u_double Val[3];
+  int address = 345; // Starting address in EEPROM
+  for (int i=0; i<3 ; ++i)
   {
-    parts[i] == EEPROM.read(address);
-    ++address;
+    for (int j=0; j<4; ++j) // Read in the parts
+    {
+      Val[i].b[j]=EEPROM.read(address+j);
+    }
+    address+=4;    
   }
   
-  KP = *tempPointer; // Set KP to combined four-byte float
-  tempPointer += 4;  // Move pointer to next set of four bytes
-  KI = *tempPointer; // Set KP to combined four-byte float
-  tempPointer += 4;  // Move pointer to next set of four bytes
-  KD = *tempPointer; // Set KP to combined four-byte float
+  KP = (float)Val[0].dval;
+  KI = (float)Val[1].dval;
+  KD = (float)Val[2].dval;
+  
+  Serial.print("KP: ");
+  Serial.println(KP,5);
+  Serial.print("KI: ");
+  Serial.println(KI,5);
+  Serial.print("KD: ");
+  Serial.println(KD,5);
 }
 //Take a reading from the task sensors and makes L/R decision 
 void takeReading()

@@ -35,7 +35,19 @@ void executeSegment(int segment)
   tempMSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 5); // Read MSB of rightAmount
   tempLSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 6); // Read LSB of rightAmount
   currentSegment.rightAmount = word(tempMSB,tempLSB);    // Combine MSB and LSB
-
+  
+  
+  Serial.print((currentSegment.follow));
+  Serial.print("\n");
+  Serial.print((currentSegment.terminate));
+  Serial.print("\n");       
+  Serial.print((currentSegment.action));
+  Serial.print("\n");
+  Serial.print((currentSegment.leftAmount));
+  Serial.print("\n");   
+  Serial.print((currentSegment.rightAmount));
+  Serial.print("\n");   //Debugging print out
+  
   // --- Execute line- or encoder-following: ---
   if (currentSegment.follow == LINE_FOLLOW) // Line-following type movement
   {

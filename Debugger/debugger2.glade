@@ -1060,6 +1060,9 @@
         <col id="0" translatable="yes">At Any Turn</col>
       </row>
       <row>
+        <col id="0" translatable="yes">At A T</col>
+      </row>
+      <row>
         <col id="0" translatable="yes">At Left Turn</col>
       </row>
       <row>

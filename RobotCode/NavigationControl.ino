@@ -56,6 +56,8 @@ void executeSegment(int segment)
     int terminationType = checkTermination();
             Serial.print("Termination:");
         Serial.print(terminationType);
+        Serial.print(", ");
+        Serial.print(currentSegment.terminate);
     if (currentSegment.terminate == AT_ANY) // Special case for AT_ANY
     {
       while (terminationType < AT_ANY)
@@ -64,7 +66,7 @@ void executeSegment(int segment)
         followLine();
         terminationType = checkTermination();
       }
-              Serial.print("Termination UNDER:");
+        Serial.print("Termination UNDER:");
         Serial.print(terminationType);
     }
     else // All other termination types
@@ -128,32 +130,64 @@ void executeSegment(int segment)
 int checkTermination()
 {
   
-  fSensor.readLine(fSensorValues, QTR_EMITTERS_ON, WHITE_LINE);
-  boolean isLeft  = (fSensorValues[0] < REFLECT_THRESHOLD);
-  boolean isRight = (fSensorValues[7] < REFLECT_THRESHOLD);
+  fSensorRight.readCalibrated(fSensorValuesRight, QTR_EMITTERS_ON);
+  fSensorLeft.readCalibrated(fSensorValuesLeft, QTR_EMITTERS_ON); 
+    for(int i=0;i<8;i++)
+  {
+    fSensorValuesBoth[i]=fSensorValuesLeft[i];
+  }
+  for(int i=8;i<16;i++)
+  {
+    fSensorValuesBoth[i]=fSensorValuesRight[i-8];
+  }
+/*Serial.print("\n");
+        Serial.print("\n");
+ Serial.print("LS[0]: ");
+    Serial.print(fSensorValuesBoth[0]);
+    Serial.print("\tLS[1]: ");
+    Serial.print(fSensorValuesBoth[1]);
+    Serial.print("\tLS[2]: ");
+    Serial.print(fSensorValuesBoth[2]);
+    Serial.print("\tLS[3]: ");
+    Serial.print(fSensorValuesBoth[3]);
+    Serial.print("\tLS[4]: ");
+    Serial.print(fSensorValuesBoth[4]);
+    Serial.print("\tLS[5]: ");
+    Serial.print(fSensorValuesBoth[5]);
+    Serial.print("\tLS[6]: ");
+    Serial.print(fSensorValuesBoth[6]);
+    Serial.print("\tLS[7]: ");
+    Serial.println(fSensorValuesBoth[7]); 
+    Serial.print("RS[0]: ");
+    Serial.print(fSensorValuesBoth[8]);
+    Serial.print("\tRS[1]: ");
+    Serial.print(fSensorValuesBoth[9]);
+    Serial.print("\tRS[2]: ");
+    Serial.print(fSensorValuesBoth[10]);
+    Serial.print("\tRS[3]: ");
+    Serial.print(fSensorValuesBoth[11]);
+    Serial.print("\tRS[4]: ");
+    Serial.print(fSensorValuesBoth[12]);
+    Serial.print("\tRS[5]: ");
+    Serial.print(fSensorValuesBoth[13]);
+    Serial.print("\tRS[6]: ");
+    Serial.print(fSensorValuesBoth[14]);
+    Serial.print("\tRS[7]: ");
+    Serial.println(fSensorValuesBoth[15]);   
+    Serial.print("\n");
+        Serial.print("\n");*/
+  
+  boolean isLeft  = (fSensorValuesBoth[0] < REFLECT_THRESHOLD);
+  boolean isRight = (fSensorValuesBoth[15] < REFLECT_THRESHOLD);
   boolean isOff = true;
 
-    Serial.print("S[0]: ");
-    Serial.print(fSensorValues[0]);
-    Serial.print("\tS[1]: ");
-    Serial.print(fSensorValues[1]);
-    Serial.print("\tS[2]: ");
-    Serial.print(fSensorValues[2]);
-    Serial.print("\tS[3]: ");
-    Serial.print(fSensorValues[3]);
-    Serial.print("\tS[4]: ");
-    Serial.print(fSensorValues[4]);
-    Serial.print("\tS[5]: ");
-    Serial.print(fSensorValues[5]);
-    Serial.print("\tS[6]: ");
-    Serial.print(fSensorValues[6]);
-    Serial.print("\tS[7]: ");
-    Serial.println(fSensorValues[7]); 
+
+
   
   // Checks to see if every sensor is above threshold:
-  for (int i = 0; i < NUM_SENSORS; i++)
+  for (int i = 0; i < NUM_SENSORS*2; i++)
   {
-    isOff &= (fSensorValues[i] >= REFLECT_THRESHOLD);
+    isOff &= (fSensorValuesBoth[i] >= REFLECT_THRESHOLD);
   }
   
   if (isLeft && isRight) 

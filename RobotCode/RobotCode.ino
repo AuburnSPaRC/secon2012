@@ -105,28 +105,32 @@ double forwardSpeed = 0;
 int delayCounter = 0;
 
 // Change these pins when you need to
-unsigned char fSensorPins[] = {33,35,37,39,41,43,45,47};
+unsigned char fSensorPinsRight[] = {47,45,43,41,39,37,35,33};//33,35,37,39,41,43,45,47};
+unsigned char fSensorPinsLeft[] = {6,7,8,9,10,11,12,13};
 unsigned char lEncoderPins[] = {46};
 unsigned char rEncoderPins[] = {48};
 
 //unsigned char rSensorPins[] = {2,3,4,5,6,7,8,9};
-#define LEFT_PWM_PIN   10
-#define LEFT_DIR_PIN   11
+#define LEFT_PWM_PIN   5
+#define LEFT_DIR_PIN   38
 #define RIGHT_PWM_PIN  12
 #define RIGHT_DIR_PIN  13
 //#define CAL_LED_PIN    5
 #define RELAY_K1_PIN   52
 #define RELAY_K2_PIN   53
-#define TEST_LED_PIN   51
+//#define TEST_LED_PIN   51
 #define LEFT_ENC_PIN   36
 #define RIGHT_ENC_PIN  50
 
 
 // Sensors 0 through 7 are connected to fSensorPins[]
-PololuQTRSensorsRC fSensor(fSensorPins, NUM_SENSORS, TIMEOUT); 
+PololuQTRSensorsRC fSensorRight(fSensorPinsRight, NUM_SENSORS, TIMEOUT); 
+PololuQTRSensorsRC fSensorLeft(fSensorPinsLeft, NUM_SENSORS, TIMEOUT); 
 PololuQTRSensorsRC lEncoder(lEncoderPins, 1, TIMEOUT);//, LEFT_ENC_PIN);
 PololuQTRSensorsRC rEncoder(rEncoderPins, 1, TIMEOUT);//, RIGHT_ENC_PIN); 
-unsigned int fSensorValues[NUM_SENSORS];
+unsigned int fSensorValuesRight[NUM_SENSORS];
+unsigned int fSensorValuesLeft[NUM_SENSORS];
+unsigned int fSensorValuesBoth[NUM_SENSORS*2];
 unsigned int lEncoderValues[1];
 unsigned int rEncoderValues[1];
 
@@ -148,9 +152,9 @@ void setup()
   pinMode(RIGHT_DIR_PIN, OUTPUT);
   pinMode(RELAY_K1_PIN, OUTPUT);
   pinMode(RELAY_K2_PIN, OUTPUT);
-  pinMode(TEST_LED_PIN, OUTPUT);
+  //pinMode(TEST_LED_PIN, OUTPUT);
   
-  digitalWrite(TEST_LED_PIN, LOW);
+  //digitalWrite(TEST_LED_PIN, LOW);
 
   delay(50);
   
@@ -187,6 +191,7 @@ void loop()
   takeReading();
   executeSegment(location);
   increaseLocation();
+ //followLine();
 }
 
 void dynamic_PID() // Sets the PID coefficients dynamically via a serial command interface...
@@ -388,12 +393,13 @@ void calibrateSensors()
   setMove(TURN_LEFT);
   // Calibrate sensors  (robot must be fully on the line)
   // Note: still needs calibration motor routine
-  for (int i = 0; i < 50; i++)  // Make the calibration take about 5 seconds
+  for (int i = 0; i < 25; i++)  // Make the calibration take about 5 seconds
   {
     // Reads both sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
-    fSensor.calibrate();
-    lEncoder.calibrate();
-    rEncoder.calibrate();
+    fSensorRight.calibrate(QTR_EMITTERS_ON);
+    fSensorLeft.calibrate(QTR_EMITTERS_ON);
+    lEncoder.calibrate(QTR_EMITTERS_ON);
+    rEncoder.calibrate(QTR_EMITTERS_ON);
     digitalWrite(RELAY_K1_PIN, toggle); // Make sound!
     toggle = !toggle;
     //rSensor.calibrate();
@@ -401,12 +407,13 @@ void calibrateSensors()
   
   toggle = true;
   setMove(TURN_RIGHT);
-  for (int i = 0; i < 50; i++)  // Make the calibration take about 5 seconds
+  for (int i = 0; i < 25; i++)  // Make the calibration take about 5 seconds
   {
     // Reads both sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
-    fSensor.calibrate();
-    lEncoder.calibrate();
-    rEncoder.calibrate();
+    fSensorRight.calibrate(QTR_EMITTERS_ON);
+    fSensorLeft.calibrate(QTR_EMITTERS_ON);
+    lEncoder.calibrate(QTR_EMITTERS_ON);
+    rEncoder.calibrate(QTR_EMITTERS_ON);
     digitalWrite(RELAY_K1_PIN, toggle); // Make sound!
     toggle = !toggle;
     //rSensor.calibrate();

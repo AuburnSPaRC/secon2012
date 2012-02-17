@@ -76,9 +76,13 @@ void setMove(int moveType)
 void followLine()
 {
   // Read calibrated front sensor values and obtain a measure of the line position from 0 to 7000
-  unsigned int position = fSensor.readLine(fSensorValues, QTR_EMITTERS_ON, WHITE_LINE);                            
+  unsigned int pOsitIon = getLine();
 
-  inputPID = position;            // set PID input to position of line
+  inputPID = pOsitIon;            // set PID input to position of line
+  
+//  Serial.print("S: ");
+//  Serial.print(pOsitIon);
+//  Serial.print("\n");
   lfPID.Compute();                // compute correction, store in outputPID
   if (outputPID < 0)
     rightDelta = outputPID;         // sets right wheel's speed variation
@@ -86,26 +90,42 @@ void followLine()
     leftDelta  = -outputPID;        // sets left wheel's speed variation
   updateMotors();
   
-  #ifdef DEBUG_LINE
-    Serial.print("Position: ");
-    Serial.print(position);
-    Serial.print("S[0]: ");
-    Serial.print(fSensorValues[0]);
-    Serial.print("\tS[1]: ");
-    Serial.print(fSensorValues[1]);
-    Serial.print("\tS[2]: ");
-    Serial.print(fSensorValues[2]);
-    Serial.print("\tS[3]: ");
-    Serial.print(fSensorValues[3]);
-    Serial.print("\tS[4]: ");
-    Serial.print(fSensorValues[4]);
-    Serial.print("\tS[5]: ");
-    Serial.print(fSensorValues[5]);
-    Serial.print("\tS[6]: ");
-    Serial.print(fSensorValues[6]);
-    Serial.print("\tS[7]: ");
-    Serial.println(fSensorValues[7]);    
-  #endif  
+  /*  Serial.print("\n");
+        Serial.print("\n");
+ Serial.print("LS[0]: ");
+    Serial.print(fSensorValuesBoth[0]);
+    Serial.print("\tLS[1]: ");
+    Serial.print(fSensorValuesBoth[1]);
+    Serial.print("\tLS[2]: ");
+    Serial.print(fSensorValuesBoth[2]);
+    Serial.print("\tLS[3]: ");
+    Serial.print(fSensorValuesBoth[3]);
+    Serial.print("\tLS[4]: ");
+    Serial.print(fSensorValuesBoth[4]);
+    Serial.print("\tLS[5]: ");
+    Serial.print(fSensorValuesBoth[5]);
+    Serial.print("\tLS[6]: ");
+    Serial.print(fSensorValuesBoth[6]);
+    Serial.print("\tLS[7]: ");
+    Serial.println(fSensorValuesBoth[7]); 
+    Serial.print("RS[0]: ");
+    Serial.print(fSensorValuesBoth[8]);
+    Serial.print("\tRS[1]: ");
+    Serial.print(fSensorValuesBoth[9]);
+    Serial.print("\tRS[2]: ");
+    Serial.print(fSensorValuesBoth[10]);
+    Serial.print("\tRS[3]: ");
+    Serial.print(fSensorValuesBoth[11]);
+    Serial.print("\tRS[4]: ");
+    Serial.print(fSensorValuesBoth[12]);
+    Serial.print("\tRS[5]: ");
+    Serial.print(fSensorValuesBoth[13]);
+    Serial.print("\tRS[6]: ");
+    Serial.print(fSensorValuesBoth[14]);
+    Serial.print("\tRS[7]: ");
+    Serial.println(fSensorValuesBoth[15]);   
+    Serial.print("\n");
+        Serial.print("\n");*/
   #ifdef DEBUG_COURSE
     Serial.print("Counter: ");
     Serial.print(delayCounter);
@@ -131,7 +151,6 @@ void encoderMoveToTerminate(int desiredTerminationType)
   {
     while(rCount > 0 || lCount >  0)
     {
-      fSensor.readCalibrated(fSensorValues, QTR_EMITTERS_ON);
       currentTerminationType = checkTermination();
       if (currentTerminationType > AT_ANY)
       {
@@ -392,4 +411,57 @@ void motorCalibrate()
       delay(5000);
     }
   #endif
+}
+
+unsigned int getLine()
+{
+  unsigned char i, on_line = 0;
+  unsigned long avg; // this is for the weighted total, which is long
+	                   // before division
+  unsigned int sum; // this is for the denominator which is <= 64000
+  static int last_value=0; // assume initially that the line is left.
+  fSensorRight.readCalibrated(fSensorValuesRight, QTR_EMITTERS_ON);
+  fSensorLeft.readCalibrated(fSensorValuesLeft, QTR_EMITTERS_ON);
+  for(int i=0;i<8;i++)
+  {
+    fSensorValuesBoth[i]=fSensorValuesLeft[i];
+  }
+  for(int i=8;i<16;i++)
+  {
+    fSensorValuesBoth[i]=fSensorValuesRight[i-8];
+  }
+
+  avg = 0;
+  sum = 0;
+  
+  for(i=0; i<16; i++) {
+    int value = fSensorValuesBoth[i];
+    value = 1000-value;
+    // keep track of whether we see the line at all
+    if(value > 200) {
+      on_line = 1;
+    }
+      
+    // only average in values that are above a noise threshold
+    if(value > 50) {
+      avg += (long)(value) * (i * 1000);
+      sum += value;
+    }
+  }
+    
+  if(!on_line)
+  {
+    // If it last read to the left of center, return 0.
+    if(last_value < 3500)
+    return 0;
+    
+    // If it last read to the right of center, return the max.
+    else
+    return 7000;
+    
+  }
+  
+  last_value = (avg/sum)/2; //0-7000
+  
+  return last_value;
 }

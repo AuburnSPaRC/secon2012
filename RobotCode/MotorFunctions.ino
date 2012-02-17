@@ -9,9 +9,9 @@
 
 // --- Motor Pin Definitions ---
 #ifndef OVERWRITE_SENSOR_PINS
-  #define LEFT_PWM_PIN   8  // Green(PWM) DPin 10  - Left motor PWM speed control
-  #define LEFT_DIR_PIN   7  // (DIG) DPin 11  - Left motor direction control
-  #define LEFT_EN_PIN    6  // (DIG) DPin 12  - Left motor enable control
+  #define LEFT_PWM_PIN   5  // Green(PWM) DPin 10  - Left motor PWM speed control
+  #define LEFT_DIR_PIN   38  // (DIG) DPin 11  - Left motor direction control
+  #define LEFT_EN_PIN    36  // (DIG) DPin 12  - Left motor enable control
   #define RIGHT_PWM_PIN  2  // (PWM) DPin 13  - Right motor PWM speed control 
   #define RIGHT_DIR_PIN  3  // (DIG) DPin 14  - Right motor direction control
   #define RIGHT_EN_PIN   4  // Blue(DIG) DPin 15  - Right motor enable control

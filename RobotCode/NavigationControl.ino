@@ -54,18 +54,25 @@ void executeSegment(int segment)
     // Execute linefollowing until termination occurs:
     lfPID.SetMode(AUTOMATIC); // Turn on PID
     int terminationType = checkTermination();
+            Serial.print("Termination:");
+        Serial.print(terminationType);
     if (currentSegment.terminate == AT_ANY) // Special case for AT_ANY
     {
       while (terminationType < AT_ANY)
       {
+
         followLine();
         terminationType = checkTermination();
       }
+              Serial.print("Termination UNDER:");
+        Serial.print(terminationType);
     }
     else // All other termination types
     {
       while (terminationType != currentSegment.terminate)
       {
+        Serial.print("Termination OVER:");
+        Serial.print(terminationType);
         setMove(MOVE_FORWARD); // Begin moving forward
         followLine();
         terminationType = checkTermination();
@@ -120,9 +127,28 @@ void executeSegment(int segment)
 // NOTE: This assumes white line on black surface.
 int checkTermination()
 {
+  
+  fSensor.readLine(fSensorValues, QTR_EMITTERS_ON, WHITE_LINE);
   boolean isLeft  = (fSensorValues[0] < REFLECT_THRESHOLD);
   boolean isRight = (fSensorValues[7] < REFLECT_THRESHOLD);
   boolean isOff = true;
+
+    Serial.print("S[0]: ");
+    Serial.print(fSensorValues[0]);
+    Serial.print("\tS[1]: ");
+    Serial.print(fSensorValues[1]);
+    Serial.print("\tS[2]: ");
+    Serial.print(fSensorValues[2]);
+    Serial.print("\tS[3]: ");
+    Serial.print(fSensorValues[3]);
+    Serial.print("\tS[4]: ");
+    Serial.print(fSensorValues[4]);
+    Serial.print("\tS[5]: ");
+    Serial.print(fSensorValues[5]);
+    Serial.print("\tS[6]: ");
+    Serial.print(fSensorValues[6]);
+    Serial.print("\tS[7]: ");
+    Serial.println(fSensorValues[7]); 
   
   // Checks to see if every sensor is above threshold:
   for (int i = 0; i < NUM_SENSORS; i++)

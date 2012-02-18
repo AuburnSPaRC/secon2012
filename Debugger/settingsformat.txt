@@ -1,2 +1,2 @@
-Course: enc/fol termination action left_amnt right_amnt 
+Course: enc/fol termination action left_amnt right_amnt speed turnspeed center
 Global: p i d start

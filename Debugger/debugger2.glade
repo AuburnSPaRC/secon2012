@@ -702,6 +702,99 @@
                 <property name="y">360</property>
               </packing>
             </child>
+            <child>
+              <object class="GtkEntry" id="speed_entry">
+                <property name="width_request">50</property>
+                <property name="height_request">20</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">•</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
+                <signal name="changed" handler="callback_speed_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="x">470</property>
+                <property name="y">218</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="entry_label">
+                <property name="width_request">100</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Speed (0-200):</property>
+              </object>
+              <packing>
+                <property name="x">340</property>
+                <property name="y">214</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="center_label">
+                <property name="width_request">110</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Center (0-7000):</property>
+              </object>
+              <packing>
+                <property name="x">340</property>
+                <property name="y">280</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="center_entry">
+                <property name="width_request">50</property>
+                <property name="height_request">20</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">•</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
+                <signal name="changed" handler="callback_center_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="x">470</property>
+                <property name="y">280</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="turn_label">
+                <property name="width_request">130</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Turn Speed (0-200):</property>
+              </object>
+              <packing>
+                <property name="x">340</property>
+                <property name="y">245</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="turnspeed_entry">
+                <property name="width_request">50</property>
+                <property name="height_request">20</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">•</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
+                <signal name="changed" handler="callback_turnspeed_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="x">470</property>
+                <property name="y">250</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">True</property>

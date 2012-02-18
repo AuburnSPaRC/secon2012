@@ -24,7 +24,7 @@
 //#define DEBUG_LINE         // Display line sensor data
 //#define DEBUG_COURSE       // Display info on robot's course location
 
-#define FTA_CYCLE_SIZE  7 // Defines the size (in bytes) of the ftaCycle struct.
+#define FTA_CYCLE_SIZE  10 // Defines the size (in bytes) of the ftaCycle struct.
 #define NUM_SETGMENTS  38 //The number of segments on the course
 #define NUM_SENSORS   8     // number of sensors used on each array
 #define TIMEOUT       2500  // waits for 2500 us for sensor outputs to go low
@@ -50,8 +50,6 @@
 
 #define MAX_VELOCITY  255  // Maximum motor velocity
 
-#define FULL_SPEED    0.40 // Fraction of MAX_VELOCITY that is 'full' speed 
-#define TURN_SPEED    0.25 // Fraction of MAX_VELOCITY that is 'turning' speed 
 //#define TURN_TIME     570  // Number of mSeconds to turn robot 90 degrees
 #define TURN_STOPS    10   // Number of encoder stops for a bot 90 degree turn
 
@@ -85,7 +83,13 @@ struct ftaCycle{
   byte action;      // "turn in place", "turn left wheel then right", "turn right wheel then left"
   int leftAmount;   // Number of encoder clicks to turn left wheel forward (negative is backward)
   int rightAmount;  // Number of encoder clicks to turn right wheel forward (negative is backward)
+  byte bot_speed;
+  byte turn_speed;
+  byte center;
 };
+
+int FULL_SPEED = 0; // Fraction of MAX_VELOCITY that is 'full' speed 
+int TURN_SPEED = 0; // Fraction of MAX_VELOCITY that is 'turning' speed 
 
 // Course Location (as defined by course_define.jpeg)
 int location = 0; 
@@ -106,8 +110,8 @@ double forwardSpeed = 0;
 int delayCounter = 0;
 
 // Change these pins when you need to
-unsigned char fSensorPinsLeft[] = {33,35,37,39,41,43,45,47};
-unsigned char fSensorPinsRight[] = {13,12,11,10,9,8,7,6};//,9,10,11,12,13};
+unsigned char fSensorPinsRight[] = {33,35,37,39,41,43,45,47};
+unsigned char fSensorPinsLeft[] = {13,12,11,10,9,8,7,6};//,9,10,11,12,13};
 unsigned char lEncoderPins[] = {46};
 unsigned char rEncoderPins[] = {48};
 
@@ -142,7 +146,6 @@ PID lfPID(&inputPID, &outputPID, &setpointPID, KP, KI, KD, DIRECT);
 
 void setup()
 {
-  u_double spv;
   Serial.begin(9600);        // Begin serial comm for debugging  
   delay(500);                // Wait for serial comm to come online
   
@@ -176,12 +179,10 @@ void setup()
   delay(5000);
   
   // Start movement (starting at location defined in EEPROM)
-  spv.b[0]=EEPROM.read(343);
-  spv.b[1]=EEPROM.read(344);
-  location = spv.ival;
-  Serial.print("Location:");
-  Serial.print(location);
-  Serial.print("\n");
+  location=(int)EEPROM.read(421);
+//  Serial.print("Location:");
+//  Serial.print(location);
+//  Serial.print("\n");
   setMove(MOVE_FORWARD);
  
 }
@@ -206,9 +207,10 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
   
    //Variables to hold possible incoming data
   char follow,terminate,action;     
-  int left_amnt,right_amnt,start_pos;
+  int left_amnt,right_amnt;
   float p_val,i_val,d_val;
   int segment;
+  byte b_speed,center,turn_speed,start_pos;
   //Debugging purposes ftaCycle currentSegment;
   //Debugging purposes byte tempMSB,tempLSB;
   if(Serial.available())		//Are there messages coming in?
@@ -242,18 +244,27 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
             segment=Vals[0].ival;
             left_amnt=Vals[1].ival;
             right_amnt=Vals[2].ival;
+            b_speed=Serial.read();
+            turn_speed=Serial.read();
+            center=Serial.read();
             Serial.print(segment);  //For Debugging Purposes
             Serial.print("\n");
-            Serial.print(left_amnt);
+            Serial.print((int)left_amnt);
             Serial.print("\n");
-            Serial.print(right_amnt);
+            Serial.print((int)right_amnt);
             Serial.print("\n");  
+            Serial.print((int)b_speed);
+            Serial.print("\n"); 
+            Serial.print((int)turn_speed);
+            Serial.print("\n");       
+            Serial.print((int)center);
+            Serial.print("\n");              
             
           }
           break;
         
         case 'g':			//Global variables
-          if(Serial.available()>=14)	//We are getting three floats and an int so wait til we get all their data
+          if(Serial.available()>=13)	//We are getting three floats and an int so wait til we get all their data
           {
             for(i=0;i<3;i++)		//Then read it in
             {
@@ -263,12 +274,10 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
               }
 
             }
-            for(j=0;j<2;j++)
-            {
-              Vals[3].b[j]=Serial.read();
-            }
+            start_pos=Serial.read();
+            Serial.print("Starting:");
             Serial.print("\n");		//For now, we want to read them back out to make sure it worked
-            Serial.print(Vals[3].ival);    //Debugging
+            Serial.print(start_pos);    //Debugging
             Serial.print("\n");Serial.flush();
           }
           break;
@@ -278,6 +287,8 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
       switch (command)			
       {
         case 'c': 
+        Serial.print("Here we are saving stuff!");
+        Serial.print(segment*FTA_CYCLE_SIZE); 
           //Save the course variables into EEProm (the -48 is to go from char to byte values)
           EEPROM.write(segment * FTA_CYCLE_SIZE,follow-48);          
           EEPROM.write((segment * FTA_CYCLE_SIZE) + 1,terminate-48);
@@ -286,6 +297,9 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
           EEPROM.write((segment * FTA_CYCLE_SIZE) + 4, Vals[1].b[0]);
           EEPROM.write((segment * FTA_CYCLE_SIZE) + 5, Vals[2].b[1]);
           EEPROM.write((segment * FTA_CYCLE_SIZE) + 6, Vals[2].b[0]);
+          EEPROM.write((segment * FTA_CYCLE_SIZE) + 7, b_speed);
+          EEPROM.write((segment * FTA_CYCLE_SIZE) + 8, turn_speed);
+          EEPROM.write((segment * FTA_CYCLE_SIZE) + 9, center);
           
           /*
           currentSegment.follow = EEPROM.read(segment * FTA_CYCLE_SIZE);          // Read the follow type
@@ -312,9 +326,8 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
         break;
         
         case 'g':
-          EEPROM.write(343,Vals[3].b[0]);
-          EEPROM.write(344,Vals[3].b[1]);
-          int address = 345;
+          EEPROM.write(421,(start_pos));
+          int address = 422;
           for (i = 0; i<3; ++i)
           {
             for (j = 0; j<4; ++j)
@@ -337,7 +350,7 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
 void readPID()
 {
   u_double Val[3];
-  int address = 345; // Starting address in EEPROM
+  int address = 422; // Starting address in EEPROM
   for (int i=0; i<3 ; ++i)
   {
     for (int j=0; j<4; ++j) // Read in the parts
@@ -387,7 +400,7 @@ void increaseLocation()
 {
  if (goLeft)
     location += 3;
- if((location==6)||(location==15)||(location==24)||(location==33))
+ if((location==6)||(location==15)||(location==26)||(location==35))
  {
    location+=3;
  }

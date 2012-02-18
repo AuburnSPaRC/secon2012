@@ -60,17 +60,17 @@ void setMove(int moveType)
       rightDelta   = -TURN_SPEED * MAX_VELOCITY;
       break;
     case MOVE_FORWARD:
-      forwardSpeed = FULL_SPEED * MAX_VELOCITY;
+      forwardSpeed = MAX_VELOCITY;
       leftDelta    = 0;
       rightDelta   = 0;
       break;
     case MOVE_BACKWARD:
-      forwardSpeed = -FULL_SPEED * MAX_VELOCITY;
+      forwardSpeed = -MAX_VELOCITY;
       leftDelta    = 0;
       rightDelta   = 0;
       break;
     default:
-      forwardSpeed = FULL_SPEED * MAX_VELOCITY;
+      forwardSpeed = MAX_VELOCITY;
       leftDelta    = 0;
       rightDelta   = 0;
   }

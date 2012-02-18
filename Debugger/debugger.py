@@ -14,6 +14,9 @@ termination_action=0
 left_amnt=0
 right_amnt=0
 start_pos=0
+speed=0
+center=0
+turnspeed=0;
 p=0;
 i=0;
 d=0;
@@ -35,6 +38,9 @@ class DebuggerGUI(object):
 		self.right_amount_action_box=builder.get_object("right_amount_box")	#Right Wheel Clicks Action Amount
 		self.left_amount_action_box=builder.get_object("left_amount_box")	#Left Wheel Clicks Action Amount
 		self.start_list_box=builder.get_object("start_list_box")		#List Box of Start Positions
+		self.center_entry=builder.get_object("center_entry")		#List Box of Start Positions
+		self.speed_entry=builder.get_object("speed_entry")		#List Box of Start Positions
+		self.turnspeed_entry=builder.get_object("turnspeed_entry")		#List Box of Start Positions
 		self.p_box=builder.get_object("p_box")
 		self.i_box=builder.get_object("i_box")
 		self.d_box=builder.get_object("d_box")
@@ -149,7 +155,7 @@ class DebuggerGUI(object):
 			f=open("course_config.txt","w")
 			while l<=37:
 				if l==currentStage:
-					f.write(str(enc_fol)+" "+str(termination)+" "+str(termination_action)+" "+str(left_amnt)+" "+str(right_amnt)+"\n")
+					f.write(str(enc_fol)+" "+str(termination)+" "+str(termination_action)+" "+str(left_amnt)+" "+str(right_amnt)+" "+str(speed)+" "+" "+str(turnspeed)+" "+str(center)+"\n")
 				else:
 					f.write(lines[l])	
 				l=l+1;
@@ -158,6 +164,24 @@ class DebuggerGUI(object):
 		else:
 			print "No state set."
 	####################################################################3
+
+	#Turn speed value changed
+	def callback_turnspeed_changed(self, widget, callback_data=None):
+		global turnspeed
+		if len(self.turnspeed_entry.get_text()):
+			turnspeed=int(self.turnspeed_entry.get_text())
+
+	#Speed value changed
+	def callback_speed_changed(self, widget, callback_data=None):
+		global speed
+		if len(self.speed_entry.get_text()):
+			speed=int(self.speed_entry.get_text())
+
+	#Center value changed
+	def callback_center_changed(self, widget, callback_data=None):
+		global center
+		if len(self.center_entry.get_text()):
+			center=int(self.center_entry.get_text())
 
 	#Global value changed
 	def callback_global_changed(self, widget, callback_data=None):
@@ -188,9 +212,9 @@ class DebuggerGUI(object):
 		l=0
 		if str.isdigit(self.pos_select.get_text()):
 			currentStage=int(self.pos_select.get_text())
-			if currentStage>37:
-				self.pos_select.set_text("37")
-				currentStage=37
+			if currentStage>39:
+				self.pos_select.set_text("39")
+				currentStage=39
 			if currentStage<0:
 				self.pos_select.set_text("0")
 				currentStage=0
@@ -210,6 +234,9 @@ class DebuggerGUI(object):
 			termination_action=int(linelist[2])
 			left_amnt=int(linelist[3])
 			right_amnt=int(linelist[4])
+			speed=int(linelist[5])
+			turnspeed=int(linelist[6])
+			center=int(linelist[7])
 			
 
 			#Set the buttons and values correctly in the GUI
@@ -217,6 +244,9 @@ class DebuggerGUI(object):
 				self.enc_fol_button.set_label("Following")
 			else:
 				self.enc_fol_button.set_label("Encoders")
+			self.speed_entry.set_text(str(speed))
+			self.center_entry.set_text(str(center))
+			self.turnspeed_entry.set_text(str(turnspeed))
 				
 
 		
@@ -231,17 +261,18 @@ class DebuggerGUI(object):
 	#Send global data
 	def callback_send_globals(self,widget,callback_data=None):	
 		#global i,p,d,start_pos
-		ser=serial.Serial('/dev/ttyUSB2',baudrate=9600)
-		info=struct.pack('=cfffh','g',p,i,d,start_pos)
+		ser=serial.Serial('/dev/ttyACM0',baudrate=9600)
+		info=struct.pack('=cfffB','g',p,i,d,start_pos)
 		ser.write(info)
 		ser.close()
+		print "sent"
 	##################
 
 	#Pressed send in MainWindow
 	def callback_send(self, widget, callback_data=None):
 		if currentStage!=-1:
-			ser=serial.Serial('/dev/ttyUSB2',baudrate=9600)
-			info=struct.pack('=cccchhh','c',str(enc_fol),str(termination),str(termination_action),int(currentStage),left_amnt,right_amnt)
+			ser=serial.Serial('/dev/ttyACM0',baudrate=9600)
+			info=struct.pack('=cccchhhBBB','c',str(enc_fol),str(termination),str(termination_action),int(currentStage),left_amnt,right_amnt,speed,turnspeed,center)
 			ser.write(info)
 			ser.close()
 

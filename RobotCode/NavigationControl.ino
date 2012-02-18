@@ -1,6 +1,6 @@
 #include <EEPROM.h>
 
-#define FTA_CYCLE_SIZE  7 // Defines the size (in bytes) of the ftaCycle struct.
+#define FTA_CYCLE_SIZE  10 // Defines the size (in bytes) of the ftaCycle struct.
 
 // Follow types:
 #define LINE_FOLLOW    0
@@ -24,6 +24,7 @@
 // Executes the three-stage cycle (follow, terminate, action) for a given segment of course.
 void executeSegment(int segment)
 {
+  
   // --- Retrieve FTA information from EEPROM: ---
   ftaCycle currentSegment;
   currentSegment.follow = EEPROM.read(segment * FTA_CYCLE_SIZE);          // Read the follow type
@@ -35,18 +36,38 @@ void executeSegment(int segment)
   tempMSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 5); // Read MSB of rightAmount
   tempLSB = EEPROM.read((segment * FTA_CYCLE_SIZE) + 6); // Read LSB of rightAmount
   currentSegment.rightAmount = word(tempMSB,tempLSB);    // Combine MSB and LSB
-  
-  
+  currentSegment.bot_speed = EEPROM.read((segment * FTA_CYCLE_SIZE) + 7); // Read LSB of rightAmount
+  currentSegment.turn_speed = EEPROM.read((segment * FTA_CYCLE_SIZE) + 8); // Read LSB of rightAmount  
+  currentSegment.center = EEPROM.read((segment * FTA_CYCLE_SIZE) + 9); // Read LSB of rightAmount  
+
+  setpointPID=currentSegment.center;
+  FULL_SPEED=currentSegment.bot_speed;
+  TURN_SPEED=currentSegment.turn_speed;
+  /*
+  Serial.print("Follow:");
   Serial.print((currentSegment.follow));
   Serial.print("\n");
+  Serial.print("Terminate:");
   Serial.print((currentSegment.terminate));
   Serial.print("\n");       
+  Serial.print("Action:");  
   Serial.print((currentSegment.action));
   Serial.print("\n");
+  Serial.print("Left Amount:");  
   Serial.print((currentSegment.leftAmount));
   Serial.print("\n");   
+  Serial.print("Right Amount:");  
   Serial.print((currentSegment.rightAmount));
   Serial.print("\n");   //Debugging print out
+  Serial.print("Full Speed:");  
+  Serial.print((currentSegment.bot_speed));
+  Serial.print("\n");   //Debugging print out  
+  Serial.print("Turn Speed:");  
+  Serial.print((currentSegment.turn_speed));
+  Serial.print("\n");   //Debugging print out  
+  Serial.print("Center");  
+  Serial.print((currentSegment.center));
+  Serial.print("\n");   //Debugging print out  */
   
   // --- Execute line- or encoder-following: ---
   if (currentSegment.follow == LINE_FOLLOW) // Line-following type movement

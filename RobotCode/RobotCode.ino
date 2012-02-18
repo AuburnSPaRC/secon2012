@@ -387,6 +387,10 @@ void increaseLocation()
 {
  if (goLeft)
     location += 3;
+ if((location==6)||(location==15)||(location==24)||(location==33))
+ {
+   location+=3;
+ }
   ++location;    // Increment location
   location %= 38; // Make sure location is never > 37
 }

@@ -88,8 +88,8 @@ struct ftaCycle{
   byte center;
 };
 
-int FULL_SPEED = 0; // Fraction of MAX_VELOCITY that is 'full' speed 
-int TURN_SPEED = 0; // Fraction of MAX_VELOCITY that is 'turning' speed 
+float FULL_SPEED = 0.4; // Fraction of MAX_VELOCITY that is 'full' speed 
+float TURN_SPEED = 0.25; // Fraction of MAX_VELOCITY that is 'turning' speed 
 
 // Course Location (as defined by course_define.jpeg)
 int location = 0; 

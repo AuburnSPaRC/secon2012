@@ -40,9 +40,13 @@ void executeSegment(int segment)
   currentSegment.turn_speed = EEPROM.read((segment * FTA_CYCLE_SIZE) + 8); // Read LSB of rightAmount  
   currentSegment.center = EEPROM.read((segment * FTA_CYCLE_SIZE) + 9); // Read LSB of rightAmount  
 
-  setpointPID=currentSegment.center;
-  FULL_SPEED=currentSegment.bot_speed;
-  TURN_SPEED=currentSegment.turn_speed;
+  setpointPID=currentSegment.center*100;
+  FULL_SPEED=float(int(currentSegment.bot_speed)/255.0);
+  TURN_SPEED=float(int(currentSegment.turn_speed)/255.0);
+  Serial.print("Turning:");
+  Serial.print(currentSegment.bot_speed);
+  Serial.print(" ");
+  Serial.print(currentSegment.turn_speed);  
   /*
   Serial.print("Follow:");
   Serial.print((currentSegment.follow));

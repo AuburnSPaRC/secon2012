@@ -64,6 +64,11 @@ void setMove(int moveType)
       leftDelta    = 0;
       rightDelta   = 0;
       break;
+    case MOVE_BACKWARD:
+      forwardSpeed = -FULL_SPEED * MAX_VELOCITY;
+      leftDelta    = 0;
+      rightDelta   = 0;
+      break;
     default:
       forwardSpeed = FULL_SPEED * MAX_VELOCITY;
       leftDelta    = 0;
@@ -136,18 +141,101 @@ void followLine()
   #endif
 }
 
+
+//Move up to and back from the boxes with the encoders??
 void encoderMoveToTerminate(int desiredTerminationType)
 {
-  lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
-  rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-  setMove(MOVE_FORWARD);
-  int lCount = 5; 
-  int rCount = 5;
+ // lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+ // rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+  int lCount = 25; 
+  int rCount = 25;
   boolean isDone = false;
   boolean lLastColor = lEncoderValues[0] > 500;
   boolean rLastColor = rEncoderValues[0] > 500;
   int currentTerminationType;
-  while(isDone == false)
+  
+  delay(50);
+  
+  if((location==2)||(location==11)||(location==20)||(location==29)){setMove(MOVE_FORWARD);}
+  else if((location==3)||(location==12)||(location==21)||(location==30)){setMove(MOVE_BACKWARD);}
+  
+  Serial.print("here we go!");
+  while(!isDone)
+  {
+      
+    lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+    rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON);
+      currentTerminationType = checkTermination();
+     if(lCount>=0||rCount>=0)
+     {
+      if (lLastColor)
+      {
+        if (lEncoderValues[0] < 300)
+        {
+          lLastColor = !lLastColor;
+          lCount--;
+        }
+      }
+      else
+      {
+        if (lEncoderValues[0] > 700)
+        {
+          lLastColor = !lLastColor;
+          lCount--;
+        }
+      }
+            
+     if (rLastColor)
+      {
+        if (rEncoderValues[0] < 300)
+        {
+          rLastColor = !rLastColor;
+          rCount--;
+        }
+      }
+      else
+      {
+        if (rEncoderValues[0] > 700)
+        {
+          rLastColor = !rLastColor;
+          rCount--;
+        }
+      }   
+     }
+      if(desiredTerminationType==OFF_LINE)
+      {
+      /*  Serial.print("OFF_ROAD!!");
+        Serial.print("\n");
+        Serial.print(rCount);
+        Serial.print(" ");
+        Serial.print(lCount);*/
+        if(lCount<=0||rCount<=0)
+        {
+          isDone=true;
+          break;
+        }
+      }
+      else if(desiredTerminationType==ON_LINE)
+      {
+        if((currentTerminationType==ON_LINE)||(currentTerminationType>=AT_ANY))
+        {
+          if(lCount<=0||rCount<=0)
+          {
+            isDone=true;
+            break;
+          }
+        }
+      }
+  }
+  setMove(STOP);
+}
+
+
+
+
+
+
+/*  while(isDone == false)
   {
     while(rCount > 0 || lCount >  0)
     {
@@ -158,7 +246,7 @@ void encoderMoveToTerminate(int desiredTerminationType)
         {
           rCount = lCount = 0;
           isDone = true;
-          break; 
+          break;
         }  
       }
       if (lCount == 0)
@@ -211,7 +299,7 @@ void encoderMoveToTerminate(int desiredTerminationType)
     }
   }
   setMove(STOP);
-}
+}*/
 
 // Turn one wheel then the other by number of encoder clicks. 
 // Notes: Positive clicks is forward. If rightFirst is true, turn right wheel first.
@@ -311,6 +399,7 @@ void turnLeftAndRight(int leftClicks, int rightClicks, boolean rightFirst)
   }
     
   setMove(STOP);
+  Serial.print("STOP");
 }
 
 // Turn in place by number of encoder clicks. (Turn right is positive)
@@ -322,8 +411,8 @@ void turnInPlace(int clicks)
   rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); // Read right encoder sensor
   if (clicks > 0) // Clicks is positive so rotate right
     setMove(TURN_RIGHT);
-  else if (clicks < 0) // Clicks is negative so rotate left
-    setMove(TURN_LEFT);
+  else if (clicks < 0){ // Clicks is negative so rotate left
+    setMove(TURN_LEFT);clicks*=-1;lCount;rCount = clicks;}
 
   boolean lLastColor = lEncoderValues[0] > 500; // Find initial left color value
   boolean rLastColor = rEncoderValues[0] > 500; // Find initial right color value

@@ -54,10 +54,10 @@ void executeSegment(int segment)
     // Execute linefollowing until termination occurs:
     lfPID.SetMode(AUTOMATIC); // Turn on PID
     int terminationType = checkTermination();
-            Serial.print("Termination:");
-        Serial.print(terminationType);
-        Serial.print(", ");
-        Serial.print(currentSegment.terminate);
+          //  Serial.print("Termination:");
+        //Serial.print(terminationType);
+       /// Serial.print(", ");
+       // Serial.print(currentSegment.terminate);
     if (currentSegment.terminate == AT_ANY) // Special case for AT_ANY
     {
       while (terminationType < AT_ANY)
@@ -66,15 +66,15 @@ void executeSegment(int segment)
         followLine();
         terminationType = checkTermination();
       }
-        Serial.print("Termination UNDER:");
-        Serial.print(terminationType);
+        //Serial.print("Termination UNDER:");
+        //Serial.print(terminationType);
     }
     else // All other termination types
     {
       while (terminationType != currentSegment.terminate)
       {
-        Serial.print("Termination OVER:");
-        Serial.print(terminationType);
+    //    Serial.print("Termination OVER:");
+      //  Serial.print(terminationType);
         setMove(MOVE_FORWARD); // Begin moving forward
         followLine();
         terminationType = checkTermination();
@@ -90,7 +90,7 @@ void executeSegment(int segment)
   }
 
   // --- Perform appropriate action: ---
-  if (goLeft) // Swap directions if going left from task
+  if (goLeft) // Swap directions if going left from task  //CHANGE TO goLeft
   { 
     // Swap left and right amounts:
     int temp = currentSegment.leftAmount;
@@ -100,11 +100,11 @@ void executeSegment(int segment)
     // Swap LEFT_THEN_RIGHT for RIGHT_THEN_LEFT and vice versa:
     if (currentSegment.action == LEFT_THEN_RIGHT)
     {
-      currentSegment.action == RIGHT_THEN_LEFT;
+      currentSegment.action = RIGHT_THEN_LEFT;
     }
     else if (currentSegment.action == RIGHT_THEN_LEFT)
     {
-      currentSegment.action == LEFT_THEN_RIGHT;
+      currentSegment.action = LEFT_THEN_RIGHT;
     }
   }
   
@@ -140,7 +140,9 @@ int checkTermination()
   {
     fSensorValuesBoth[i]=fSensorValuesRight[i-8];
   }
-/*Serial.print("\n");
+  
+  /*
+Serial.print("\n");
         Serial.print("\n");
  Serial.print("LS[0]: ");
     Serial.print(fSensorValuesBoth[0]);
@@ -177,8 +179,8 @@ int checkTermination()
     Serial.print("\n");
         Serial.print("\n");*/
   
-  boolean isLeft  = (fSensorValuesBoth[0] < REFLECT_THRESHOLD);
-  boolean isRight = (fSensorValuesBoth[15] < REFLECT_THRESHOLD);
+  boolean isLeft  = ((fSensorValuesBoth[0] < REFLECT_THRESHOLD)&&(fSensorValuesBoth[1] < REFLECT_THRESHOLD));
+  boolean isRight = ((fSensorValuesBoth[15] < REFLECT_THRESHOLD)&&(fSensorValuesBoth[14] < REFLECT_THRESHOLD));
   boolean isOff = true;
 
 

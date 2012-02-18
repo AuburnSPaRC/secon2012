@@ -46,6 +46,7 @@
 #define PIVOT_LEFT_BACK     5 // Bot pivots back on left wheel
 #define PIVOT_RIGHT_FORWARD 6 // Bot pivots forward on right wheel
 #define PIVOT_RIGHT_BACK    7 // Bot pivots back on right wheel
+#define MOVE_BACKWARD       8 // Bot moves backwards at FULL_SPEED
 
 #define MAX_VELOCITY  255  // Maximum motor velocity
 
@@ -105,8 +106,8 @@ double forwardSpeed = 0;
 int delayCounter = 0;
 
 // Change these pins when you need to
-unsigned char fSensorPinsRight[] = {47,45,43,41,39,37,35,33};//33,35,37,39,41,43,45,47};
-unsigned char fSensorPinsLeft[] = {6,7,8,9,10,11,12,13};
+unsigned char fSensorPinsLeft[] = {33,35,37,39,41,43,45,47};
+unsigned char fSensorPinsRight[] = {13,12,11,10,9,8,7,6};//,9,10,11,12,13};
 unsigned char lEncoderPins[] = {46};
 unsigned char rEncoderPins[] = {48};
 
@@ -191,6 +192,9 @@ void loop()
   takeReading();
   executeSegment(location);
   increaseLocation();
+  Serial.print("Location: ");
+  Serial.print(location);
+  Serial.print("\n");
  //followLine();
 }
 
@@ -357,7 +361,7 @@ void readPID()
 //Take a reading from the task sensors and makes L/R decision 
 void takeReading()
 {
-  switch (location)
+ /* switch (location)
   {
     case 1: // Voltage Task
       goLeft = readVoltage();
@@ -373,15 +377,15 @@ void takeReading()
       break;
     default:
       goLeft = false; // Not at a task location.
-      break;
-  }
+      break;*/
+  //}
   digitalWrite(RELAY_K1_PIN, 0);
   digitalWrite(RELAY_K2_PIN, 0);
 }
 
 void increaseLocation()
 {
-  if (goLeft)
+ if (goLeft)
     location += 3;
   ++location;    // Increment location
   location %= 38; // Make sure location is never > 37

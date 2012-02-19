@@ -43,10 +43,11 @@ void executeSegment(int segment)
   setpointPID=currentSegment.center*100;
   FULL_SPEED=float(int(currentSegment.bot_speed)/255.0);
   TURN_SPEED=float(int(currentSegment.turn_speed)/255.0);
-  Serial.print("Turning:");
-  Serial.print(currentSegment.bot_speed);
-  Serial.print(" ");
-  Serial.print(currentSegment.turn_speed);  
+//  Serial.print("Turning:");
+//  Serial.print(FULL_SPEED);
+ // Serial.print(" ");
+ // Serial.print(TURN_SPEED);  
+    setMove(MOVE_FORWARD);
   /*
   Serial.print("Follow:");
   Serial.print((currentSegment.follow));
@@ -63,10 +64,10 @@ void executeSegment(int segment)
   Serial.print("Right Amount:");  
   Serial.print((currentSegment.rightAmount));
   Serial.print("\n");   //Debugging print out
-  Serial.print("Full Speed:");  
+  */Serial.print("Full Speed:");  
   Serial.print((currentSegment.bot_speed));
   Serial.print("\n");   //Debugging print out  
-  Serial.print("Turn Speed:");  
+ /* Serial.print("Turn Speed:");  
   Serial.print((currentSegment.turn_speed));
   Serial.print("\n");   //Debugging print out  
   Serial.print("Center");  

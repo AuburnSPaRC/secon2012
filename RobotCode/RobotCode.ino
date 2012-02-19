@@ -183,7 +183,6 @@ void setup()
 //  Serial.print("Location:");
 //  Serial.print(location);
 //  Serial.print("\n");
-  setMove(MOVE_FORWARD);
  
 }
 

@@ -147,8 +147,8 @@ void encoderMoveToTerminate(int desiredTerminationType)
 {
  // lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
  // rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-  int lCount = 25; 
-  int rCount = 25;
+  int lCount = 5; 
+  int rCount = 5;
   boolean isDone = false;
   boolean lLastColor = lEncoderValues[0] > 500;
   boolean rLastColor = rEncoderValues[0] > 500;
@@ -309,6 +309,11 @@ void turnLeftAndRight(int leftClicks, int rightClicks, boolean rightFirst)
   int rCount = rightClicks; // Set the right countdown
   boolean leftDone, rightDone;
   
+  if (lCount < 0)
+    lCount *= -1;
+  if (rCount < 0)
+    rCount *= -1;
+  
   if (rightFirst) // Skip left and go to right
   {
     leftDone = true; 
@@ -393,7 +398,7 @@ void turnLeftAndRight(int leftClicks, int rightClicks, boolean rightFirst)
       }
       rightDone = true;
       leftDone = false;
-      if (rightFirst)
+      if (!rightFirst)
         break; // Break from the for loop, so the turns don't happen twice.
     }
   }

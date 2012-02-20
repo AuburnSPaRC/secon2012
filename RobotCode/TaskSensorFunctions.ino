@@ -184,7 +184,8 @@ boolean readCapacitance()
   
   C = 112.0 / (R * log(float(1023-V1)/float(1023-V2)));
   // ^ fancy mathematics
- 
+   Serial.print("voltage");
+  Serial.print(V1);
   if (V1 >= 900)      //bad connection
   {
     accurateFlag = false;
@@ -225,7 +226,8 @@ boolean readVoltage()
   Vin = analogRead(PIN_VOLT);
   vActual = ((3*5*Vin)/1023) + 2*Vdiode; //find and put Vactual in fullscale voltage
   
-  
+  Serial.print("voltage");
+  Serial.print(vActual);
   if (vActual > 10 && vActual <= 15)  //11V to 15V = turn right
   {
     accurateFlag = true;

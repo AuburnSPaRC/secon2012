@@ -127,6 +127,8 @@ unsigned char rEncoderPins[] = {48};
 #define LEFT_ENC_PIN   36
 #define RIGHT_ENC_PIN  50
 
+#define HIT_SWITCH_PIN 40
+
 
 // Sensors 0 through 7 are connected to fSensorPins[]
 PololuQTRSensorsRC fSensorRight(fSensorPinsRight, NUM_SENSORS, TIMEOUT); 
@@ -156,6 +158,7 @@ void setup()
   pinMode(RIGHT_DIR_PIN, OUTPUT);
   pinMode(RELAY_K1_PIN, OUTPUT);
   pinMode(RELAY_K2_PIN, OUTPUT);
+  pinMode(HIT_SWITCH_PIN, INPUT);
   //pinMode(TEST_LED_PIN, OUTPUT);
   
   //digitalWrite(TEST_LED_PIN, LOW);
@@ -187,14 +190,16 @@ void setup()
 }
 
 void loop()
-{ 
+{
+  Serial.print("\n");
+  Serial.print("Location: ");
+  Serial.print(location);
+  Serial.print("\n");  
   dynamic_PID();
   takeReading();
   executeSegment(location);
   increaseLocation();
-  Serial.print("Location: ");
-  Serial.print(location);
-  Serial.print("\n");
+
  //followLine();
 }
 
@@ -373,24 +378,26 @@ void readPID()
 //Take a reading from the task sensors and makes L/R decision 
 void takeReading()
 {
- /* switch (location)
+  switch (location)
   {
-    case 1: // Voltage Task
-      goLeft = readVoltage();
-      break;
-    case 2: // Capacitance Task 
+    case 3: // Voltage Task
+      delay(4000);
+      Serial.print("Reading Voltage...");
       goLeft = readCapacitance();
       break;
-    case 5: // Temperature Task
+    case 12: // Capacitance Task 
+      goLeft = readCapacitance();
+      break;
+    case 23: // Temperature Task
       goLeft = readTemperature();
       break;
-    case 6: // Waveform Task
+    case 32: // Waveform Task
       goLeft = readWaveform();
       break;
     default:
       goLeft = false; // Not at a task location.
-      break;*/
-  //}
+      break;
+  }
   digitalWrite(RELAY_K1_PIN, 0);
   digitalWrite(RELAY_K2_PIN, 0);
 }
@@ -399,11 +406,11 @@ void increaseLocation()
 {
  if (goLeft)
     location += 3;
- if((location==6)||(location==15)||(location==26)||(location==35))
- {
-   location+=3;
- }
   ++location;    // Increment location
+  if((location==6)||(location==15)||(location==26)||(location==35))
+  {
+    location+=3;
+  }  
   location %= 38; // Make sure location is never > 37
 }
 

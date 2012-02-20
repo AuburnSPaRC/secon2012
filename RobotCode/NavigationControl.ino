@@ -80,10 +80,6 @@ void executeSegment(int segment)
     // Execute linefollowing until termination occurs:
     lfPID.SetMode(AUTOMATIC); // Turn on PID
     int terminationType = checkTermination();
-          //  Serial.print("Termination:");
-        //Serial.print(terminationType);
-       /// Serial.print(", ");
-       // Serial.print(currentSegment.terminate);
     if (currentSegment.terminate == AT_ANY) // Special case for AT_ANY
     {
       while (terminationType < AT_ANY)
@@ -92,18 +88,19 @@ void executeSegment(int segment)
         followLine();
         terminationType = checkTermination();
       }
-        //Serial.print("Termination UNDER:");
-        //Serial.print(terminationType);
     }
     else // All other termination types
     {
       while (terminationType != currentSegment.terminate)
       {
-    //    Serial.print("Termination OVER:");
-      //  Serial.print(terminationType);
         setMove(MOVE_FORWARD); // Begin moving forward
-        followLine();
+        if(currentSegment.terminate!=HIT_SWITCH){followLine();}
         terminationType = checkTermination();
+        //Serial.print(location);
+        //Serial.print(" ");
+        //Serial.print(terminationType);
+        //Serial.print(" ");
+        //Serial.print(currentSegment.terminate);
       }
     }
     setMove(STOP);
@@ -208,7 +205,7 @@ Serial.print("\n");
   boolean isLeft  = ((fSensorValuesBoth[0] < REFLECT_THRESHOLD)&&(fSensorValuesBoth[1] < REFLECT_THRESHOLD));
   boolean isRight = ((fSensorValuesBoth[15] < REFLECT_THRESHOLD)&&(fSensorValuesBoth[14] < REFLECT_THRESHOLD));
   boolean isOff = true;
-
+  boolean hitSwitch = (digitalRead(HIT_SWITCH_PIN)==LOW);
 
 
   
@@ -218,7 +215,9 @@ Serial.print("\n");
     isOff &= (fSensorValuesBoth[i] >= REFLECT_THRESHOLD);
   }
   
-  if (isLeft && isRight) 
+  if (hitSwitch)
+    return (HIT_SWITCH);
+  else if (isLeft && isRight) 
     return AT_T;
   else if (isLeft) 
     return AT_LEFT;

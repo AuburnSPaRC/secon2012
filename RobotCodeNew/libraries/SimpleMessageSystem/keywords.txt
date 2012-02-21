@@ -1,0 +1,30 @@
+#######################################
+# Syntax Coloring Map For SimpleMessageSystem
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+message KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+messageBuild KEYWORD2
+messageGetChar KEYWORD2
+messageGetInt KEYWORD2
+messageSendChar KEYWORD2
+messageSendInt KEYWORD2
+messageEnd KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+

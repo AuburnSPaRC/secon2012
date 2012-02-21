@@ -272,7 +272,7 @@ class DebuggerGUI(object):
 	def callback_send(self, widget, callback_data=None):
 		if currentStage!=-1:
 			ser=serial.Serial('/dev/ttyUSB0',baudrate=9600)
-			info=struct.pack('=cccchhhBBB','c',str(enc_fol),str(termination),str(termination_action),int(currentStage),left_amnt,right_amnt,speed,turnspeed,center)
+			info=struct.pack('=cBBBBbbBBBfff','c',currentStage, enc_fol,termination,termination_action,left_amnt,right_amnt,speed,turnspeed,center,p,i,d)
 			ser.write(info)
 			ser.close()
 

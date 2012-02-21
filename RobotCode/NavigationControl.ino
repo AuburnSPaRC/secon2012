@@ -164,7 +164,7 @@ int checkTermination()
     fSensorValuesBoth[i]=fSensorValuesRight[i-8];
   }
   
-  /*
+  
 Serial.print("\n");
         Serial.print("\n");
  Serial.print("LS[0]: ");
@@ -200,7 +200,7 @@ Serial.print("\n");
     Serial.print("\tRS[7]: ");
     Serial.println(fSensorValuesBoth[15]);   
     Serial.print("\n");
-        Serial.print("\n");*/
+        Serial.print("\n");
   
   boolean isLeft  = ((fSensorValuesBoth[0] < REFLECT_THRESHOLD)&&(fSensorValuesBoth[1] < REFLECT_THRESHOLD));
   boolean isRight = ((fSensorValuesBoth[15] < REFLECT_THRESHOLD)&&(fSensorValuesBoth[14] < REFLECT_THRESHOLD));

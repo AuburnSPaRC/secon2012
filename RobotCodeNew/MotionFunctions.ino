@@ -84,61 +84,13 @@ void followLine()
   unsigned int pOsitIon = getLine();
 
   inputPID = pOsitIon;            // set PID input to position of line
-  
-//  Serial.print("S: ");
-//  Serial.print(pOsitIon);
-//  Serial.print("\n");
+
   lfPID.Compute();                // compute correction, store in outputPID
   if (outputPID < 0)
     rightDelta = outputPID;         // sets right wheel's speed variation
   else
     leftDelta  = -outputPID;        // sets left wheel's speed variation
   updateMotors();
-  
-  /*  Serial.print("\n");
-        Serial.print("\n");
- Serial.print("LS[0]: ");
-    Serial.print(fSensorValuesBoth[0]);
-    Serial.print("\tLS[1]: ");
-    Serial.print(fSensorValuesBoth[1]);
-    Serial.print("\tLS[2]: ");
-    Serial.print(fSensorValuesBoth[2]);
-    Serial.print("\tLS[3]: ");
-    Serial.print(fSensorValuesBoth[3]);
-    Serial.print("\tLS[4]: ");
-    Serial.print(fSensorValuesBoth[4]);
-    Serial.print("\tLS[5]: ");
-    Serial.print(fSensorValuesBoth[5]);
-    Serial.print("\tLS[6]: ");
-    Serial.print(fSensorValuesBoth[6]);
-    Serial.print("\tLS[7]: ");
-    Serial.println(fSensorValuesBoth[7]); 
-    Serial.print("RS[0]: ");
-    Serial.print(fSensorValuesBoth[8]);
-    Serial.print("\tRS[1]: ");
-    Serial.print(fSensorValuesBoth[9]);
-    Serial.print("\tRS[2]: ");
-    Serial.print(fSensorValuesBoth[10]);
-    Serial.print("\tRS[3]: ");
-    Serial.print(fSensorValuesBoth[11]);
-    Serial.print("\tRS[4]: ");
-    Serial.print(fSensorValuesBoth[12]);
-    Serial.print("\tRS[5]: ");
-    Serial.print(fSensorValuesBoth[13]);
-    Serial.print("\tRS[6]: ");
-    Serial.print(fSensorValuesBoth[14]);
-    Serial.print("\tRS[7]: ");
-    Serial.println(fSensorValuesBoth[15]);   
-    Serial.print("\n");
-        Serial.print("\n");*/
-  #ifdef DEBUG_COURSE
-    Serial.print("Counter: ");
-    Serial.print(delayCounter);
-    Serial.print("\tMainLoc: M");
-    Serial.print(mainLoc);
-    Serial.print("\tTaskLoc: T");
-    Serial.println(taskLoc);
-  #endif
 }
 
 
@@ -516,21 +468,19 @@ unsigned int getLine()
   static int last_value=0; // assume initially that the line is left.
   fSensorRight.readCalibrated(fSensorValuesRight, QTR_EMITTERS_ON);
   fSensorLeft.readCalibrated(fSensorValuesLeft, QTR_EMITTERS_ON);
-  for(int i=0;i<8;i++)
+  for(int i=0;i<NUM_SENSORS;i++)
   {
     fSensorValuesBoth[i]=fSensorValuesLeft[i];
   }
-  fSensorValuesBoth[0]=1000;
-  for(int i=8;i<16;i++)
+  for(int i=NUM_SENSORS;i<NUM_SENSORS*2;i++)
   {
-    fSensorValuesBoth[i]=fSensorValuesRight[i-8];
+    fSensorValuesBoth[i]=fSensorValuesRight[i-NUM_SENSORS];
   }
-  fSensorValuesBoth[15]=1000;
 
   avg = 0;
   sum = 0;
   
-  for(i=0; i<16; i++) {
+  for(i=0; i<NUM_SENSORS*2; i++) {
     int value = fSensorValuesBoth[i];
     value = 1000-value;
     // keep track of whether we see the line at all

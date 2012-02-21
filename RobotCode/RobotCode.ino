@@ -110,8 +110,8 @@ double forwardSpeed = 0;
 int delayCounter = 0;
 
 // Change these pins when you need to
-unsigned char fSensorPinsRight[] = {33,35,37,39,41,43,45,47};
-unsigned char fSensorPinsLeft[] = {13,12,11,10,9,8,7,6};//,9,10,11,12,13};
+unsigned char fSensorPinsRight[] = {33,35,37,39,41,43,45};
+unsigned char fSensorPinsLeft[] = {12,11,10,9,8,7,6};//,9,10,11,12,13};
 unsigned char lEncoderPins[] = {46};
 unsigned char rEncoderPins[] = {48};
 

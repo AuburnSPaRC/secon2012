@@ -457,7 +457,7 @@
               </object>
               <packing>
                 <property name="x">615</property>
-                <property name="y">18</property>
+                <property name="y">175</property>
               </packing>
             </child>
             <child>
@@ -545,7 +545,7 @@
                 <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
                 <property name="secondary_icon_sensitive">True</property>
-                <signal name="changed" handler="callback_global_changed" swapped="no"/>
+                <signal name="changed" handler="callback_P_changed" swapped="no"/>
               </object>
               <packing>
                 <property name="x">590</property>
@@ -564,7 +564,7 @@
                 <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
                 <property name="secondary_icon_sensitive">True</property>
-                <signal name="changed" handler="callback_global_changed" swapped="no"/>
+                <signal name="changed" handler="callback_D_changed" swapped="no"/>
               </object>
               <packing>
                 <property name="x">810</property>
@@ -583,7 +583,7 @@
                 <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
                 <property name="secondary_icon_sensitive">True</property>
-                <signal name="changed" handler="callback_global_changed" swapped="no"/>
+                <signal name="changed" handler="callback_I_changed" swapped="no"/>
               </object>
               <packing>
                 <property name="x">700</property>
@@ -640,7 +640,7 @@
               </object>
               <packing>
                 <property name="x">590</property>
-                <property name="y">178</property>
+                <property name="y">250</property>
               </packing>
             </child>
             <child>
@@ -666,7 +666,7 @@
               </object>
               <packing>
                 <property name="x">725</property>
-                <property name="y">175</property>
+                <property name="y">250</property>
               </packing>
             </child>
             <child>

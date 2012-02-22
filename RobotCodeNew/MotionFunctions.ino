@@ -18,7 +18,6 @@
 #define AT_T          4 // Bot is at a T-intersection
 #define AT_LEFT       5 // Bot is at left turn
 #define AT_RIGHT      6 // Bot is at right turn
-
 // Bot move actions
 void setMove(int moveType)
 {
@@ -80,39 +79,58 @@ void setMove(int moveType)
 // Does PID for line folliwing and sets the motor delta speeds.
 void followLine()
 {
-  // Read calibrated front sensor values and obtain a measure of the line position from 0 to 7000
-  unsigned int pOsitIon = getLine();
-
+  // Read calibrated front sensor values and obtain a measure of the line position from 0 to NUM_SENSORS-1
+  unsigned int pOsitIon = fSensors.readLine(fSensorValues,QTR_EMITTERS_ON,1);
+//  Serial.println(courseConfig[location].center);
+//  Serial.println(pOsitIon);
   inputPID = pOsitIon;            // set PID input to position of line
-
+  
   lfPID.Compute();                // compute correction, store in outputPID
   if (outputPID < 0)
-    rightDelta = outputPID;         // sets right wheel's speed variation
+  {
+    leftDelta = -outputPID;         // sets right wheel's speed variation
+    rightDelta = outputPID;
+  }
   else
-    leftDelta  = -outputPID;        // sets left wheel's speed variation
+  {
+    rightDelta  = outputPID;        // sets left wheel's speed variation
+    leftDelta   = -outputPID;
+  }
+//   Serial.println(setpointPID);
+//   Serial.println(inputPID);
+//   Serial.println(outputPID);
+//   Serial.print("\n");
   updateMotors();
 }
 
 
-//Move up to and back from the boxes with the encoders??
-void encoderMoveToTerminate(int desiredTerminationType)
+//Move up to and back from the boxes 
+void moveToTerminate(int termination)
 {
- // lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
- // rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-  int lCount = 5; 
-  int rCount = 5;
-  boolean isDone = false;
-  boolean lLastColor = lEncoderValues[0] > 500;
-  boolean rLastColor = rEncoderValues[0] > 500;
   int currentTerminationType;
   
-  delay(50);
+  if((location==2)||(location==11)||(location==22)||(location==31)){setMove(MOVE_FORWARD);}
+  //else if((location==3)||(location==12)||(location==23)||(location==32)){setMove(MOVE_BACKWARD);}
   
-  if((location==2)||(location==11)||(location==20)||(location==29)){setMove(MOVE_FORWARD);}
-  else if((location==3)||(location==12)||(location==21)||(location==30)){setMove(MOVE_BACKWARD);}
+  if(termination==HIT_SWITCH)  //Moving forward
+  {
+    while(currentTerminationType!=HIT_SWITCH)
+    {
+      currentTerminationType=checkTermination();
+    }
+  }
+//  else  //Backing up
+//  {
+//    while(currentTerminationType!=AT_T)
+//    {
+//      currentTerminationType=checkTermination();
+//    }    
+//  }
+}
   
-  Serial.print("here we go!");
-  while(!isDone)
+  
+  ///OLD FUNCTION
+/*  while(!isDone)
   {
       
     lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
@@ -160,7 +178,7 @@ void encoderMoveToTerminate(int desiredTerminationType)
         Serial.print("\n");
         Serial.print(rCount);
         Serial.print(" ");
-        Serial.print(lCount);*/
+        Serial.print(lCount);
         if(lCount<=0||rCount<=0)
         {
           isDone=true;
@@ -180,7 +198,7 @@ void encoderMoveToTerminate(int desiredTerminationType)
       }
   }
   setMove(STOP);
-}
+}*/
 
 
 
@@ -362,7 +380,7 @@ void turnLeftAndRight(int leftClicks, int rightClicks, boolean rightFirst)
 // Turn in place by number of encoder clicks. (Turn right is positive)
 void turnInPlace(int clicks)
 {
-  int lCount, rCount = clicks; // Set the left and right countdowns
+  int lCount=clicks, rCount = clicks; // Set the left and right countdowns
     
   lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); // Read left encoder sensor
   rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); // Read right encoder sensor
@@ -459,6 +477,9 @@ void motorCalibrate()
   #endif
 }
 
+
+///SHOULDN'T Need this anymore
+/*
 unsigned int getLine()
 {
   unsigned char i, on_line = 0;
@@ -481,6 +502,7 @@ unsigned int getLine()
   sum = 0;
   
   for(i=0; i<NUM_SENSORS*2; i++) {
+    Serial.println(i);
     int value = fSensorValuesBoth[i];
     value = 1000-value;
     // keep track of whether we see the line at all
@@ -498,16 +520,16 @@ unsigned int getLine()
   if(!on_line)
   {
     // If it last read to the left of center, return 0.
-    if(last_value < 3500)
+    if(last_value < ((NUM_SENSORS-1)*1000)/2)
     return 0;
     
     // If it last read to the right of center, return the max.
     else
-    return 7000;
+    return ((NUM_SENSORS-1)*1000);
     
   }
   
-  last_value = (avg/sum)/2; //0-7000
+  last_value = (avg/sum)/2; //0-6000
   
   return last_value;
-}
+}*/

@@ -14,6 +14,9 @@ termination_action=0
 left_amnt=0
 right_amnt=0
 start_pos=0
+speed=0
+center=0
+turnspeed=0;
 p=0;
 i=0;
 d=0;
@@ -35,6 +38,9 @@ class DebuggerGUI(object):
 		self.right_amount_action_box=builder.get_object("right_amount_box")	#Right Wheel Clicks Action Amount
 		self.left_amount_action_box=builder.get_object("left_amount_box")	#Left Wheel Clicks Action Amount
 		self.start_list_box=builder.get_object("start_list_box")		#List Box of Start Positions
+		self.center_entry=builder.get_object("center_entry")		#List Box of Start Positions
+		self.speed_entry=builder.get_object("speed_entry")		#List Box of Start Positions
+		self.turnspeed_entry=builder.get_object("turnspeed_entry")		#List Box of Start Positions
 		self.p_box=builder.get_object("p_box")
 		self.i_box=builder.get_object("i_box")
 		self.d_box=builder.get_object("d_box")
@@ -45,13 +51,7 @@ class DebuggerGUI(object):
 		line=f.readline()
 		linelist=string.split(line)
 		f.close()
-		p=float(linelist[0])
-		i=float(linelist[1])
-		d=float(linelist[2])
-		start_pos=int(linelist[3])	
-		self.p_box.set_text(str(p))
-		self.i_box.set_text(str(i))
-		self.d_box.set_text(str(d))	
+		start_pos=int(linelist[0])		
 		###################################
 		#Add List To Action Table
 		self.start_list_box.set_active(start_pos)
@@ -149,7 +149,7 @@ class DebuggerGUI(object):
 			f=open("course_config.txt","w")
 			while l<=37:
 				if l==currentStage:
-					f.write(str(enc_fol)+" "+str(termination)+" "+str(termination_action)+" "+str(left_amnt)+" "+str(right_amnt)+"\n")
+					f.write(str(enc_fol)+" "+str(termination)+" "+str(termination_action)+" "+str(left_amnt)+" "+str(right_amnt)+" "+str(speed)+" "+" "+str(turnspeed)+" "+str(center)+" "+str(p)+" "+str(i)+" "+str(d)+"\n")
 				else:
 					f.write(lines[l])	
 				l=l+1;
@@ -157,22 +157,46 @@ class DebuggerGUI(object):
 			f.close()
 		else:
 			print "No state set."
-	####################################################################3
+	####################################################################
 
-	#Global value changed
-	def callback_global_changed(self, widget, callback_data=None):
+	#PID values changed
+	def callback_P_changed(self,widget,callback_data=None):
 		global p
-		global i
-		global d
-		global start_pos
 		if len(self.p_box.get_text()):
 			p=float(self.p_box.get_text())
 
+	def callback_I_changed(self,widget,callback_data=None):
+		global i
 		if len(self.i_box.get_text()):
 			i=float(self.i_box.get_text())
 
+	def callback_D_changed(self,widget,callback_data=None):
+		global d
 		if len(self.d_box.get_text()):
 			d=float(self.d_box.get_text())
+	###########################################################################
+
+	#Turn speed value changed
+	def callback_turnspeed_changed(self, widget, callback_data=None):
+		global turnspeed
+		if len(self.turnspeed_entry.get_text()):
+			turnspeed=int(self.turnspeed_entry.get_text())
+
+	#Speed value changed
+	def callback_speed_changed(self, widget, callback_data=None):
+		global speed
+		if len(self.speed_entry.get_text()):
+			speed=int(self.speed_entry.get_text())
+
+	#Center value changed
+	def callback_center_changed(self, widget, callback_data=None):
+		global center
+		if len(self.center_entry.get_text()):
+			center=int(self.center_entry.get_text())
+
+	#Global value changed
+	def callback_global_changed(self, widget, callback_data=None):
+		global start_pos
 		start_pos=int(self.start_list_box.get_active())
 	##############################
 	
@@ -184,13 +208,16 @@ class DebuggerGUI(object):
 		global termination_action
 		global left_amnt
 		global right_amnt
+		global p
+		global i
+		global d
 
 		l=0
 		if str.isdigit(self.pos_select.get_text()):
 			currentStage=int(self.pos_select.get_text())
-			if currentStage>37:
-				self.pos_select.set_text("37")
-				currentStage=37
+			if currentStage>39:
+				self.pos_select.set_text("39")
+				currentStage=39
 			if currentStage<0:
 				self.pos_select.set_text("0")
 				currentStage=0
@@ -210,20 +237,38 @@ class DebuggerGUI(object):
 			termination_action=int(linelist[2])
 			left_amnt=int(linelist[3])
 			right_amnt=int(linelist[4])
-			
+			speed=int(linelist[5])
+			turnspeed=int(linelist[6])
+			center=int(linelist[7])
+			p=float(linelist[8])
+			i=float(linelist[9])
+			d=float(linelist[10])
+		        
+			print p
+			print i
+			print d
 
 			#Set the buttons and values correctly in the GUI
 			if enc_fol == 0:
 				self.enc_fol_button.set_label("Following")
 			else:
 				self.enc_fol_button.set_label("Encoders")
+
+			
+			self.speed_entry.set_text(str(speed))
+			self.center_entry.set_text(str(center))
+			self.turnspeed_entry.set_text(str(turnspeed))
+
+			self.p_box.set_text(str(p))
+			self.i_box.set_text(str(i))
+			self.d_box.set_text(str(d))
 				
 
 		
 	#Save the global data
 	def callback_save_global_data(self,widget,callback_data=None):
 		f=open("global_config.txt","w")
-		f.write(str(p)+" "+str(i)+" "+str(d)+" "+str(start_pos)+"\n")
+		f.write(str(start_pos)+"\n")
 		f.flush()
 		f.close()
 	#########################
@@ -231,19 +276,21 @@ class DebuggerGUI(object):
 	#Send global data
 	def callback_send_globals(self,widget,callback_data=None):	
 		#global i,p,d,start_pos
-		ser=serial.Serial('/dev/ttyUSB1',baudrate=9600)
-		info=struct.pack('=cfffh','g',p,i,d,start_pos)
+		ser=serial.Serial('/dev/ttyACM3',baudrate=9600)
+		info=struct.pack('=cB','g',start_pos)
 		ser.write(info)
 		ser.close()
+		print "sent"
 	##################
 
 	#Pressed send in MainWindow
 	def callback_send(self, widget, callback_data=None):
 		if currentStage!=-1:
-			ser=serial.Serial('/dev/ttyUSB1',baudrate=9600)
-			info=struct.pack('=cccchhh','c',str(enc_fol),str(termination),str(termination_action),int(currentStage),left_amnt,right_amnt)
+			ser=serial.Serial('/dev/ttyACM3',baudrate=9600)
+			info=struct.pack('=cBBBBbbBBBfff','c',currentStage, enc_fol,termination,termination_action,left_amnt,right_amnt,speed,turnspeed,center,p,i,d)
 			ser.write(info)
 			ser.close()
+			
 
 if __name__ == "__main__":
 	app=DebuggerGUI()

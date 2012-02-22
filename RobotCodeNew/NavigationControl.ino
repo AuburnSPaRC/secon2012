@@ -1,7 +1,5 @@
 #include <EEPROM.h>
 
-#define FTA_CYCLE_SIZE  10 // Defines the size (in bytes) of the ftaCycle struct.
-
 // Follow types:
 #define LINE_FOLLOW    0
 #define ENCODER_TRAVEL 1
@@ -25,13 +23,20 @@
 void executeSegment(int segment)
 {
   u_double tempVals[3];    //Temporary structs to read in the floats
+  byte temp;
   
   // --- Retrieve FTA information from EEPROM: ---
   courseConfig[location].follow = EEPROM.read(segment * FTA_CYCLE_SIZE);          // Read the follow type
   courseConfig[location].terminate = EEPROM.read((segment * FTA_CYCLE_SIZE) + 1); // Read the termination type
   courseConfig[location].action = EEPROM.read((segment * FTA_CYCLE_SIZE) + 2);    // Read the action type
-  courseConfig[location].leftAmount = EEPROM.read((segment * FTA_CYCLE_SIZE) + 3); // Read leftAmount
-  courseConfig[location].rightAmount = EEPROM.read((segment * FTA_CYCLE_SIZE) + 4); // Read leftAmount
+  temp = EEPROM.read((segment * FTA_CYCLE_SIZE) + 3); // Read leftAmount
+  if(temp>127){courseConfig[location].leftAmount = int(-1*(256-temp));}
+  else courseConfig[location].leftAmount=int(temp);
+  
+  temp = EEPROM.read((segment * FTA_CYCLE_SIZE) + 4); // Read rightAmount
+  if(temp>127){courseConfig[location].rightAmount = int(-1*(256-temp));}
+  else courseConfig[location].rightAmount=int(temp);
+  
   courseConfig[location].bot_speed = EEPROM.read((segment * FTA_CYCLE_SIZE) + 5); // Read LSB of rightAmount
   courseConfig[location].turn_speed = EEPROM.read((segment * FTA_CYCLE_SIZE) + 6); // Read LSB of rightAmount  
   courseConfig[location].center = EEPROM.read((segment * FTA_CYCLE_SIZE) + 7); // Read LSB of rightAmount  
@@ -59,51 +64,51 @@ void executeSegment(int segment)
   setpointPID=courseConfig[location].center*100;
   FULL_SPEED=float(int(courseConfig[location].bot_speed)/255.0);
   TURN_SPEED=float(int(courseConfig[location].turn_speed)/255.0);
-    
+  MAX_PID_DELTA=0.2*MAX_VELOCITY;    
   
   
   #ifdef DEBUG_ROBOT
     Serial.print("\n");
     Serial.print("Follow:");
-    Serial.print((courseConfigs[location].follow));
+    Serial.print((courseConfig[location].follow));
     Serial.print("\n");
     Serial.print("Terminate:");
-    Serial.print((courseConfigs[location].terminate));
+    Serial.print((courseConfig[location].terminate));
     Serial.print("\n");       
     Serial.print("Action:");  
-    Serial.print((courseConfigs[location].action));
+    Serial.print((courseConfig[location].action));
     Serial.print("\n");
     Serial.print("Left Amount:");  
-    Serial.print((courseConfigs[location].leftAmount));
+    Serial.print((courseConfig[location].leftAmount));
     Serial.print("\n");   
     Serial.print("Right Amount:");  
-    Serial.print((courseConfigs[location].rightAmount));
+    Serial.print((courseConfig[location].rightAmount));
     Serial.print("\n");   //Debugging print out
     Serial.print("Speed:");  
-    Serial.print((courseConfigs[location].bot_speed));
+    Serial.print((courseConfig[location].bot_speed));
     Serial.print("\n");   //Debugging print out
     Serial.print("Turn Speed:");  
-    Serial.print((courseConfigs[location].turn_speed));
+    Serial.print((courseConfig[location].turn_speed));
     Serial.print("\n");   //Debugging print out  
     Serial.print("Center:");  
-    Serial.print((courseConfigs[location].center));
+    Serial.print((courseConfig[location].center));
     Serial.print("\n");   //Debugging print out  
-    Serial.print("KP");  
-    Serial.println((courseConfigs[location].KP,5));
-    Serial.print("\n");   //Debugging print out  
-    Serial.print("KI");  
-    Serial.println((courseConfigs[location].KI,5));
-    Serial.print("\n");   //Debugging print out  
-    Serial.print("KD");  
-    Serial.println((courseConfigs[location].KD,5));
+    Serial.print("KP: ");  
+    Serial.println(courseConfig[location].KP,5);
+    Serial.print("KI: ");  
+    Serial.println(courseConfig[location].KI,5);
+    Serial.print("KD: ");  
+    Serial.println(courseConfig[location].KD,5);
     Serial.print("\n");   //Debugging print out
   #endif    
   
-  
+
   // --- Execute line- or encoder-following: ---
   if (courseConfig[location].follow == LINE_FOLLOW) // Line-following type movement
   {
+    setMove(MOVE_FORWARD);
     // Execute linefollowing until termination occurs:
+    lfPID.SetOutputLimits(-MAX_PID_DELTA, MAX_PID_DELTA); // force PID to the range of motor speeds.   
     lfPID.SetTunings(courseConfig[location].KP, courseConfig[location].KI, courseConfig[location].KD); // Set the PID loops tuning values to the new ones from EEPROM
     lfPID.SetMode(AUTOMATIC); // Turn on PID
     
@@ -120,20 +125,28 @@ void executeSegment(int segment)
     }
     else // All other termination types
     {
+      
       while (terminationType != courseConfig[location].terminate)
       {
-        setMove(MOVE_FORWARD); // Begin moving forward
-        if(courseConfig[location].terminate!=HIT_SWITCH){followLine();}
+        #ifdef DEBUG_PID
+         if(Serial.available()){
+          delay(100);
+          dynamic_PID();
+          setMove(MOVE_FORWARD); // Begin moving forward
+          }
+        #endif
+        followLine();
         terminationType = checkTermination();
       }
     }
     setMove(STOP);
     lfPID.SetMode(MANUAL); // Turn off PID
+
   }
-  else  // Encoder-travel type movement
+  else  // Encoder-travel type movement, well, not really, right now it just waits til switch is pressed///maybe later??
   {
     // Execute encoder-following until termination occurs:
-    encoderMoveToTerminate(courseConfig[location].terminate);
+    moveToTerminate(courseConfig[segment].terminate);
   }
 
   // --- Perform appropriate action: ---
@@ -154,7 +167,6 @@ void executeSegment(int segment)
       courseConfig[location].action = LEFT_THEN_RIGHT;
     }
   }
-  
   if (courseConfig[location].action == TURN_IN_PLACE)
   {
     if (goLeft) // Swap direction if turning left from box
@@ -177,25 +189,27 @@ void executeSegment(int segment)
 int checkTermination()
 {
   
-  fSensorRight.readCalibrated(fSensorValuesRight, QTR_EMITTERS_ON);
-  fSensorLeft.readCalibrated(fSensorValuesLeft, QTR_EMITTERS_ON); 
-    for(int i=0;i<NUM_SENSORS;i++)
-  {
-    fSensorValuesBoth[i]=fSensorValuesLeft[i];
-  }
-  for(int i=NUM_SENSORS;i<NUM_SENSORS*2;i++)
-  {
-    fSensorValuesBoth[i]=fSensorValuesRight[i-NUM_SENSORS];
-    Serial.print("Sensor[");
-    Serial.print(i);
-    Serial.print("]: ");
-    Serial.print(fSensorValuesBoth[i]);
-    if(i==NUM_SENSORS-1)Serial.print("\n");
-  }
+  fSensors.readCalibrated(fSensorValues, QTR_EMITTERS_ON);
+  //#ifdef DEBUG_ROBOT
+   // for(int i=0;i<NUM_SENSORS;i++)
+    //{
   
+   /*   #ifdef DEBUG_ROBOT
+        Serial.print("Sensor[");
+        Serial.print(i);
+        Serial.print("]: ");
+        Serial.print(fSensorValues[i]);
+        Serial.print(" ");
+        Serial.flush();
+        delay(10);
+      #endif*/
+    //}      
+    //Serial.print("\n");
+    //Serial.flush();
+   //#endif
   
-  boolean isLeft  = ((fSensorValuesBoth[0] < REFLECT_THRESHOLD)&&(fSensorValuesBoth[1] < REFLECT_THRESHOLD));
-  boolean isRight = ((fSensorValuesBoth[(NUM_SENSORS*2)-1] < REFLECT_THRESHOLD)&&(fSensorValuesBoth[(NUM_SENSORS*2)-2] < REFLECT_THRESHOLD));
+  boolean isLeft  = ((fSensorValues[0] < REFLECT_THRESHOLD)&&(fSensorValues[1] < REFLECT_THRESHOLD));
+  boolean isRight = ((fSensorValues[(NUM_SENSORS)-1] < REFLECT_THRESHOLD)&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
   boolean isOff = true;
   boolean hitSwitch = (digitalRead(HIT_SWITCH_PIN)==LOW);
 
@@ -204,7 +218,7 @@ int checkTermination()
   // Checks to see if every sensor is above threshold:
   for (int i = 0; i < NUM_SENSORS*2; i++)
   {
-    isOff &= (fSensorValuesBoth[i] >= REFLECT_THRESHOLD);
+    isOff &= (fSensorValues[i] >= REFLECT_THRESHOLD);
   }
   
   if (hitSwitch)

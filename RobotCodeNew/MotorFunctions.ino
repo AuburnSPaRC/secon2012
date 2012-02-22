@@ -17,12 +17,13 @@
   #define RIGHT_EN_PIN   4  // Blue(DIG) DPin 15  - Right motor enable control
 #endif
 
+//#define DEBUG_MOTOR_SPEED 0
 // Converts the value between +/- MAX_VELOCITY to an actual PWM signal and direction
 void updateMotors()
 {
   double tempLeftSpeed  = forwardSpeed + leftDelta;   // Left motor speed from -255 to 255
   double tempRightSpeed = forwardSpeed + rightDelta;  // Reft motor speed from -255 to 255
-  
+
   #ifdef DEBUG_MOTOR_SPEED
     Serial.print("LeftD: ");
     Serial.print(leftDelta);

@@ -51,10 +51,7 @@ class DebuggerGUI(object):
 		line=f.readline()
 		linelist=string.split(line)
 		f.close()
-		p=float(linelist[0])
-		i=float(linelist[1])
-		d=float(linelist[2])
-		start_pos=int(linelist[3])		
+		start_pos=int(linelist[0])		
 		###################################
 		#Add List To Action Table
 		self.start_list_box.set_active(start_pos)
@@ -257,12 +254,12 @@ class DebuggerGUI(object):
 			else:
 				self.enc_fol_button.set_label("Encoders")
 
-			self.p_box.set_text(str(p))
+			
 			self.speed_entry.set_text(str(speed))
 			self.center_entry.set_text(str(center))
 			self.turnspeed_entry.set_text(str(turnspeed))
 
-			
+			self.p_box.set_text(str(p))
 			self.i_box.set_text(str(i))
 			self.d_box.set_text(str(d))
 				
@@ -293,6 +290,7 @@ class DebuggerGUI(object):
 			info=struct.pack('=cBBBBbbBBBfff','c',currentStage, enc_fol,termination,termination_action,left_amnt,right_amnt,speed,turnspeed,center,p,i,d)
 			ser.write(info)
 			ser.close()
+			
 
 if __name__ == "__main__":
 	app=DebuggerGUI()

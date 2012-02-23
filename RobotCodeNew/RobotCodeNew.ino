@@ -146,9 +146,10 @@ void loop()
     delay(100);
     dynamic_PID();
   }
- takeReading();
+  takeReading();
   executeSegment(location);
   increaseLocation();
+
 
   //followLine();
 }
@@ -265,15 +266,19 @@ void takeReading()
     delay(4000);
     Serial.print("Reading Voltage...");
     goLeft = readCapacitance();
+    goLeft = false;   //For debugging
     break;
   case 12: // Capacitance Task 
     goLeft = readCapacitance();
+    goLeft = false;   //For debugging
     break;
   case 23: // Temperature Task
     goLeft = readTemperature();
+    goLeft = false;   //For debugging    
     break;
   case 32: // Waveform Task
     goLeft = readWaveform();
+    goLeft = false;   //For debugging    
     break;
   default:
     goLeft = false; // Not at a task location.
@@ -286,13 +291,9 @@ void takeReading()
 
 void increaseLocation()
 {
-  if (goLeft)
-    location += 3;
-  ++location;    // Increment location
-  if((location==6)||(location==15)||(location==26)||(location==35))
-  {
-    location+=3;
-  }  
+  if (goLeft){location += 4;}
+  else if((location==6)||(location==15)||(location==26)||(location==35)){location+=4;}  
+  else location++;
   location %= 38; // Make sure location is never > 37
 }
 

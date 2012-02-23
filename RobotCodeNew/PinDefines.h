@@ -23,20 +23,20 @@
 
 // --- Task Sensor Pin Definitions ---
 #ifdef OVERWRITE_TASK_PINS  
-  // Hit switch pins:
+    // Hit switch pins:
     #define HIT_SWITCH_PIN 40 // (DIG) DPin 40 - Physical switch pin
-  // Capcitance sensor pins:
-    #define PIN_CR1        A1 // (ANA) APin 1  - Samples the cap voltage (analog)
-    #define PIN_CR2        A2 // (DIG) APin 2  - Discharges the capacitor (digital)
-    #define PIN_CR3        A3 // (DIG) APin 3  - Charges the capacitor (digital)
-  // Voltage sensor pins:
-    #define PIN_VOLT       A0 // (ANA) APin0   - Measure voltage
-  // Temperature sensor pins:
-    #define PIN_TEMP       11 // (DIG) DPin11  - For measuring temperature
+    // Capcitance Pins:
+    #define PIN_CR1  A15  // (ANA) APin 1  - Samples the cap voltage (analog)
+    #define PIN_CR2  A14  // (DIG) APin 2  - Discharges the capacitor (digital)
+    #define PIN_CR3  A13  // (DIG) APin 3  - Charges the capacitor (digital)
+    // Voltage sensor pins:
+    #define PIN_VOLT A12  // (ANA) APin0   - Measure voltage
+  // Temperature Pins:
+    #define PIN_TEMP A11  // (DIG) DPin11  - For measuring temperature
   // Waveform sensor pins (D0-D7 also used, PORTB):
-    #define PIN_RD         8  // (DIG) DPin 8  - Connected to RD of the MAX153
-    #define PIN_INT        9  // (DIG) DPin 9  - Connected to INT of the MAX 153
-    #define PIN_CS         10 // (DIG) DPin 10 - Connected to CS of MAX 153
+    #define PIN_RD   30   // (DIG) DPin 8  - Connected to RD of the MAX153
+    #define PIN_INT  32   // (DIG) DPin 9  - Connected to INT of the MAX 153
+    #define PIN_CS   34  // (DIG) DPin 10 - Connected to CS of MAX 153
 #endif
 
 // --- QTR Sensor Pin Definitions ---

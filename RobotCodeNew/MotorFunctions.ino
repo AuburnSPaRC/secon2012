@@ -8,7 +8,8 @@
 */
 
 // --- Motor Pin Definitions ---
-#ifndef OVERWRITE_SENSOR_PINS
+// NOTE: Defaults only; please edit the values in PinDefines.h!
+#ifndef OVERWRITE_MOTOR_PINS
   #define LEFT_PWM_PIN   5  // Green(PWM) DPin 10  - Left motor PWM speed control
   #define LEFT_DIR_PIN   38  // (DIG) DPin 11  - Left motor direction control
   #define LEFT_EN_PIN    36  // (DIG) DPin 12  - Left motor enable control

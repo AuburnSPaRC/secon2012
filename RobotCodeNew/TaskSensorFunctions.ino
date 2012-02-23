@@ -15,22 +15,12 @@
 #include <OneWire.h>   // For the one-wire interface with the temperature sensor.
 
 // --- Sensor Pin Definitions ---
+// NOTE: Defaults only; please edit the values in PinDefines.h!
 #ifndef OVERWRITE_SENSOR_PINS
   // Waveform Pins (D0-D7 also used, PORTB):
   #define PIN_RD   8   // (DIG) DPin 8  - Connected to RD of the MAX153
   #define PIN_INT  9   // (DIG) DPin 9  - Connected to INT of the MAX 153
   #define PIN_CS   10  // (DIG) DPin 10 - Connected to CS of MAX 153
-  #define ADC_PORT PORTA
-  #define ADC_PIN PINA
-  #define ADC_DDR DDRA
-  #define ADC_RD_PORT PORTC
-  #define ADC_RD_PIN PINC
-  #define ADC_RD_SET_MASK 0b10000000
-  #define ADC_RD_CLR_MASK 0b01111111
-  #define ADC_INT_PORT PORTC
-  #define ADC_INT_PIN PINC
-  #define ADC_INT_SET_MASK 0b00100000
-  #define ADC_INT_CLR_MASK 0b11011111
   // Capcitance Pins:
   #define PIN_CR1  A1  // (ANA) APin 1  - Samples the cap voltage (analog)
   #define PIN_CR2  A2  // (DIG) APin 2  - Discharges the capacitor (digital)
@@ -39,9 +29,19 @@
   #define PIN_VOLT A0  // (ANA) APin0   - Measure voltage
   // Temperature Pins:
   #define PIN_TEMP 11  // (DIG) DPin11  - For measuring temperature
-  
 #endif
-
+  
+#define ADC_PORT PORTA
+#define ADC_PIN PINA
+#define ADC_DDR DDRA
+#define ADC_RD_PORT PORTC
+#define ADC_RD_PIN PINC
+#define ADC_RD_SET_MASK 0b10000000
+#define ADC_RD_CLR_MASK 0b01111111
+#define ADC_INT_PORT PORTC
+#define ADC_INT_PIN PINC
+#define ADC_INT_SET_MASK 0b00100000
+#define ADC_INT_CLR_MASK 0b11011111
 
 // --- Constants ---
 #define LEFT  true             // Left direction

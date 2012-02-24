@@ -15,32 +15,17 @@
 #include <OneWire.h>   // For the one-wire interface with the temperature sensor.
 
 // --- Sensor Pin Definitions ---
-#ifndef OVERWRITE_SENSOR_PINS
-  // Waveform Pins (D0-D7 also used, PORTB):
-  #define PIN_RD   8   // (DIG) DPin 8  - Connected to RD of the MAX153
-  #define PIN_INT  9   // (DIG) DPin 9  - Connected to INT of the MAX 153
-  #define PIN_CS   10  // (DIG) DPin 10 - Connected to CS of MAX 153
-  #define ADC_PORT PORTA
-  #define ADC_PIN PINA
-  #define ADC_DDR DDRA
-  #define ADC_RD_PORT PORTC
-  #define ADC_RD_PIN PINC
-  #define ADC_RD_SET_MASK 0b10000000
-  #define ADC_RD_CLR_MASK 0b01111111
-  #define ADC_INT_PORT PORTC
-  #define ADC_INT_PIN PINC
-  #define ADC_INT_SET_MASK 0b00100000
-  #define ADC_INT_CLR_MASK 0b11011111
-  // Capcitance Pins:
-  #define PIN_CR1  A1  // (ANA) APin 1  - Samples the cap voltage (analog)
-  #define PIN_CR2  A2  // (DIG) APin 2  - Discharges the capacitor (digital)
-  #define PIN_CR3  A3  // (DIG) APin 3  - Charges the capacitor (digital)
-  // Voltage Pins:
-  #define PIN_VOLT A0  // (ANA) APin0   - Measure voltage
-  // Temperature Pins:
-  #define PIN_TEMP 11  // (DIG) DPin11  - For measuring temperature
-  
-#endif
+#define ADC_PORT PORTA
+#define ADC_PIN PINA
+#define ADC_DDR DDRA
+#define ADC_RD_PORT PORTC
+#define ADC_RD_PIN PINC
+#define ADC_RD_SET_MASK 0b10000000
+#define ADC_RD_CLR_MASK 0b01111111
+#define ADC_INT_PORT PORTC
+#define ADC_INT_PIN PINC
+#define ADC_INT_SET_MASK 0b00100000
+#define ADC_INT_CLR_MASK 0b11011111
 
 
 // --- Constants ---
@@ -69,7 +54,7 @@
 #define TRIGGER     1.0        // Tolerance from TEMP_RANGE level 
 #define DS18B20_ID  0x28       // Family ID of DS18B20 Temperature Sensor
 byte ID_AMBIENT[8] = {0x28, 0xD8, 0xF1, 0x87, 0x3, 0x0, 0x0, 0xAB}; // ID of ambient sensor.
-byte ID_PLATE[8] = {0x28, 0xF0, 0x3E, 0x77, 0x3, 0x0, 0x0, 0x80};   // ID of plate sensor.
+byte ID_PLATE[8] = {0x28, 0x5E, 0x24, 0xBB, 0x3, 0x0, 0x0, 0x25};   // ID of plate sensor.
 
 
 ////////////////////////
@@ -102,6 +87,7 @@ boolean readWaveform()
   digitalWrite(RELAY_K2_PIN, 0);
   // -------------
 
+  delay(1000);
   int sqcount = 0;
   int sawcount = 0; //count for the square wave/sawtooth wave, variable for signal value
   int my_status;
@@ -139,16 +125,19 @@ boolean readWaveform()
   if (sqcount > NUM_SAMPLES*(SQ_THRESH_PERCENT))   //if x% of samples are within range, then it must be a square wave
   {
     accurateFlag = true;
+    Serial.print("RIGHT");    
     return RIGHT;
   }
   else if (sawcount > NUM_SAMPLES*(SAW_THRESH_PERCENT))   //if x% of samples are NOT within range, then it must be a sawtooth wave
   {
     accurateFlag = true;
+    Serial.print("LEFT");
     return LEFT;
   }
   else
   {
     accurateFlag = false;
+    Serial.print("ERROR");
     return ERROR;  
   }
 }
@@ -159,9 +148,10 @@ boolean readCapacitance()
   pinMode(PIN_CR2,INPUT);
   pinMode(PIN_CR3,INPUT);
   pinMode(PIN_CR1,INPUT);
-  digitalWrite(RELAY_K1_PIN, 1);
-  digitalWrite(RELAY_K2_PIN, 0);
+  digitalWrite(RELAY_K1_PIN, 0);
+  digitalWrite(RELAY_K2_PIN, 1);
   // -------------
+  delay(1000);
   
     //declare variables
   int V1, V2;  //holds voltage samples
@@ -184,8 +174,11 @@ boolean readCapacitance()
   
   C = 112.0 / (R * log(float(1023-V1)/float(1023-V2)));
   // ^ fancy mathematics
-   Serial.print("voltage");
-  Serial.print(V1);
+   Serial.print("Capacitance:\n");
+   Serial.println(V1);
+   Serial.println(V2);
+  Serial.println(C);
+  Serial.print("\n");
   if (V1 >= 900)      //bad connection
   {
     accurateFlag = false;
@@ -217,17 +210,17 @@ boolean readVoltage()
 {
   // --- Setup ---
   pinMode(PIN_VOLT,INPUT);
-  digitalWrite(RELAY_K1_PIN, 0);
-  digitalWrite(RELAY_K2_PIN, 1);
+  digitalWrite(RELAY_K1_PIN, 1);
+  digitalWrite(RELAY_K2_PIN, 0);
   // -------------  
-  
+  delay(1000);
   int Vin;
   double vActual;
   Vin = analogRead(PIN_VOLT);
   vActual = ((3*5*Vin)/1023) + 2*Vdiode; //find and put Vactual in fullscale voltage
   
-  Serial.print("voltage");
-  Serial.print(vActual);
+  Serial.print("Voltage: ");
+  Serial.print(vActual);  Serial.print("\n");
   if (vActual > 10 && vActual <= 15)  //11V to 15V = turn right
   {
     accurateFlag = true;
@@ -249,19 +242,18 @@ boolean readTemperature()
 {
   float tempPlate, tempAmbient;
   
-  digitalWrite(RELAY_K1_PIN, 0);
-  digitalWrite(RELAY_K2_PIN, 0);
+  digitalWrite(RELAY_K1_PIN, 1);
+  digitalWrite(RELAY_K2_PIN, 1);
+  delay(1000);
   
   ds.reset();
   ds.skip();
   ds.write(0x44);
   
-  delay(1000);            // Measurement may take 750ms
-  
   tempPlate = readSensorTemp(ID_PLATE);
   delay(1000);
-  tempAmbient = readSensorTemp(ID_AMBIENT);
-  
+  //tempAmbient = readSensorTemp(ID_AMBIENT);    //Wait til we get another ambient sensor
+
   if (tempPlate > tempAmbient + TEMP_RANGE - TRIGGER)
   {
     accurateFlag = true;
@@ -285,6 +277,7 @@ float readSensorTemp(byte addr[])
   float Tc_100;
   byte i;
   byte data[2];
+  int whole, fract;
   
   ds.reset();
   ds.select(addr);    
@@ -294,11 +287,20 @@ float readSensorTemp(byte addr[])
     data[i] = ds.read();
   }
   
-  LowByte = data[0];
-  HighByte = data[1];
-  TReading = (HighByte << 8) + LowByte;       // Raw temperature from sensor
-  Tc_100 = (6 * TReading) + TReading / 4.;    // Multiply by 6.25 to get degCelsius
- 
+  LowByte = (int)data[0];  
+  HighByte = (int)data[1];
+
+  TReading = (HighByte << 8)+LowByte;       // Raw temperature from sensor
+  Tc_100 = float((6.0 * float(TReading)) + float(TReading)/4.0);    // Multiply by 6.25 to get degCelsius
+  whole=Tc_100/100;
+  fract=int(Tc_100) % 100;
+  
+  Serial.print(whole);
+  Serial.print(".");
+  if(fract<10)Serial.print("0");
+  Serial.print(fract);
+  Serial.print("\n");
+  
   return Tc_100; 
 }
 

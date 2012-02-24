@@ -16,6 +16,7 @@
 #include <PID_v1.h>
 #include <PololuQTRSensors.h>
 #include <EEPROM.h>
+#include "PinDefines.h"
 
 #define FTA_CYCLE_SIZE  20 // Defines the size (in bytes) of the ftaCycle struct.
 #define NUM_SEGMENTS  40 //The number of segments on the course
@@ -43,25 +44,11 @@
 
 #define MAX_VELOCITY  255  // Maximum motor velocity
 
-
-//Relay PINS
-#define RELAY_K1_PIN   52
-#define RELAY_K2_PIN   53
-
-
-#define LEFT_PWM_PIN   5  // Green(PWM) DPin 10  - Left motor PWM speed control
-#define LEFT_DIR_PIN   38  // (DIG) DPin 11  - Left motor direction control
-#define LEFT_EN_PIN    36  // (DIG) DPin 12  - Left motor enable control
-#define RIGHT_PWM_PIN  2  // (PWM) DPin 13  - Right motor PWM speed control 
-#define RIGHT_DIR_PIN  3  // (DIG) DPin 14  - Right motor direction control
-#define RIGHT_EN_PIN   4  // Blue(DIG) DPin 15  - Right motor enable control
-#define HIT_SWITCH_PIN 40 //Physical switch pin
 #define DEBUG_ROBOT 0
 //#define DEBUG_PID 0
 
 // PWM offset for motor speeds to be equal (Left motor is faster = +)
 #define MOTOR_OFFSET  0
-
 
 //Structure to read in data fromt the serial port into ints and floats
 union u_double
@@ -70,8 +57,6 @@ union u_double
   float dval;
   int ival;
 };  //A structure to read in floats from the serial ports
-
-
 
 // Container for the "follow, terminate, action" cycle values.
 struct ftaCycle{
@@ -105,12 +90,6 @@ boolean goLeft = false;
 double leftDelta = 0;
 double rightDelta = 0;
 double forwardSpeed = 0;
-
-// Change these pins when you need to
-unsigned char fSensorPins[] = {12,11,10,9,8,7,6,33,35,37,39,41,43,45};
-unsigned char lEncoderPins[] = {46};
-unsigned char rEncoderPins[] = {48};
-
 
 // Sensors 0 through 7 are connected to fSensorPins[]
 PololuQTRSensorsRC fSensors(fSensorPins, NUM_SENSORS, TIMEOUT); 
@@ -167,9 +146,10 @@ void loop()
     delay(100);
     dynamic_PID();
   }
- takeReading();
+  takeReading();
   executeSegment(location);
   increaseLocation();
+
 
   //followLine();
 }
@@ -286,15 +266,19 @@ void takeReading()
     delay(4000);
     Serial.print("Reading Voltage...");
     goLeft = readCapacitance();
+    goLeft = false;   //For debugging
     break;
   case 12: // Capacitance Task 
     goLeft = readCapacitance();
+    goLeft = false;   //For debugging
     break;
   case 23: // Temperature Task
     goLeft = readTemperature();
+    goLeft = false;   //For debugging    
     break;
   case 32: // Waveform Task
     goLeft = readWaveform();
+    goLeft = false;   //For debugging    
     break;
   default:
     goLeft = false; // Not at a task location.
@@ -307,13 +291,9 @@ void takeReading()
 
 void increaseLocation()
 {
-  if (goLeft)
-    location += 3;
-  ++location;    // Increment location
-  if((location==6)||(location==15)||(location==26)||(location==35))
-  {
-    location+=3;
-  }  
+  if (goLeft){location += 4;}
+  else if((location==6)||(location==15)||(location==26)||(location==35)){location+=4;}  
+  else location++;
   location %= 38; // Make sure location is never > 37
 }
 

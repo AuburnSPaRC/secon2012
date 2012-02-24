@@ -147,7 +147,8 @@ class DebuggerGUI(object):
 			f.close()	
 
 			f=open("course_config.txt","w")
-			while l<=37:
+			while l<=39:
+
 				if l==currentStage:
 					f.write(str(enc_fol)+" "+str(termination)+" "+str(termination_action)+" "+str(left_amnt)+" "+str(right_amnt)+" "+str(speed)+" "+" "+str(turnspeed)+" "+str(center)+" "+str(p)+" "+str(i)+" "+str(d)+"\n")
 				else:

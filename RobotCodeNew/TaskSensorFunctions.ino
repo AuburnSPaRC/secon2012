@@ -14,18 +14,7 @@
 #include "math.h"      // Needed to perform log() operation.
 #include <OneWire.h>   // For the one-wire interface with the temperature sensor.
 
-// --- Sensor Pin Definitions ---
-#define ADC_PORT PORTA
-#define ADC_PIN PINA
-#define ADC_DDR DDRA
-#define ADC_RD_PORT PORTC
-#define ADC_RD_PIN PINC
-#define ADC_RD_SET_MASK 0b10000000
-#define ADC_RD_CLR_MASK 0b01111111
-#define ADC_INT_PORT PORTC
-#define ADC_INT_PIN PINC
-#define ADC_INT_SET_MASK 0b00100000
-#define ADC_INT_CLR_MASK 0b11011111
+
 
 
 // --- Constants ---
@@ -93,7 +82,11 @@ boolean readWaveform()
   int my_status;
   byte val = 0;
   
-  ADC_DDR = 0;  //ADC_PORT as input
+  #ifdef DEBUG_WAVEFORM
+    Serial.println("WAVEFORM----");
+  #endif
+  
+  
   digitalWrite(PIN_CS,LOW); //enable ADC chip
   delay(1);  //give it time to start up
   for (int i=0; i<NUM_SAMPLES; i++)
@@ -107,8 +100,13 @@ boolean readWaveform()
     delayMicroseconds(4);
     val = ADC_PIN;  //read adc pins
     blah = (unsigned int)val;  //today's non-descriptive variable name is brought to you by Ben Straub
+    
     //digitalWrite(pin_RD, HIGH); //stop reading in data
     ADC_RD_PORT |= ADC_RD_SET_MASK;  // replaces the commented line above
+    
+    #ifdef DEBUG_WAVEFORM
+      Serial.println(blah);
+    #endif
     
     if ((blah*1.0 >= (V_SQ_MAX - V_SQ_MAX*VOLT_THRESH)) && 
         (blah*1.0 <= (V_SQ_MAX + V_SQ_MAX*VOLT_THRESH)))  //if voltage is within 10% of square wave maximum
@@ -151,8 +149,7 @@ boolean readCapacitance()
   digitalWrite(RELAY_K1_PIN, 0);
   digitalWrite(RELAY_K2_PIN, 1);
   // -------------
-  delay(1000);
-  
+  delay(100);
     //declare variables
   int V1, V2;  //holds voltage samples
   float C;     //holds the calculated capacitance (in uF)
@@ -165,19 +162,19 @@ boolean readCapacitance()
   digitalWrite(PIN_CR2,LOW);
   
   digitalWrite(PIN_CR3,LOW); //discharge cap
-  delay(1);  //make sure it's fully discharged
+  delay(4);  //make sure it's fully discharged
   pinMode(PIN_CR3,INPUT); //stop discharging by setting this pin to a high impedance state
   delayMicroseconds(4);
   digitalWrite(PIN_CR2,HIGH); //start charging
   V1 = analogRead(PIN_CR1); // get first reading
   V2 = analogRead(PIN_CR1); // occurs 112us after first reading
   
-  C = 112.0 / (R * log(float(1023-V1)/float(1023-V2)));
+  C = float(112.0 / (R * log(float(1023-float(V1))/float(1023-float(V2)))));
   // ^ fancy mathematics
    Serial.print("Capacitance:\n");
    Serial.println(V1);
    Serial.println(V2);
-  Serial.println(C);
+  Serial.println(C,5);
   Serial.print("\n");
   if (V1 >= 900)      //bad connection
   {
@@ -213,15 +210,15 @@ boolean readVoltage()
   digitalWrite(RELAY_K1_PIN, 1);
   digitalWrite(RELAY_K2_PIN, 0);
   // -------------  
-  delay(1000);
+  delay(100);
   int Vin;
   double vActual;
   Vin = analogRead(PIN_VOLT);
-  vActual = ((3*5*Vin)/1023) + 2*Vdiode; //find and put Vactual in fullscale voltage
+  vActual = float(((3.0*5.0*float(Vin))/1023.0) + 2*Vdiode); //find and put Vactual in fullscale voltage
   
   Serial.print("Voltage: ");
   Serial.print(vActual);  Serial.print("\n");
-  if (vActual > 10 && vActual <= 15)  //11V to 15V = turn right
+  if (vActual > 10 && vActual <= 20)  //11V to 15V = turn right
   {
     accurateFlag = true;
     return RIGHT; 

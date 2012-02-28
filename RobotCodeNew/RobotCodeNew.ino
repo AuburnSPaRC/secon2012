@@ -45,7 +45,9 @@
 #define MAX_VELOCITY  255  // Maximum motor velocity
 
 #define DEBUG_ROBOT 0
+//#define RE
 //#define DEBUG_PID 0
+//#define DEBUG_WAVEFORM
 
 // PWM offset for motor speeds to be equal (Left motor is faster = +)
 #define MOTOR_OFFSET  0
@@ -131,7 +133,7 @@ void setup()
     delay(2000);
 
   // Start movement (starting at location defined in EEPROM)
-  location=(int)EEPROM.read(421);
+  location=(int)EEPROM.read(1028);
 }
 
 void loop()
@@ -146,10 +148,15 @@ void loop()
     delay(100);
     dynamic_PID();
   }
+#ifndef DEBUG_WAVEFORM
   takeReading();
   executeSegment(location);
   increaseLocation();
-
+#endif
+  
+  #ifdef DEBUG_WAVEFORM
+  readWaveform();
+  #endif
 
   //followLine();
 }
@@ -251,7 +258,7 @@ void dynamic_PID() // Sets the PID coefficients dynamically via a serial command
     break;
 
   case 'g':
-    EEPROM.write(421,(start_pos));
+    EEPROM.write(1028,(start_pos));
     break;
   }
 }
@@ -263,21 +270,20 @@ void takeReading()
   switch (location)
   {
   case 3: // Voltage Task
-    delay(4000);
-    Serial.print("Reading Voltage...");
-    goLeft = readCapacitance();
-    goLeft = false;   //For debugging
+    goLeft = readVoltage();
     break;
   case 12: // Capacitance Task 
+    readCapacitance();      //For some reason it does better if we do this....
     goLeft = readCapacitance();
-    goLeft = false;   //For debugging
     break;
   case 23: // Temperature Task
-    goLeft = readTemperature();
+      delay(2000);
+  //  goLeft = readTemperature();
     goLeft = false;   //For debugging    
     break;
   case 32: // Waveform Task
-    goLeft = readWaveform();
+      delay(2000);
+//    goLeft = readWaveform();
     goLeft = false;   //For debugging    
     break;
   default:
@@ -294,7 +300,7 @@ void increaseLocation()
   if (goLeft){location += 4;}
   else if((location==6)||(location==15)||(location==26)||(location==35)){location+=4;}  
   else location++;
-  location %= 38; // Make sure location is never > 37
+  if(location>39)location=0; // Make sure location is never > 37
 }
 
 void calibrateSensors()

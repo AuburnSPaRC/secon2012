@@ -139,7 +139,6 @@ void executeSegment(int segment)
         terminationType = checkTermination();
       }
     }
-    setMove(STOP);
     lfPID.SetMode(MANUAL); // Turn off PID
 
   }
@@ -211,8 +210,8 @@ int checkTermination()
   boolean isLeft  = ((fSensorValues[0] < REFLECT_THRESHOLD)&&(fSensorValues[1] < REFLECT_THRESHOLD));
   boolean isRight = ((fSensorValues[(NUM_SENSORS)-1] < REFLECT_THRESHOLD)&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
   boolean isOff = true;
-  boolean hitSwitch = (digitalRead(HIT_SWITCH_PIN)==LOW);
-
+  boolean hitSwitchVals[4] = {(digitalRead(TOP_RIGHT_SWITCH)==LOW),(digitalRead(TOP_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_RIGHT_SWITCH)==LOW)};
+  boolean hitSwitch=((hitSwitchVals[0]&&hitSwitchVals[3])||(hitSwitchVals[0]&&hitSwitchVals[2])||(hitSwitchVals[1]&&hitSwitchVals[3])||(hitSwitchVals[1]&&hitSwitchVals[2]));
 
   
   // Checks to see if every sensor is above threshold:
@@ -221,9 +220,14 @@ int checkTermination()
     isOff &= (fSensorValues[i] >= REFLECT_THRESHOLD);
   }
   
+ 
+  
   if (hitSwitch)
-    return (HIT_SWITCH);
-  else if (isLeft && isRight) 
+  {
+    if((location==2)||(location==11)||(location==22)||(location==31)){delay(1000);return (HIT_SWITCH);}
+  }
+  
+  if (isLeft && isRight) 
     return AT_T;
   else if (isLeft) 
     return AT_LEFT;

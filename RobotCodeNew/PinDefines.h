@@ -37,8 +37,26 @@
     #define PIN_RD   30   // (DIG) DPin 8  - Connected to RD of the MAX153
     #define PIN_INT  32   // (DIG) DPin 9  - Connected to INT of the MAX 153
     #define PIN_CS   34  // (DIG) DPin 10 - Connected to CS of MAX 153
+    
+    //Waveform Port Definitions ---
+    #define ADC_PORT PORTA // (DIG) - Data pins
+    #define ADC_PIN PINA 
+    #define ADC_DDR DDRA
+    #define ADC_RD_PORT PORTC // (DIG) - RD pin
+    #define ADC_RD_PIN PINC
+    #define ADC_RD_SET_MASK 0b10000000
+    #define ADC_RD_CLR_MASK 0b01111111
+    #define ADC_INT_PORT PORTC // (DIG) - INT pin
+    #define ADC_INT_PIN PINC
+    #define ADC_INT_SET_MASK 0b00100000
+    #define ADC_INT_CLR_MASK 0b11011111
 #endif
 
+    #define TOP_RIGHT_SWITCH A3
+    #define TOP_LEFT_SWITCH A2
+    #define BOTTOM_LEFT_SWITCH A1
+    #define BOTTOM_RIGHT_SWITCH A0
+    
 // --- QTR Sensor Pin Definitions ---
 #ifdef OVERWRITE_QTR_PINS
   unsigned char fSensorPins[] = {12,11,10,9,8,7,6,33,35,37,39,41,43,45}; // Main line sensor

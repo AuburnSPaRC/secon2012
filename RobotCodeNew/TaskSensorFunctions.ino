@@ -96,7 +96,7 @@ boolean readWaveform()
     //digitalWrite(pin_RD, LOW);  //write RD LOW to read in data
     ADC_RD_PORT &= ADC_RD_CLR_MASK;  // replaces the commented line above
     //while(digitalRead(pin_INT)) {} //while INT is HIGH, the code waits
-    while(ADC_INT_PORT & ADC_INT_SET_MASK) {}  // replaces the commented line above
+    while(ADC_INT_PIN & ADC_INT_SET_MASK) {}  // replaces the commented line above
     delayMicroseconds(4);
     val = ADC_PIN;  //read adc pins
     blah = (unsigned int)val;  //today's non-descriptive variable name is brought to you by Ben Straub
@@ -119,7 +119,15 @@ boolean readWaveform()
   }
   
   digitalWrite(PIN_CS,HIGH);  //disables the ADC
-    
+  
+    Serial.print("Square: ");
+  Serial.println(sqcount);
+  Serial.print("Saw: ");
+  Serial.println(sawcount);
+//  Serial.print("time: ");
+//  Serial.println(t2-t1);
+  Serial.println("-------------");
+  
   if (sqcount > NUM_SAMPLES*(SQ_THRESH_PERCENT))   //if x% of samples are within range, then it must be a square wave
   {
     accurateFlag = true;
@@ -221,7 +229,8 @@ boolean readVoltage()
   if (vActual > 10 && vActual <= 20)  //11V to 15V = turn right
   {
     accurateFlag = true;
-    return RIGHT; 
+    return RIGHT;
+    
   }
   else if (vActual >= 4.5)  //5V to 9V = turn left
   {

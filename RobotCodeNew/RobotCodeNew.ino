@@ -41,6 +41,7 @@
 #define PIVOT_RIGHT_FORWARD 6 // Bot pivots forward on right wheel
 #define PIVOT_RIGHT_BACK    7 // Bot pivots back on right wheel
 #define MOVE_BACKWARD       8 // Bot moves backwards at FULL_SPEED
+#define MOVE_FAST       9 // Bot moves at FULLSPEED
 
 #define MAX_VELOCITY  255  // Maximum motor velocity
 
@@ -102,6 +103,8 @@ unsigned int lEncoderValues[1];
 unsigned int rEncoderValues[1];
 
 
+
+
 // Setup PID computation
 double setpointPID, inputPID, outputPID;
 PID lfPID(&inputPID, &outputPID, &setpointPID, 0.1,0.1,0.1, DIRECT);
@@ -143,7 +146,11 @@ void loop()
   Serial.print("Location: ");
   Serial.print(location);
   Serial.print("\n");  
-#endif  
+#endif    
+ // readTemperature();
+  
+  
+
   if(Serial.available()){
     delay(100);
     dynamic_PID();
@@ -277,14 +284,11 @@ void takeReading()
     goLeft = readCapacitance();
     break;
   case 23: // Temperature Task
-      delay(2000);
-  //  goLeft = readTemperature();
-    goLeft = false;   //For debugging    
+    goLeft = readTemperature();
+    //goLeft = false;   //For debugging    
     break;
   case 32: // Waveform Task
-      delay(2000);
-//    goLeft = readWaveform();
-    goLeft = false;   //For debugging    
+    goLeft = readWaveform();
     break;
   default:
     goLeft = false; // Not at a task location.

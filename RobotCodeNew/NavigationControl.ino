@@ -24,7 +24,8 @@ void executeSegment(int segment)
 {
   u_double tempVals[3];    //Temporary structs to read in the floats
   byte temp;
-  
+  int delayer=0;
+
   // --- Retrieve FTA information from EEPROM: ---
   courseConfig[location].follow = EEPROM.read(segment * FTA_CYCLE_SIZE);          // Read the follow type
   courseConfig[location].terminate = EEPROM.read((segment * FTA_CYCLE_SIZE) + 1); // Read the termination type
@@ -136,7 +137,8 @@ void executeSegment(int segment)
           }
         #endif
         followLine();
-        terminationType = checkTermination();
+        if(delayer>=100){terminationType = checkTermination();}
+        else delayer++;
       }
     }
     lfPID.SetMode(MANUAL); // Turn off PID
@@ -212,7 +214,7 @@ int checkTermination()
   boolean isOff = true;
   boolean hitSwitchVals[4] = {(digitalRead(TOP_RIGHT_SWITCH)==LOW),(digitalRead(TOP_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_RIGHT_SWITCH)==LOW)};
   boolean hitSwitch=((hitSwitchVals[0]&&hitSwitchVals[3])||(hitSwitchVals[0]&&hitSwitchVals[2])||(hitSwitchVals[1]&&hitSwitchVals[3])||(hitSwitchVals[1]&&hitSwitchVals[2]));
-
+  boolean hitSwitchTemp=hitSwitchVals[0]||hitSwitchVals[1]||hitSwitchVals[2]&&hitSwitchVals[3];
   
   // Checks to see if every sensor is above threshold:
   for (int i = 0; i < NUM_SENSORS*2; i++)
@@ -224,7 +226,11 @@ int checkTermination()
   
   if (hitSwitch)
   {
-    if((location==2)||(location==11)||(location==22)||(location==31)){delay(1000);return (HIT_SWITCH);}
+    if((location==2)||(location==11)||(location==22)||(location==31)){return (HIT_SWITCH);}
+  }
+  if(hitSwitchTemp)
+  {
+    if(location==22){return (HIT_SWITCH);}
   }
   
   if (isLeft && isRight) 

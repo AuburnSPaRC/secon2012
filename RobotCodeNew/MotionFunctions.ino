@@ -18,6 +18,22 @@
 #define AT_T          4 // Bot is at a T-intersection
 #define AT_LEFT       5 // Bot is at left turn
 #define AT_RIGHT      6 // Bot is at right turn
+
+
+void interpolateStop(int stopVal)
+{
+  leftDelta=0;
+  rightDelta=0;
+  
+  while(forwardSpeed>stopVal+40)
+  {
+    forwardSpeed-=10;
+    updateMotors();
+    delayMicroseconds(7500);
+  }
+  
+    
+}
 // Bot move actions
 void setMove(int moveType)
 {
@@ -29,31 +45,37 @@ void setMove(int moveType)
       rightDelta   = 0;
       break;
     case TURN_LEFT:
+      interpolateStop(0);
       forwardSpeed = 0;
       leftDelta    = -TURN_SPEED * MAX_VELOCITY;
       rightDelta   = TURN_SPEED * MAX_VELOCITY;
       break;
     case PIVOT_LEFT_FORWARD:
+      interpolateStop(0);
       forwardSpeed = 0;
       leftDelta    = 0;
       rightDelta   = TURN_SPEED * MAX_VELOCITY;
       break;
     case PIVOT_LEFT_BACK:
+      interpolateStop(0);
       forwardSpeed = 0;
       leftDelta    = 0;
       rightDelta   = -TURN_SPEED * MAX_VELOCITY;
       break;
     case PIVOT_RIGHT_FORWARD:
+      interpolateStop(0);
       forwardSpeed = 0;
       leftDelta    = TURN_SPEED * MAX_VELOCITY;
       rightDelta   = 0;
       break;
     case PIVOT_RIGHT_BACK:
+      interpolateStop(0);
       forwardSpeed = 0;
       leftDelta    = -TURN_SPEED * MAX_VELOCITY;
       rightDelta   = 0;
       break;
     case TURN_RIGHT:
+      interpolateStop(0);
       forwardSpeed = 0;
       leftDelta    = TURN_SPEED * MAX_VELOCITY;
       rightDelta   = -TURN_SPEED * MAX_VELOCITY;
@@ -65,6 +87,11 @@ void setMove(int moveType)
       break;
     case MOVE_BACKWARD:
       forwardSpeed = -FULL_SPEED*MAX_VELOCITY;
+      leftDelta    = 0;
+      rightDelta   = 0;
+      break;
+    case MOVE_FAST:
+      forwardSpeed = MAX_VELOCITY;
       leftDelta    = 0;
       rightDelta   = 0;
       break;
@@ -108,8 +135,13 @@ void followLine()
 void moveToTerminate(int termination)
 {
   int currentTerminationType;
+  int fast_delay=0;
   
-  if((location==2)||(location==11)||(location==22)||(location==31)){setMove(MOVE_FORWARD);}
+  if((location==2)||(location==11)||(location==22)||(location==31))
+  {
+    setMove(MOVE_FORWARD);
+
+  }
   //else if((location==3)||(location==12)||(location==23)||(location==32)){setMove(MOVE_BACKWARD);}
   
   if(termination==HIT_SWITCH)  //Moving forward
@@ -117,6 +149,8 @@ void moveToTerminate(int termination)
     while(currentTerminationType!=HIT_SWITCH)
     {
       currentTerminationType=checkTermination();
+      if(fast_delay>100){setMove(MOVE_FAST);}
+      else {fast_delay++;}      
     }
   }
 //  else  //Backing up
@@ -374,7 +408,7 @@ void turnLeftAndRight(int leftClicks, int rightClicks, boolean rightFirst)
   }
     
   setMove(STOP);
-  Serial.print("STOP");
+  ///Serial.print("STOP");
 }
 
 // Turn in place by number of encoder clicks. (Turn right is positive)
@@ -443,7 +477,7 @@ void turnInPlace(int clicks)
     }
       
   }
-  setMove(STOP);
+ setMove(STOP);
 }
 
 

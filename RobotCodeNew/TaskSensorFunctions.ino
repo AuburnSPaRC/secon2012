@@ -42,8 +42,8 @@
 #define TEMP_RANGE  5.55       // Optimal minimum range above or below room temp (5.55C=10F)
 #define TRIGGER     1.0        // Tolerance from TEMP_RANGE level 
 #define DS18B20_ID  0x28       // Family ID of DS18B20 Temperature Sensor
-byte ID_AMBIENT[8] = {0x28, 0xD8, 0xF1, 0x87, 0x3, 0x0, 0x0, 0xAB}; // ID of ambient sensor.
-byte ID_PLATE[8] = {0x28, 0x5E, 0x24, 0xBB, 0x3, 0x0, 0x0, 0x25};   // ID of plate sensor.
+byte ID_AMBIENT[8] = {0x28, 0x3C, 0x2F, 0xBB, 0x3, 0x0, 0x0, 0xF8}; // ID of ambient sensor.
+byte ID_PLATE[8] = {0x28, 0xF9, 0x48, 0xBB, 0x3, 0x0, 0x0, 0xCC};   // ID of plate sensor.
 
 
 ////////////////////////
@@ -76,7 +76,7 @@ boolean readWaveform()
   digitalWrite(RELAY_K2_PIN, 0);
   // -------------
 
-  delay(1000);
+  delay(100);
   int sqcount = 0;
   int sawcount = 0; //count for the square wave/sawtooth wave, variable for signal value
   int my_status;
@@ -247,34 +247,80 @@ boolean readVoltage()
 boolean readTemperature() 
 {
   float tempPlate, tempAmbient;
-  
+  int i, numTimes=0, upping=0;   //Trending variables  0=down, 1=up
+  static float lastTempPlate;
   digitalWrite(RELAY_K1_PIN, 1);
   digitalWrite(RELAY_K2_PIN, 1);
-  delay(1000);
+ 
+  delay(100);
   
   ds.reset();
   ds.skip();
   ds.write(0x44);
   
-  tempPlate = readSensorTemp(ID_PLATE);
-  delay(1000);
-  //tempAmbient = readSensorTemp(ID_AMBIENT);    //Wait til we get another ambient sensor
 
-  if (tempPlate > tempAmbient + TEMP_RANGE - TRIGGER)
+  tempAmbient = readSensorTemp(ID_AMBIENT);
+  
+  for(i=0;i<30;i++)    //Wait at maximum, ten readings
   {
-    accurateFlag = true;
-    return RIGHT;
+    ds.reset();
+    ds.skip();
+    ds.write(0x44);
+    delay(300);
+    tempPlate = readSensorTemp(ID_PLATE); 
+    tempAmbient=tempPlate;///REMOVE THIS LATER!*/
+    if (tempPlate > tempAmbient + TEMP_RANGE - TRIGGER)
+    {
+      accurateFlag = true;
+      return RIGHT;
+    }
+    else if (tempPlate < tempAmbient - TEMP_RANGE + TRIGGER)
+    {
+      accurateFlag = true;
+      return LEFT;
+    }
+    else 
+    {
+      if(upping)
+      {
+        if(tempPlate>lastTempPlate)
+        {
+          numTimes++;
+        }
+        else if(tempPlate<lastTempPlate)
+        {
+          numTimes=0;
+          upping=false;
+        }
+      }
+      else
+      {
+        if(tempPlate<lastTempPlate)
+        {
+          numTimes++;
+        }
+        else if(tempPlate>lastTempPlate)
+        {
+          numTimes=0;
+          upping=true;
+        }
+      }
+      if(numTimes>=4)
+      {
+        if(!upping){Serial.print("LEFT");return LEFT;}
+        else {Serial.print("RIGHT");return RIGHT;}        
+      }
+    }
+    lastTempPlate=tempPlate;
   }
-  else if (tempPlate < tempAmbient - TEMP_RANGE + TRIGGER)
-  {
-    accurateFlag = true;
-    return LEFT;
-  }
-  else
-  {
-    accurateFlag = false;
-    return ERROR;
-  }
+  
+    
+  accurateFlag = false;
+  if(tempPlate<tempAmbient){return LEFT;}
+  else if(tempPlate>tempAmbient){return RIGHT;}
+  Serial.print("ERROR");return ERROR;
+  
+  
 }
 
 float readSensorTemp(byte addr[]) 
@@ -300,13 +346,14 @@ float readSensorTemp(byte addr[])
   Tc_100 = float((6.0 * float(TReading)) + float(TReading)/4.0);    // Multiply by 6.25 to get degCelsius
   whole=Tc_100/100;
   fract=int(Tc_100) % 100;
-  
-  Serial.print(whole);
+  Tc_100=float(whole+float(float(fract)/100));
+  /*Serial.print(whole);
   Serial.print(".");
   if(fract<10)Serial.print("0");
   Serial.print(fract);
-  Serial.print("\n");
+  Serial.print("\n");*/
   
+  Serial.println(Tc_100);
   return Tc_100; 
 }
 

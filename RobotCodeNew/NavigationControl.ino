@@ -24,7 +24,8 @@ void executeSegment(int segment)
 {
   u_double tempVals[3];    //Temporary structs to read in the floats
   byte temp;
-  
+  int delayer=0;
+
   // --- Retrieve FTA information from EEPROM: ---
   courseConfig[location].follow = EEPROM.read(segment * FTA_CYCLE_SIZE);          // Read the follow type
   courseConfig[location].terminate = EEPROM.read((segment * FTA_CYCLE_SIZE) + 1); // Read the termination type
@@ -112,7 +113,7 @@ void executeSegment(int segment)
     lfPID.SetTunings(courseConfig[location].KP, courseConfig[location].KI, courseConfig[location].KD); // Set the PID loops tuning values to the new ones from EEPROM
     lfPID.SetMode(AUTOMATIC); // Turn on PID
     
-    int terminationType = checkTermination();  //Check termination type
+    int terminationType = -1;  //Check termination type
     
     if(courseConfig[location].terminate == AT_ANY) // Special case for AT_ANY
     {
@@ -136,10 +137,12 @@ void executeSegment(int segment)
           }
         #endif
         followLine();
-        terminationType = checkTermination();
+        if(delayer>=120){terminationType = checkTermination();}
+        else delayer++;
       }
     }
     lfPID.SetMode(MANUAL); // Turn off PID
+    if(location!=2&&location!=11&&location!=22&location!=31&&location!=1&&location!=10&&location!=21&location!=30){setMove(STOP);delay(200);}
 
   }
   else  // Encoder-travel type movement, well, not really, right now it just waits til switch is pressed///maybe later??
@@ -207,12 +210,12 @@ int checkTermination()
     //Serial.flush();
    //#endif
   
-  boolean isLeft  = ((fSensorValues[0] < REFLECT_THRESHOLD)&&(fSensorValues[1] < REFLECT_THRESHOLD));
-  boolean isRight = ((fSensorValues[(NUM_SENSORS)-1] < REFLECT_THRESHOLD)&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
+  boolean isLeft  = ((fSensorValues[0] < REFLECT_THRESHOLD));//&&(fSensorValues[1] < REFLECT_THRESHOLD));
+  boolean isRight = ((fSensorValues[(NUM_SENSORS)-1] < REFLECT_THRESHOLD));//&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
   boolean isOff = true;
   boolean hitSwitchVals[4] = {(digitalRead(TOP_RIGHT_SWITCH)==LOW),(digitalRead(TOP_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_RIGHT_SWITCH)==LOW)};
   boolean hitSwitch=((hitSwitchVals[0]&&hitSwitchVals[3])||(hitSwitchVals[0]&&hitSwitchVals[2])||(hitSwitchVals[1]&&hitSwitchVals[3])||(hitSwitchVals[1]&&hitSwitchVals[2]));
-
+  boolean hitSwitchTemp=hitSwitchVals[0]||hitSwitchVals[1]||hitSwitchVals[2]&&hitSwitchVals[3];
   
   // Checks to see if every sensor is above threshold:
   for (int i = 0; i < NUM_SENSORS*2; i++)
@@ -220,11 +223,17 @@ int checkTermination()
     isOff &= (fSensorValues[i] >= REFLECT_THRESHOLD);
   }
   
+  
+  
  
   
   if (hitSwitch)
   {
-    if((location==2)||(location==11)||(location==22)||(location==31)){delay(1000);return (HIT_SWITCH);}
+    if((location==2)||(location==11)||(location==22)||(location==31)){return (HIT_SWITCH);}
+  }
+  if(hitSwitchTemp)
+  {
+    if(location==22){return (HIT_SWITCH);}
   }
   
   if (isLeft && isRight) 

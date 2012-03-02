@@ -210,8 +210,8 @@ int checkTermination()
     //Serial.flush();
    //#endif
   
-  boolean isLeft  = ((fSensorValues[0] < REFLECT_THRESHOLD)&&(fSensorValues[1] < REFLECT_THRESHOLD));
-  boolean isRight = ((fSensorValues[(NUM_SENSORS)-1] < REFLECT_THRESHOLD)&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
+  boolean isLeft  = ((fSensorValues[0] < REFLECT_THRESHOLD));//&&(fSensorValues[1] < REFLECT_THRESHOLD));
+  boolean isRight = ((fSensorValues[(NUM_SENSORS)-1] < REFLECT_THRESHOLD));//&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
   boolean isOff = true;
   boolean hitSwitchVals[4] = {(digitalRead(TOP_RIGHT_SWITCH)==LOW),(digitalRead(TOP_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_RIGHT_SWITCH)==LOW)};
   boolean hitSwitch=((hitSwitchVals[0]&&hitSwitchVals[3])||(hitSwitchVals[0]&&hitSwitchVals[2])||(hitSwitchVals[1]&&hitSwitchVals[3])||(hitSwitchVals[1]&&hitSwitchVals[2]));
@@ -222,6 +222,8 @@ int checkTermination()
   {
     isOff &= (fSensorValues[i] >= REFLECT_THRESHOLD);
   }
+  
+  
   
  
   

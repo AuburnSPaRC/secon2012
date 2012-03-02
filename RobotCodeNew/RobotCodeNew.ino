@@ -152,7 +152,8 @@ void loop()
   
 
   if(Serial.available()){
-    delay(100);
+    delay(1000);
+    Serial.print("We got something!");
     dynamic_PID();
   }
 #ifndef DEBUG_WAVEFORM

@@ -45,37 +45,37 @@ void setMove(int moveType)
       rightDelta   = 0;
       break;
     case TURN_LEFT:
-      interpolateStop(0);
+      //interpolateStop(0);
       forwardSpeed = 0;
       leftDelta    = -TURN_SPEED * MAX_VELOCITY;
       rightDelta   = TURN_SPEED * MAX_VELOCITY;
       break;
     case PIVOT_LEFT_FORWARD:
-      interpolateStop(0);
+     // interpolateStop(0);
       forwardSpeed = 0;
       leftDelta    = 0;
       rightDelta   = TURN_SPEED * MAX_VELOCITY;
       break;
     case PIVOT_LEFT_BACK:
-      interpolateStop(0);
+    //  interpolateStop(0);
       forwardSpeed = 0;
       leftDelta    = 0;
       rightDelta   = -TURN_SPEED * MAX_VELOCITY;
       break;
     case PIVOT_RIGHT_FORWARD:
-      interpolateStop(0);
+    //  interpolateStop(0);
       forwardSpeed = 0;
       leftDelta    = TURN_SPEED * MAX_VELOCITY;
       rightDelta   = 0;
       break;
     case PIVOT_RIGHT_BACK:
-      interpolateStop(0);
+     // interpolateStop(0);
       forwardSpeed = 0;
       leftDelta    = -TURN_SPEED * MAX_VELOCITY;
       rightDelta   = 0;
       break;
     case TURN_RIGHT:
-      interpolateStop(0);
+     // interpolateStop(0);
       forwardSpeed = 0;
       leftDelta    = TURN_SPEED * MAX_VELOCITY;
       rightDelta   = -TURN_SPEED * MAX_VELOCITY;

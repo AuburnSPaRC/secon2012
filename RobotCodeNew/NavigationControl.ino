@@ -113,7 +113,7 @@ void executeSegment(int segment)
     lfPID.SetTunings(courseConfig[location].KP, courseConfig[location].KI, courseConfig[location].KD); // Set the PID loops tuning values to the new ones from EEPROM
     lfPID.SetMode(AUTOMATIC); // Turn on PID
     
-    int terminationType = checkTermination();  //Check termination type
+    int terminationType = -1;  //Check termination type
     
     if(courseConfig[location].terminate == AT_ANY) // Special case for AT_ANY
     {
@@ -137,11 +137,12 @@ void executeSegment(int segment)
           }
         #endif
         followLine();
-        if(delayer>=100){terminationType = checkTermination();}
+        if(delayer>=120){terminationType = checkTermination();}
         else delayer++;
       }
     }
     lfPID.SetMode(MANUAL); // Turn off PID
+    if(location!=2&&location!=11&&location!=22&location!=31&&location!=1&&location!=10&&location!=21&location!=30){setMove(STOP);delay(200);}
 
   }
   else  // Encoder-travel type movement, well, not really, right now it just waits til switch is pressed///maybe later??

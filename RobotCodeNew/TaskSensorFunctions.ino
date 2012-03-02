@@ -42,7 +42,7 @@
 #define TEMP_RANGE  5.55       // Optimal minimum range above or below room temp (5.55C=10F)
 #define TRIGGER     1.0        // Tolerance from TEMP_RANGE level 
 #define DS18B20_ID  0x28       // Family ID of DS18B20 Temperature Sensor
-byte ID_AMBIENT[8] = {0x28, 0xD8, 0xF1, 0x87, 0x3, 0x0, 0x0, 0xAB}; // ID of ambient sensor.
+byte ID_AMBIENT[8] = {0x28, 0x3C, 0x2F, 0xBB, 0x3, 0x0, 0x0, 0xF8}; // ID of ambient sensor.
 byte ID_PLATE[8] = {0x28, 0xF9, 0x48, 0xBB, 0x3, 0x0, 0x0, 0xCC};   // ID of plate sensor.
 
 
@@ -76,7 +76,7 @@ boolean readWaveform()
   digitalWrite(RELAY_K2_PIN, 0);
   // -------------
 
-  delay(1000);
+  delay(100);
   int sqcount = 0;
   int sawcount = 0; //count for the square wave/sawtooth wave, variable for signal value
   int my_status;
@@ -251,22 +251,24 @@ boolean readTemperature()
   static float lastTempPlate;
   digitalWrite(RELAY_K1_PIN, 1);
   digitalWrite(RELAY_K2_PIN, 1);
+ 
   delay(100);
   
+  ds.reset();
+  ds.skip();
+  ds.write(0x44);
   
 
-  
-
-  //tempAmbient = readSensorTemp(ID_AMBIENT);    //Wait til we get another ambient sensor
+  tempAmbient = readSensorTemp(ID_AMBIENT);
   
   for(i=0;i<30;i++)    //Wait at maximum, ten readings
   {
     ds.reset();
     ds.skip();
     ds.write(0x44);
-    tempPlate = readSensorTemp(ID_PLATE);
-    delay(300);  
-    tempAmbient=tempPlate;///REMOVE THIS LATER!
+    delay(300);
+    tempPlate = readSensorTemp(ID_PLATE); 
+    tempAmbient=tempPlate;///REMOVE THIS LATER!*/
     if (tempPlate > tempAmbient + TEMP_RANGE - TRIGGER)
     {
       accurateFlag = true;
@@ -314,8 +316,8 @@ boolean readTemperature()
   
     
   accurateFlag = false;
-//  if(tempPlate<tempAmbient){return LEFT;}
-//  else if(tempPlate>tempAmbient){return RIGHT;}
+  if(tempPlate<tempAmbient){return LEFT;}
+  else if(tempPlate>tempAmbient){return RIGHT;}
   Serial.print("ERROR");return ERROR;
   
   

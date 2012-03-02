@@ -1,12 +1,24 @@
 #include <OneWire.h>
 
+  #define RELAY_K1_PIN   52 // (DIG) DPin 52 - Control Relay 1
+  #define RELAY_K2_PIN   53 // (DIG) DPin 53 - Control Relay 
+
 // OneWire device bus
-OneWire db(10);  // on pin 10
+OneWire db(A11);  // on pin 10
 
 void setup(void) {
   // Initialize inputs/outputs
   // Start serial port
   Serial.begin(9600);
+  
+  digitalWrite(RELAY_K1_PIN, 0);
+  digitalWrite(RELAY_K2_PIN, 1);
+  // -------------  
+  delay(100);
+  digitalWrite(RELAY_K1_PIN, 1);
+  digitalWrite(RELAY_K2_PIN, 0);
+  // -------------  
+  delay(100);  
 
   byte i;
   byte present = 0;

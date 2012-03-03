@@ -308,8 +308,8 @@ void increaseLocation()
 {
   if(location==15){location=20;}
   else if(location==35){location=0;}
-  else if(location==18){location==20;}
-  else if(location==38){location==0;}
+  else if(location==18){location=20;}
+  else if(location==38){location=0;}
   else
   {
     if (goLeft){location += 4;}

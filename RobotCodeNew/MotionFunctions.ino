@@ -242,7 +242,7 @@ void moveToTerminate(int termination)
     rLastColor = lEncoderValues[0] > 500;
          
    
-    while(rCount<=100||lCount<=100)
+    while(rCount<=140||lCount<=140)
     {
 
       counts++;

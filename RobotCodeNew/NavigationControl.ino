@@ -144,7 +144,7 @@ void executeSegment(int segment)
       }
     }
     lfPID.SetMode(MANUAL); // Turn off PID
-    if(location!=2&&location!=11&&location!=22&location!=31&&location!=1&&location!=10&&location!=21&location!=30){setMove(STOP);delay(200);}
+    if(location!=2&&location!=11&&location!=22&location!=31&&location!=1&&location!=10&&location!=21&location!=30&&location!=14&&location!=34){setMove(STOP);delay(200);}
 
   }
   else  // Encoder-travel type movement, well, not really, right now it just waits til switch is pressed///maybe later??
@@ -234,7 +234,7 @@ int checkTermination()
  
   if(location==18||location==38)
   {
-    if(isCenter){return (AT_CENTER);
+    if(isCenter){return (AT_CENTER);}
   }
   if (hitSwitch)
   {

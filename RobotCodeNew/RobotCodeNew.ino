@@ -24,7 +24,7 @@
 #define TIMEOUT       2500  // waits for 2500 us for sensor outputs to go low
 #define MID_LINE      ((NUM_SENSORS-1)*1000)/2  // value of sensor when line is centered (0-7000)
 #define WHITE_LINE    1     // '1' = white line, '0' = black line
-#define REFLECT_THRESHOLD 750  // part of 1000 at which line is not found
+#define REFLECT_THRESHOLD 650  // part of 1000 at which line is not found
 
 
 // Direction Definitions
@@ -45,6 +45,7 @@
 
 #define MAX_VELOCITY  255  // Maximum motor velocity
 
+//#define FAST_TEMP
 #define DEBUG_ROBOT 0
 //#define RE
 //#define DEBUG_PID 0
@@ -81,7 +82,7 @@ ftaCycle courseConfig[NUM_SEGMENTS];     //Holds the settings for the course rea
 float MAX_PID_DELTA=0;   // Maximum difference in wheel speeds when line-following 
 
 float FULL_SPEED = 0.4; // Fraction of MAX_VELOCITY that is 'full' speed, set each segment
-float TURN_SPEED = 0.25; // Fraction of MAX_VELOCITY that is 'turning' speed, set each segment
+float TURN_SPEED = 0.3; // Fraction of MAX_VELOCITY that is 'turning' speed, set each segment
 
 // Course Location (as defined by course_define.jpeg)
 int location = 0; 
@@ -141,6 +142,7 @@ void setup()
 
 void loop()
 {
+  
 #ifdef DEBUG_ROBOT
   Serial.print("\n");
   Serial.print("Location: ");
@@ -165,7 +167,6 @@ void loop()
   #ifdef DEBUG_WAVEFORM
   readWaveform();
   #endif
-
   //followLine();
 }
 
@@ -302,10 +303,15 @@ void takeReading()
 
 void increaseLocation()
 {
-  if (goLeft){location += 4;}
-  else if((location==6)||(location==15)||(location==26)||(location==35)){location+=4;}  
-  else location++;
-  if(location>39)location=0; // Make sure location is never > 37
+  if(location==15){location=20;}
+  else if(location==35){location=0;}
+  else
+  {
+    if (goLeft){location += 4;}
+    else if((location==6)||(location==15)||(location==26)||(location==35)){location+=4;}  
+    else location++;
+    if(location>39)location=0; // Make sure location is never > 37
+  }
 }
 
 void calibrateSensors()
@@ -314,27 +320,33 @@ void calibrateSensors()
   setMove(TURN_LEFT);
   // Calibrate sensors  (robot must be fully on the line)
   // Note: still needs calibration motor routine
-  for (int i = 0; i < 25; i++)  // Make the calibration take about 5 seconds
+  for (int i = 0; i < 30; i++)  // Make the calibration take about 5 seconds
   {
     // Reads both sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
     fSensors.calibrate(QTR_EMITTERS_ON);
     lEncoder.calibrate(QTR_EMITTERS_ON);
     rEncoder.calibrate(QTR_EMITTERS_ON);
-    digitalWrite(RELAY_K1_PIN, toggle); // Make sound!
-    toggle = !toggle;
+    if(i%2==0)
+    {
+     digitalWrite(RELAY_K1_PIN, toggle); // Make sound!
+     toggle = !toggle;
+    }
     //rSensor.calibrate();
   }
 
   toggle = true;
   setMove(TURN_RIGHT);
-  for (int i = 0; i < 25; i++)  // Make the calibration take about 5 seconds
+  for (int i = 0; i < 30; i++)  // Make the calibration take about 5 seconds
   {
     // Reads both sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
     fSensors.calibrate(QTR_EMITTERS_ON);
     lEncoder.calibrate(QTR_EMITTERS_ON);
     rEncoder.calibrate(QTR_EMITTERS_ON);
-    digitalWrite(RELAY_K1_PIN, toggle); // Make sound!
-    toggle = !toggle;
+    if(i%2==0)
+    {
+     digitalWrite(RELAY_K1_PIN, toggle); // Make sound!
+     toggle = !toggle;
+    }
     //rSensor.calibrate();
   }  
   setMove(STOP);

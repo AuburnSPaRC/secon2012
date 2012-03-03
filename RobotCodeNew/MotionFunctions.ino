@@ -18,7 +18,7 @@
 #define AT_T          4 // Bot is at a T-intersection
 #define AT_LEFT       5 // Bot is at left turn
 #define AT_RIGHT      6 // Bot is at right turn
-
+#define AT_CENTER     7 // Bot is at the center
 
 void interpolateStop(int stopVal)
 {
@@ -137,7 +137,9 @@ void moveToTerminate(int termination)
   boolean lLastColor, rLastColor;
   int currentTerminationType;
   int fast_delay=0;
-  int lCount=1,rCount=1;
+  int lCount=5,rCount=5;
+  int counts=0;
+  int Kp = 1;
 
   
   
@@ -171,56 +173,128 @@ void moveToTerminate(int termination)
   {
     
     setMove(MOVE_FORWARD);
+    rCount = lCount = 0;
+    
+    lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+    rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+    lLastColor = lEncoderValues[0] > 500;
+    rLastColor = lEncoderValues[0] > 500;
+         
    
     while(currentTerminationType!=AT_T)
     {
+
+      counts++;
       
+      leftDelta = Kp*(rCount-lCount);
+      rightDelta = -(rightDelta);
+      
+      updateMotors();
+        
+        
       lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
       rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-      lLastColor = lEncoderValues[0] > 500;
-      rLastColor = lEncoderValues[0] > 500;
         
-      while(rCount>0&&lCount>0)
+      if (lLastColor)
       {
-        
-        lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
-        rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
-          
-        if (lLastColor)
-        {
-          if (lEncoderValues[0] < 300)
-          {
-            lLastColor = !lLastColor;
-            lCount--;
-          }
-        }
-        else if (lEncoderValues[0] > 700)
+        if (lEncoderValues[0] < 300)
         {
           lLastColor = !lLastColor;
-          lCount--;
-        }
-        
-        
-        if (rLastColor)
-        {
-          if (rEncoderValues[0] < 300)
-          {
-            rLastColor = !rLastColor;
-            rCount--;
-          }
-        }
-        else if (rEncoderValues[0] > 700)
-        {
-          rLastColor = !rLastColor;
-          rCount--;
+          lCount++;
         }
       }
+      else if (lEncoderValues[0] > 700)
+      {
+        lLastColor = !lLastColor;
+        lCount++;
+      }
+      
+      
+      if (rLastColor)
+      {
+        if (rEncoderValues[0] < 300)
+        {
+          rLastColor = !rLastColor;
+          rCount++;
+        }
+      }
+      else if (rEncoderValues[0] > 700)
+      {
+        rLastColor = !rLastColor;
+        rCount++;
+      }
+      
       currentTerminationType=checkTermination();
     }
     setMove(STOP);
-
-    
   }
+  
+  //TAKING A SHORTCUT (NEW)
+  if((location==18||location==38))
+  {
+    
+    setMove(MOVE_FORWARD);
+    rCount = lCount = 0;
+    
+    lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+    rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+    lLastColor = lEncoderValues[0] > 500;
+    rLastColor = lEncoderValues[0] > 500;
+         
+   
+    while(rCount<=100||lCount<=100)
+    {
+
+      counts++;
+      
+      leftDelta = Kp*(rCount-lCount);
+      rightDelta = -(rightDelta);
+      
+      updateMotors();
+       
+        
+      lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+      rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+        
+      if (lLastColor)
+      {
+        if (lEncoderValues[0] < 300)
+        {
+          lLastColor = !lLastColor;
+          lCount++;
+        }
+      }
+      else if (lEncoderValues[0] > 700)
+      {
+        lLastColor = !lLastColor;
+        lCount++;
+      }
+      
+      
+      if (rLastColor)
+      {
+        if (rEncoderValues[0] < 300)
+        {
+          rLastColor = !rLastColor;
+          rCount++;
+        }
+      }
+      else if (rEncoderValues[0] > 700)
+      {
+        rLastColor = !rLastColor;
+        rCount++;
+      }
+      
+      if(rCount>60||lCount>60)
+      {
+        if(checkTermination()==AT_CENTER)break;
+        
+      }
+    }
+    setMove(STOP);
+  }  
+  
+  
 }      
 
   

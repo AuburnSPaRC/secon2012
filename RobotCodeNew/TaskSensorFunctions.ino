@@ -123,6 +123,7 @@ boolean readWaveform()
 
   digitalWrite(PIN_CS,HIGH);  //disables the ADC
 
+#ifdef DEBUG_WAVEFORM
   Serial.print("Square: ");
   Serial.println(sqcount);
   Serial.print("Saw: ");
@@ -130,23 +131,30 @@ boolean readWaveform()
   //  Serial.print("time: ");
   //  Serial.println(t2-t1);
   Serial.println("-------------");
+#endif
 
   if (sqcount > NUM_SAMPLES*(SQ_THRESH_PERCENT))   //if x% of samples are within range, then it must be a square wave
   {
     accurateFlag = true;
+  #ifdef DEBUG_WAVEFORM
     Serial.print("RIGHT");    
+  #endif
     return RIGHT;
   }
   else if (sawcount > NUM_SAMPLES*(SAW_THRESH_PERCENT))   //if x% of samples are NOT within range, then it must be a sawtooth wave
   {
     accurateFlag = true;
+  #ifdef DEBUG_WAVEFORM
     Serial.print("LEFT");
+  #endif
     return LEFT;
   }
   else
   {
     accurateFlag = false;
+  #ifdef DEBUG_WAVEFORM
     Serial.print("ERROR");
+  #endif
     return ERROR;  
   }
 }
@@ -182,11 +190,13 @@ boolean readCapacitance()
 
   C = float(112.0 / (R * log(float(1023-float(V1))/float(1023-float(V2)))));
   // ^ fancy mathematics
+#ifdef DEBUG_CAPACITANCE
   Serial.print("Capacitance:\n");
   Serial.println(V1);
   Serial.println(V2);
   Serial.println(C,5);
   Serial.print("\n");
+#endif
   if (V1 >= 900)      //bad connection
   {
     accurateFlag = false;
@@ -226,10 +236,11 @@ boolean readVoltage()
   double vActual;
   Vin = analogRead(PIN_VOLT);
   vActual = float(((3.0*5.0*float(Vin))/1023.0) + 2*Vdiode); //find and put Vactual in fullscale voltage
-
+#ifdef DEBUG_VOLTAGE
     Serial.print("Voltage: ");
   Serial.print(vActual);  
   Serial.print("\n");
+#endif
   if (vActual > 10 && vActual <= 20)  //11V to 15V = turn right
   {
     accurateFlag = true;
@@ -312,11 +323,15 @@ boolean readTemperature()
       if(numTimes>=2)
       {
         if(!upping){
+          #ifdef DEBUG_TEMP
           Serial.print("LEFT");
+          #endif
           return LEFT;
         }
         else {
+          #ifdef DEBUG_TEMP
           Serial.print("RIGHT");
+          #endif
           return RIGHT;
         }        
       }
@@ -354,7 +369,9 @@ boolean readTemperature()
   else if(tempPlate>tempAmbient){
     return RIGHT;
   }
+  #ifdef DEBUG_TEMP
   Serial.print("ERROR");
+  #endif
   return ERROR;
 
 
@@ -389,8 +406,9 @@ float readSensorTemp(byte addr[])
    if(fract<10)Serial.print("0");
    Serial.print(fract);
    Serial.print("\n");*/
-
+#ifdef DEBUG_TEMP
   Serial.println(Tc_100);
+#endif
   return Tc_100; 
 }
 

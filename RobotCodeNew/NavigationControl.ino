@@ -12,6 +12,7 @@
 #define AT_T          4 // Bot is at a T-intersection
 #define AT_LEFT       5 // Bot is at left turn
 #define AT_RIGHT      6 // Bot is at right turn
+#define AT_CENTER     7 // Bot is at the center
 
 // Action types:
 #define TURN_IN_PLACE   0 // Rotate left or right in place
@@ -213,8 +214,10 @@ int checkTermination()
     //Serial.flush();
    //#endif
   
-  boolean isLeft  = ((fSensorValues[0] < REFLECT_THRESHOLD));//&&(fSensorValues[1] < REFLECT_THRESHOLD));
-  boolean isRight = ((fSensorValues[(NUM_SENSORS)-1] < REFLECT_THRESHOLD));//&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
+  boolean isCenter = (fSensorValues[(NUM_SENSORS/2)-1]<REFLECT_THRESHOLD)||(fSensorValues[(NUM_SENSORS/2)]<REFLECT_THRESHOLD);
+  
+  boolean isLeft  = ((fSensorValues[0] < REFLECT_THRESHOLD));     //&&(fSensorValues[1] < REFLECT_THRESHOLD));
+  boolean isRight = ((fSensorValues[(NUM_SENSORS)-1] < REFLECT_THRESHOLD));    //&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
   boolean isOff = true;
   boolean hitSwitchVals[4] = {(digitalRead(TOP_RIGHT_SWITCH)==LOW),(digitalRead(TOP_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_RIGHT_SWITCH)==LOW)};
   boolean hitSwitch=((hitSwitchVals[0]&&hitSwitchVals[3])||(hitSwitchVals[0]&&hitSwitchVals[2])||(hitSwitchVals[1]&&hitSwitchVals[3])||(hitSwitchVals[1]&&hitSwitchVals[2]));
@@ -229,7 +232,10 @@ int checkTermination()
   
   
  
-  
+  if(location==18||location==38)
+  {
+    if(isCenter){return (AT_CENTER);
+  }
   if (hitSwitch)
   {
     if(((location==2)||(location==11)||(location==31))&&(location!=22)){return (HIT_SWITCH);}

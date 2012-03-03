@@ -46,10 +46,13 @@
 #define MAX_VELOCITY  255  // Maximum motor velocity
 
 //#define FAST_TEMP
-#define DEBUG_ROBOT 0
+//#define DEBUG_ROBOT 0
 //#define RE
 //#define DEBUG_PID 0
 //#define DEBUG_WAVEFORM
+//#define DEBUG_CAPACITANCE
+//#define DEBUG_VOLTAGE
+//#define DEBUG_TEMP
 
 // PWM offset for motor speeds to be equal (Left motor is faster = +)
 #define MOTOR_OFFSET  0
@@ -305,6 +308,8 @@ void increaseLocation()
 {
   if(location==15){location=20;}
   else if(location==35){location=0;}
+  else if(location==18){location==20;}
+  else if(location==38){location==0;}
   else
   {
     if (goLeft){location += 4;}

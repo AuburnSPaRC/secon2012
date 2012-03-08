@@ -12,6 +12,7 @@
 #define AT_T          4 // Bot is at a T-intersection
 #define AT_LEFT       5 // Bot is at left turn
 #define AT_RIGHT      6 // Bot is at right turn
+#define AT_CENTER     7 // Bot is at the center
 
 // Action types:
 #define TURN_IN_PLACE   0 // Rotate left or right in place
@@ -25,6 +26,7 @@ void executeSegment(int segment)
   u_double tempVals[3];    //Temporary structs to read in the floats
   byte temp;
   int delayer=0;
+  int terminationType = -1;  //Check termination type
 
   // --- Retrieve FTA information from EEPROM: ---
   courseConfig[location].follow = EEPROM.read(segment * FTA_CYCLE_SIZE);          // Read the follow type
@@ -103,17 +105,17 @@ void executeSegment(int segment)
     Serial.print("\n");   //Debugging print out
   #endif    
   
-
+    setMove(MOVE_FORWARD);
   // --- Execute line- or encoder-following: ---
   if (courseConfig[location].follow == LINE_FOLLOW) // Line-following type movement
   {
-    setMove(MOVE_FORWARD);
+    
     // Execute linefollowing until termination occurs:
     lfPID.SetOutputLimits(-MAX_PID_DELTA, MAX_PID_DELTA); // force PID to the range of motor speeds.   
     lfPID.SetTunings(courseConfig[location].KP, courseConfig[location].KI, courseConfig[location].KD); // Set the PID loops tuning values to the new ones from EEPROM
     lfPID.SetMode(AUTOMATIC); // Turn on PID
     
-    int terminationType = -1;  //Check termination type
+    
     
     if(courseConfig[location].terminate == AT_ANY) // Special case for AT_ANY
     {
@@ -142,12 +144,13 @@ void executeSegment(int segment)
       }
     }
     lfPID.SetMode(MANUAL); // Turn off PID
-    if(location!=2&&location!=11&&location!=22&location!=31&&location!=1&&location!=10&&location!=21&location!=30){setMove(STOP);delay(200);}
+    if(location!=2&&location!=11&&location!=22&location!=31&&location!=1&&location!=10&&location!=21&location!=30&&location!=14&&location!=34){setMove(STOP);delay(200);}
 
   }
   else  // Encoder-travel type movement, well, not really, right now it just waits til switch is pressed///maybe later??
   {
-    // Execute encoder-following until termination occurs:
+    // Execute encoder-following until termination occurs:'
+    terminationType = checkTermination();
     moveToTerminate(courseConfig[segment].terminate);
   }
 
@@ -184,6 +187,7 @@ void executeSegment(int segment)
   {
     turnLeftAndRight(courseConfig[location].leftAmount, courseConfig[location].rightAmount, true); // True = turn right wheel first
   }
+
 }
 
 // Checks to see if the robot is at a turn or a 'T', by checking the outer sensors.
@@ -210,12 +214,14 @@ int checkTermination()
     //Serial.flush();
    //#endif
   
-  boolean isLeft  = ((fSensorValues[0] < REFLECT_THRESHOLD));//&&(fSensorValues[1] < REFLECT_THRESHOLD));
-  boolean isRight = ((fSensorValues[(NUM_SENSORS)-1] < REFLECT_THRESHOLD));//&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
+  boolean isCenter = (fSensorValues[(NUM_SENSORS/2)-1]<REFLECT_THRESHOLD)||(fSensorValues[(NUM_SENSORS/2)]<REFLECT_THRESHOLD);
+  
+  boolean isLeft  = ((fSensorValues[0] < REFLECT_THRESHOLD));     //&&(fSensorValues[1] < REFLECT_THRESHOLD));
+  boolean isRight = ((fSensorValues[(NUM_SENSORS)-1] < REFLECT_THRESHOLD));    //&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
   boolean isOff = true;
   boolean hitSwitchVals[4] = {(digitalRead(TOP_RIGHT_SWITCH)==LOW),(digitalRead(TOP_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_RIGHT_SWITCH)==LOW)};
   boolean hitSwitch=((hitSwitchVals[0]&&hitSwitchVals[3])||(hitSwitchVals[0]&&hitSwitchVals[2])||(hitSwitchVals[1]&&hitSwitchVals[3])||(hitSwitchVals[1]&&hitSwitchVals[2]));
-  boolean hitSwitchTemp=hitSwitchVals[0]||hitSwitchVals[1]||hitSwitchVals[2]&&hitSwitchVals[3];
+  boolean hitSwitchTemp=(hitSwitchVals[0]&&hitSwitchVals[1])||(hitSwitchVals[2]&&hitSwitchVals[3]);
   
   // Checks to see if every sensor is above threshold:
   for (int i = 0; i < NUM_SENSORS*2; i++)
@@ -226,10 +232,13 @@ int checkTermination()
   
   
  
-  
+  if(location==18||location==38)
+  {
+    if(isCenter){return (AT_CENTER);}
+  }
   if (hitSwitch)
   {
-    if((location==2)||(location==11)||(location==22)||(location==31)){return (HIT_SWITCH);}
+    if(((location==2)||(location==11)||(location==31))&&(location!=22)){return (HIT_SWITCH);}
   }
   if(hitSwitchTemp)
   {

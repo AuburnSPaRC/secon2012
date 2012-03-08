@@ -18,7 +18,7 @@
 #define AT_T          4 // Bot is at a T-intersection
 #define AT_LEFT       5 // Bot is at left turn
 #define AT_RIGHT      6 // Bot is at right turn
-
+#define AT_CENTER     7 // Bot is at the center
 
 void interpolateStop(int stopVal)
 {
@@ -134,33 +134,169 @@ void followLine()
 //Move up to and back from the boxes 
 void moveToTerminate(int termination)
 {
+  boolean lLastColor, rLastColor;
   int currentTerminationType;
   int fast_delay=0;
+  int lCount=5,rCount=5;
+  int counts=0;
+  int Kp = 1;
+
   
+  
+  //AT THE BOX
   if((location==2)||(location==11)||(location==22)||(location==31))
   {
     setMove(MOVE_FORWARD);
 
   }
-  //else if((location==3)||(location==12)||(location==23)||(location==32)){setMove(MOVE_BACKWARD);}
-  
+
+  //MOVING AWAY FROM THE BOX 
   if(termination==HIT_SWITCH)  //Moving forward
   {
+    currentTerminationType=checkTermination();
     while(currentTerminationType!=HIT_SWITCH)
     {
       currentTerminationType=checkTermination();
       if(fast_delay>100){setMove(MOVE_FAST);}
       else {fast_delay++;}      
     }
+  }  //Moving away from the temperature box
+  else if(location==23)  //Backing up from temp sensor
+  {
+    setMove(MOVE_BACKWARD);
+    delay(100);
+    setMove(STOP);
   }
-//  else  //Backing up
-//  {
-//    while(currentTerminationType!=AT_T)
-//    {
-//      currentTerminationType=checkTermination();
-//    }    
-//  }
-}
+
+  //TAKING A SHORTCUT
+  if(termination==AT_T&&(location==15||location==35))
+  {
+    
+    setMove(MOVE_FORWARD);
+    rCount = lCount = 0;
+    
+    lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+    rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+    lLastColor = lEncoderValues[0] > 500;
+    rLastColor = lEncoderValues[0] > 500;
+         
+   
+    while(currentTerminationType!=AT_T)
+    {
+
+      counts++;
+      
+      leftDelta = Kp*(rCount-lCount);
+      rightDelta = -(rightDelta);
+      
+      updateMotors();
+        
+        
+      lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+      rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+        
+      if (lLastColor)
+      {
+        if (lEncoderValues[0] < 300)
+        {
+          lLastColor = !lLastColor;
+          lCount++;
+        }
+      }
+      else if (lEncoderValues[0] > 700)
+      {
+        lLastColor = !lLastColor;
+        lCount++;
+      }
+      
+      
+      if (rLastColor)
+      {
+        if (rEncoderValues[0] < 300)
+        {
+          rLastColor = !rLastColor;
+          rCount++;
+        }
+      }
+      else if (rEncoderValues[0] > 700)
+      {
+        rLastColor = !rLastColor;
+        rCount++;
+      }
+      
+      currentTerminationType=checkTermination();
+    }
+    setMove(STOP);
+  }
+  
+  //TAKING A SHORTCUT (NEW)
+  if((location==18||location==38))
+  {
+    
+    setMove(MOVE_FORWARD);
+    rCount = lCount = 0;
+    
+    lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+    rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+    lLastColor = lEncoderValues[0] > 500;
+    rLastColor = lEncoderValues[0] > 500;
+         
+   
+    while(rCount<=140||lCount<=140)
+    {
+
+      counts++;
+      
+      leftDelta = Kp*(rCount-lCount);
+      rightDelta = -(rightDelta);
+      
+      updateMotors();
+       
+        
+      lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+      rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+        
+      if (lLastColor)
+      {
+        if (lEncoderValues[0] < 300)
+        {
+          lLastColor = !lLastColor;
+          lCount++;
+        }
+      }
+      else if (lEncoderValues[0] > 700)
+      {
+        lLastColor = !lLastColor;
+        lCount++;
+      }
+      
+      
+      if (rLastColor)
+      {
+        if (rEncoderValues[0] < 300)
+        {
+          rLastColor = !rLastColor;
+          rCount++;
+        }
+      }
+      else if (rEncoderValues[0] > 700)
+      {
+        rLastColor = !rLastColor;
+        rCount++;
+      }
+      
+      if(rCount>60||lCount>60)
+      {
+        if(checkTermination()==AT_CENTER)break;
+        
+      }
+    }
+    setMove(STOP);
+  }  
+  
+  
+}      
+
   
   
   ///OLD FUNCTION
@@ -441,10 +577,12 @@ void turnInPlace(int clicks)
     
     lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
     rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+   // Serial.println(lEncoderValues[0]);
+    //Serial.println(lEncoderValues[0]);
     
     if (lLastColor)
     {
-      if (lEncoderValues[0] < 300)
+      if (lEncoderValues[0] < 400)
       {
         lLastColor = !lLastColor;
         lCount--;
@@ -452,7 +590,7 @@ void turnInPlace(int clicks)
     }
     else
     {
-      if (lEncoderValues[0] > 700)
+      if (lEncoderValues[0] > 600)
       {
         lLastColor = !lLastColor;
         lCount--;
@@ -461,7 +599,7 @@ void turnInPlace(int clicks)
     
     if (rLastColor)
     {
-      if (rEncoderValues[0] < 300)
+      if (rEncoderValues[0] < 400)
       {
         rLastColor = !rLastColor;
         rCount--;
@@ -469,7 +607,7 @@ void turnInPlace(int clicks)
     }
     else
     {
-      if (rEncoderValues[0] > 700)
+      if (rEncoderValues[0] > 600)
       {
         rLastColor = !rLastColor;
         rCount--;

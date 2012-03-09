@@ -128,23 +128,24 @@ void executeSegment(int segment)
     }
     else // All other termination types
     {
-      
+      if(location==8||location==17||location==28||location==37||location==5||location==14||location==25||location==34){avoidMessingUpLineFollowing();}
       while (terminationType != courseConfig[location].terminate)
       {
         #ifdef DEBUG_PID
          if(Serial.available()){
-          delay(100);
+          (100);
           dynamic_PID();
           setMove(MOVE_FORWARD); // Begin moving forward
           }
         #endif
         followLine();
-        if(delayer>=120){terminationType = checkTermination();}
+        if(delayer>=100){terminationType = checkTermination();}
         else delayer++;
       }
     }
     lfPID.SetMode(MANUAL); // Turn off PID
-    if(location!=2&&location!=11&&location!=22&location!=31&&location!=1&&location!=10&&location!=21&location!=30&&location!=14&&location!=34){setMove(STOP);delay(200);}
+//    if(location!=2&&location!=11&&location!=22&location!=31&&location!=1&&location!=10&&location!=21&location!=30&&location!=14&&location!=34){setMove(MOVE_BACKWARD);}
+     if(location==17||location==37||location==18||location==38){setMove(STOP);delay(200);}
 
   }
   else  // Encoder-travel type movement, well, not really, right now it just waits til switch is pressed///maybe later??
@@ -152,6 +153,7 @@ void executeSegment(int segment)
     // Execute encoder-following until termination occurs:'
     terminationType = checkTermination();
     moveToTerminate(courseConfig[segment].terminate);
+    if(location==17||location==37||location==18||location==38){setMove(STOP);delay(200);}
   }
 
   // --- Perform appropriate action: ---
@@ -197,20 +199,22 @@ int checkTermination()
   
   fSensors.readCalibrated(fSensorValues, QTR_EMITTERS_ON);
   //#ifdef DEBUG_ROBOT
-   // for(int i=0;i<NUM_SENSORS;i++)
-    //{
+   /* for(int i=0;i<NUM_SENSORS;i++)
+    {
   
-   /*   #ifdef DEBUG_ROBOT
+      
         Serial.print("Sensor[");
         Serial.print(i);
         Serial.print("]: ");
         Serial.print(fSensorValues[i]);
         Serial.print(" ");
         Serial.flush();
-        delay(10);
-      #endif*/
-    //}      
-    //Serial.print("\n");
+        Serial.print("\n");
+        delay(200);
+
+      
+    }*/      
+    
     //Serial.flush();
    //#endif
   

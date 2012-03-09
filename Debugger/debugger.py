@@ -280,7 +280,7 @@ class DebuggerGUI(object):
 	#Send global data
 	def callback_send_globals(self,widget,callback_data=None):	
 		#global i,p,d,start_pos
-		ser=serial.Serial('/dev/ttyUSB0',baudrate=9600)
+		ser=serial.Serial('/dev/ttyUSB1',baudrate=9600)
 		info=struct.pack('=cB','g',start_pos)
 		ser.write(info)
 		ser.close()
@@ -290,7 +290,7 @@ class DebuggerGUI(object):
 	#Pressed send in MainWindow
 	def callback_send(self, widget, callback_data=None):
 		if currentStage!=-1:
-			ser=serial.Serial('/dev/ttyUSB0',baudrate=9600)
+			ser=serial.Serial('/dev/ttyUSB1',baudrate=9600)
 			info=struct.pack('=cBBBBbbBBBfff','c',currentStage, enc_fol,termination,termination_action,left_amnt,right_amnt,speed,turnspeed,center,p,i,d)
 			ser.write(info)
 			ser.close()

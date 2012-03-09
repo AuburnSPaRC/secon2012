@@ -59,7 +59,7 @@
     
 // --- QTR Sensor Pin Definitions ---
 #ifdef OVERWRITE_QTR_PINS
-  unsigned char fSensorPins[] = {12,11,10,9,8,7,6,33,35,37,39,41,43,45}; // Main line sensor
+  unsigned char fSensorPins[] = {51,12,11,10,9,8,7,6,33,35,37,39,41,43,45,47}; // Main line sensor
   unsigned char lEncoderPins[] = {46}; // Left encoder sensor
   unsigned char rEncoderPins[] = {48}; // Right encoder sensor
 #endif

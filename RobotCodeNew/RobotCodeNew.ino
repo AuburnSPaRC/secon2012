@@ -20,7 +20,7 @@
 
 #define FTA_CYCLE_SIZE  20 // Defines the size (in bytes) of the ftaCycle struct.
 #define NUM_SEGMENTS  40 //The number of segments on the course
-#define NUM_SENSORS   14    // number of sensors used on each array
+#define NUM_SENSORS   16    // number of sensors used on each array
 #define TIMEOUT       2500  // waits for 2500 us for sensor outputs to go low
 #define MID_LINE      ((NUM_SENSORS-1)*1000)/2  // value of sensor when line is centered (0-7000)
 #define WHITE_LINE    1     // '1' = white line, '0' = black line

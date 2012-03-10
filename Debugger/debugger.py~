@@ -280,7 +280,7 @@ class DebuggerGUI(object):
 	#Send global data
 	def callback_send_globals(self,widget,callback_data=None):	
 		#global i,p,d,start_pos
-		ser=serial.Serial('/dev/ttyUSB01',baudrate=9600)
+		ser=serial.Serial('/dev/ttyUSB1',baudrate=9600)
 		info=struct.pack('=cB','g',start_pos)
 		ser.write(info)
 		ser.close()

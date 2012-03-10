@@ -160,8 +160,13 @@ void moveToTerminate(int termination)
       if(fast_delay>100){setMove(MOVE_FAST);}
       else {fast_delay++;}
     }
+<<<<<<< HEAD
   } //Moving away from the temperature box
   else if(location==23||location==3||location==12||location==32) //Backing up from temp sensor
+=======
+  }  //Moving away from the temperature box
+  else if(location==23||location==3||location==12||location==32)  //Backing up from temp sensor
+>>>>>>> ef8898c689414ac2ad08beaf6b53c73d1c8c0d41
   {
     setMove(MOVE_BACKWARD);
     delay(70);
@@ -290,6 +295,7 @@ void moveToTerminate(int termination)
         if(checkTermination()==AT_CENTER)
           {
              break;
+<<<<<<< HEAD
           }
       }
     }
@@ -297,6 +303,15 @@ void moveToTerminate(int termination)
   }
  
 }
+=======
+          }     
+      }
+    }
+    setMove(STOP);
+  }  
+ 
+}      
+>>>>>>> ef8898c689414ac2ad08beaf6b53c73d1c8c0d41
 
 
 
@@ -312,6 +327,68 @@ void avoidMessingUpLineFollowing(void)
     int Kp = 1;
   
   
+<<<<<<< HEAD
+=======
+  
+  
+    //Moving forward a little to avoide line following crap
+   
+    setMove(MOVE_FORWARD);
+    rCount = lCount = 0;
+    
+    lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+    rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+    lLastColor = lEncoderValues[0] > 500;
+    rLastColor = lEncoderValues[0] > 500;
+         
+   
+    while(rCount<=8||lCount<=8)
+    {
+
+      counts++;
+      
+      leftDelta = Kp*(rCount-lCount);
+      rightDelta = -(rightDelta);
+      
+      updateMotors();
+       
+        
+      lEncoder.readCalibrated(lEncoderValues, QTR_EMITTERS_ON); 
+      rEncoder.readCalibrated(rEncoderValues, QTR_EMITTERS_ON); 
+        
+      if (lLastColor)
+      {
+        if (lEncoderValues[0] < 300)
+        {
+          lLastColor = !lLastColor;
+          lCount++;
+        }
+      }
+      else if (lEncoderValues[0] > 700)
+      {
+        lLastColor = !lLastColor;
+        lCount++;
+      }
+      
+      
+      if (rLastColor)
+      {
+        if (rEncoderValues[0] < 300)
+        {
+          rLastColor = !rLastColor;
+          rCount++;
+        }
+      }
+      else if (rEncoderValues[0] > 700)
+      {
+        rLastColor = !rLastColor;
+        rCount++;
+      }
+
+    }
+}
+
+>>>>>>> ef8898c689414ac2ad08beaf6b53c73d1c8c0d41
   
   
     //Moving forward a little to avoide line following crap

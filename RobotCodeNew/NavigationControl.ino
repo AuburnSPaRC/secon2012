@@ -144,7 +144,11 @@ void executeSegment(int segment)
       }
     }
     lfPID.SetMode(MANUAL); // Turn off PID
+<<<<<<< HEAD
 // if(location!=2&&location!=11&&location!=22&location!=31&&location!=1&&location!=10&&location!=21&location!=30&&location!=14&&location!=34){setMove(MOVE_BACKWARD);}
+=======
+//    if(location!=2&&location!=11&&location!=22&location!=31&&location!=1&&location!=10&&location!=21&location!=30&&location!=14&&location!=34){setMove(MOVE_BACKWARD);}
+>>>>>>> ef8898c689414ac2ad08beaf6b53c73d1c8c0d41
      if(location==17||location==37||location==18||location==38){setMove(STOP);delay(200);}
 
   }
@@ -200,6 +204,7 @@ int checkTermination()
   fSensors.readCalibrated(fSensorValues, QTR_EMITTERS_ON);
   //#ifdef DEBUG_ROBOT
    /* for(int i=0;i<NUM_SENSORS;i++)
+<<<<<<< HEAD
 {
 Serial.print("Sensor[");
 Serial.print(i);
@@ -211,6 +216,22 @@ Serial.print("\n");
 delay(200);
 
 }*/
+=======
+    {
+  
+      
+        Serial.print("Sensor[");
+        Serial.print(i);
+        Serial.print("]: ");
+        Serial.print(fSensorValues[i]);
+        Serial.print(" ");
+        Serial.flush();
+        Serial.print("\n");
+        delay(200);
+
+      
+    }*/      
+>>>>>>> ef8898c689414ac2ad08beaf6b53c73d1c8c0d41
     
     //Serial.flush();
    //#endif

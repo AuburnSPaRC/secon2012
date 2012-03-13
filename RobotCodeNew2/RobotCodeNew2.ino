@@ -131,7 +131,7 @@ void setup()
   delay(1000);
   
   readConfigs(0, NUM_SEGMENTS);
-  cur_loc=(int)EEPROM.read(1028);
+  cur_loc=2;//(int)EEPROM.read(1028);
 }
 
 
@@ -149,7 +149,6 @@ void loop(void)
  
  if(!courseConfig[cur_loc].skip_section)    //Make sure we're not supposed to skip this section
  {
-   takeReading();                //Try to take a reading
    executeSegment(cur_loc);      //Carry on with current segment
  }
  else {Serial.print("Skipped that!\n");}
@@ -170,17 +169,17 @@ void takeReading(void)
 {
    switch (cur_loc)
   {
-  case 3: // Voltage Task
+  case 2: // Voltage Task
     //goLeft = readVoltage();
     break;
-  case 12: // Capacitance Task 
+  case 11: // Capacitance Task 
     //readCapacitance();      //For some reason it does better if we do this....
     //goLeft = readCapacitance();
     break;
-  case 23: // Temperature Task
+  case 22: // Temperature Task
     //goLeft = readTemperature();    
     break;
-  case 32: // Waveform Task
+  case 31: // Waveform Task
     //goLeft = readWaveform();
     break;
   default:
@@ -342,25 +341,23 @@ void calibrateSensors()
 {
   float temp=TURN_SPEED;
   
-  TURN_SPEED=0.35;
+  TURN_SPEED=0.25;
   setMove(TURN_LEFT);
   // Calibrate sensors  (robot must be fully on the line)
   // Note: still needs calibration motor routine
-  for (int i = 0; i < 25; i++)  // Make the calibration take about 5 seconds
+  for (int i = 0; i < 50; i++)  // Make the calibration take about 5 seconds
   {
     // Reads both sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
     fSensors.calibrate(QTR_EMITTERS_ON);
-    //turnSensors.calibrate(QTR_EMITTERS_ON);
     encoders.calibrate(QTR_EMITTERS_ON);
     //rEncoder.calibrate(QTR_EMITTERS_ON);
   }
 
   setMove(TURN_RIGHT);
-  for (int i = 0; i < 25; i++)  // Make the calibration take about 5 seconds
+  for (int i = 0; i < 50; i++)  // Make the calibration take about 5 seconds
   {
     // Reads both sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
     fSensors.calibrate(QTR_EMITTERS_ON);
-    //turnSensors.calibrate(QTR_EMITTERS_ON);
     encoders.calibrate(QTR_EMITTERS_ON);
   //  rEncoder.calibrate(QTR_EMITTERS_ON);
   }

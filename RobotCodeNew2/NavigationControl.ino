@@ -26,7 +26,7 @@ void executeSegment(int segment)
   
   delayer=0;                //reset the delayer
   atTermination=NOWHERE;    //reset our termination
-  /*
+  
     Serial.print("\n");
     Serial.print("Follow:");
     Serial.print((courseConfig[segment].follow));
@@ -64,15 +64,16 @@ void executeSegment(int segment)
     Serial.println(courseConfig[segment].clicks);
     Serial.print("Occurances: ");  
     Serial.println(courseConfig[segment].occurance);  
-   Serial.print("\n"); //Debugging print out*/
+   Serial.print("\n"); //Debugging print out
  
+  FULL_SPEED=float(int(courseConfig[segment].bot_speed)/255.0);
+  TURN_SPEED=float(int(courseConfig[segment].turn_speed)/255.0);
+
   //First do the actual part
   if(courseConfig[segment].follow==0)    //Line following
   {
     //Set up our PID for this section
     setpointPID=courseConfig[segment].center*100;
-    FULL_SPEED=float(int(courseConfig[segment].bot_speed)/255.0);
-    TURN_SPEED=float(int(courseConfig[segment].turn_speed)/255.0);
     MAX_DELTA = FULL_SPEED*MAX_VELOCITY;
 
     lfPID.SetOutputLimits(-MAX_DELTA, MAX_DELTA); // force PID to the range of motor speeds.   
@@ -91,29 +92,37 @@ void executeSegment(int segment)
   }
   else      //Encoders
   {
+    if(courseConfig[segment].termination==HIT_SWITCH){delayer=100;}
     while(true)
     {
-      encoderMove(5);
+      setMove(MOVE_FORWARD);
       if(delayer>100)checkTermination();
       else delayer++;
-      if(atTermination==courseConfig[segment].termination){nOccur++;delayer=0;if(nOccur>=courseConfig[segment].occurance){break;}}
+      if(atTermination==courseConfig[segment].termination){nOccur++;delayer=0;if(nOccur>=courseConfig[segment].occurance){setMove(STOP);break;}}
     }
   }
   
+  if(segment==2||segment==11||segment==22||segment==31)
+  {
+    //takeReading();                //Try to take a reading
+  }
   
   //Turn left then right
   if(courseConfig[segment].action==LEFT_THEN_RIGHT)
   {
-    if(!goLeft)turnLeftThenRight(courseConfig[segment].rightAmount,courseConfig[segment].leftAmount,true);
+    
+    if(!goLeft){Serial.print("Hello0");turnLeftThenRight(courseConfig[segment].rightAmount,courseConfig[segment].leftAmount,true);}
     else turnLeftThenRight(courseConfig[segment].leftAmount,courseConfig[segment].rightAmount,false);
   }
   else if(courseConfig[segment].action==RIGHT_THEN_LEFT)    //Turn right then left
   {
+    Serial.print("Hello1");
     if(!goLeft)turnLeftThenRight(courseConfig[segment].rightAmount,courseConfig[segment].leftAmount,false);
     else turnLeftThenRight(courseConfig[segment].leftAmount,courseConfig[segment].rightAmount,true);
   }  
   else if(courseConfig[segment].action==TURN_IN_PLACE)
   {
+    Serial.print("Hello2");
     if(!goLeft)turnInPlace(courseConfig[segment].leftAmount);
     else turnInPlace(-courseConfig[segment].leftAmount);
   }
@@ -155,7 +164,12 @@ int checkTermination(void)
 
   boolean isRight = (fSensorValues[NUM_SENSORS-1] < REFLECT_THRESHOLD);    //&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
   boolean isLeft  = (fSensorValues[0]  < REFLECT_THRESHOLD);
+  boolean hitSwitchVals[4] = {(digitalRead(TOP_RIGHT_SWITCH)==LOW),(digitalRead(TOP_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_RIGHT_SWITCH)==LOW)};
+  boolean hitSwitch=((hitSwitchVals[0]||hitSwitchVals[1])&&(hitSwitchVals[2]||hitSwitchVals[3]));
   
+  if(hitSwitch){
+    atTermination=HIT_SWITCH;
+    return 1; }
   if (isRight && isLeft) {
     atTermination = AT_T;
     return 1; }

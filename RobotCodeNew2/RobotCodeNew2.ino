@@ -143,19 +143,18 @@ void loop(void)
   Serial.print("\n"); 
  while(Serial.available()>0)    //First see if we have any incoming messages
  {
-   Serial.println("Got Something");
-   Serial.println(Serial.available());
    getData();
    delay(750); 
  }
- /*
+ 
  if(!courseConfig[cur_loc].skip_section)    //Make sure we're not supposed to skip this section
  {
    takeReading();                //Try to take a reading
    executeSegment(cur_loc);      //Carry on with current segment
  }
+ else {Serial.print("Skipped that!\n");}
  
- moveOn();                     //Move to next location*/
+ moveOn();                     //Move to next location
 }
 
 

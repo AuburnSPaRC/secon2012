@@ -2,10 +2,10 @@
 #define ON_LINE       0 // Bot is on the line
 #define OFF_LINE      1 // Bot is off the line
 #define HIT_SWITCH    2 // Physical switch is triggered
-#define AT_T          4 // Bot is at a T-intersection
-#define AT_LEFT       5 // Bot is at left turn
-#define AT_RIGHT      6 // Bot is at right turn
-#define AT_CENTER     7 // Bot is at the center
+#define AT_T          3 // Bot is at a T-intersection
+#define AT_LEFT       4 // Bot is at left turn
+#define AT_RIGHT      5 // Bot is at right turn
+#define AT_CENTER     6 // Bot is at the center
 #define NOWHERE       -1// Bot is nowhere
 
 
@@ -26,7 +26,7 @@ void executeSegment(int segment)
   
   delayer=0;                //reset the delayer
   atTermination=NOWHERE;    //reset our termination
-  
+  /*
     Serial.print("\n");
     Serial.print("Follow:");
     Serial.print((courseConfig[segment].follow));
@@ -58,16 +58,16 @@ void executeSegment(int segment)
     Serial.println(courseConfig[segment].KI,5);
     Serial.print("KD: ");  
     Serial.println(courseConfig[segment].KD,5);
-    Serial.print("\n");
     Serial.print("Ignore: ");  
     Serial.println(courseConfig[segment].skip_section);
     Serial.print("Clicks: ");  
     Serial.println(courseConfig[segment].clicks);
     Serial.print("Occurances: ");  
-    Serial.println(courseConfig[segment].occurance);   //Debugging print out
+    Serial.println(courseConfig[segment].occurance);  
+   Serial.print("\n"); //Debugging print out*/
  
   //First do the actual part
-  if(courseConfig[segment].follow)    //Line following
+  if(courseConfig[segment].follow==0)    //Line following
   {
     //Set up our PID for this section
     setpointPID=courseConfig[segment].center*100;
@@ -81,6 +81,7 @@ void executeSegment(int segment)
 
     while(true)
     {
+      
       followLine();
       if(delayer>100)checkTermination();
       else delayer++;
@@ -153,7 +154,7 @@ int checkTermination(void)
 
 
   boolean isRight = (fSensorValues[NUM_SENSORS-1] < REFLECT_THRESHOLD);    //&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
-  boolean isLeft  = (turnSensorValues[0]  < REFLECT_THRESHOLD);
+  boolean isLeft  = (fSensorValues[0]  < REFLECT_THRESHOLD);
   
   if (isRight){atTermination=AT_RIGHT;return 1;}
   if (isLeft){atTermination=AT_LEFT;return 1;}

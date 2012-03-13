@@ -27,7 +27,45 @@ void executeSegment(int segment)
   delayer=0;                //reset the delayer
   atTermination=NOWHERE;    //reset our termination
   
-  
+    Serial.print("\n");
+    Serial.print("Follow:");
+    Serial.print((courseConfig[segment].follow));
+    Serial.print("\n");
+    Serial.print("Terminate:");
+    Serial.print((courseConfig[segment].termination));
+    Serial.print("\n");       
+    Serial.print("Action:");  
+    Serial.print((courseConfig[segment].action));
+    Serial.print("\n");
+    Serial.print("Left Amount:");  
+    Serial.print((courseConfig[segment].leftAmount));
+    Serial.print("\n");   
+    Serial.print("Right Amount:");  
+    Serial.print((courseConfig[segment].rightAmount));
+    Serial.print("\n");   //Debugging print out
+    Serial.print("Speed:");  
+    Serial.print((courseConfig[segment].bot_speed));
+    Serial.print("\n");   //Debugging print out
+    Serial.print("Turn Speed:");  
+    Serial.print((courseConfig[segment].turn_speed));
+    Serial.print("\n");   //Debugging print out  
+    Serial.print("Center:");  
+    Serial.print((courseConfig[segment].center));
+    Serial.print("\n");   //Debugging print out  
+    Serial.print("KP: ");  
+    Serial.println(courseConfig[segment].KP,5);
+    Serial.print("KI: ");  
+    Serial.println(courseConfig[segment].KI,5);
+    Serial.print("KD: ");  
+    Serial.println(courseConfig[segment].KD,5);
+    Serial.print("\n");
+    Serial.print("Ignore: ");  
+    Serial.println(courseConfig[segment].skip_section);
+    Serial.print("Clicks: ");  
+    Serial.println(courseConfig[segment].clicks);
+    Serial.print("Occurances: ");  
+    Serial.println(courseConfig[segment].occurance);   //Debugging print out
+ 
   //First do the actual part
   if(courseConfig[segment].follow)    //Line following
   {

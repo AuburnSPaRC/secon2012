@@ -112,7 +112,7 @@ unsigned int encoderValues[2];
 
 // Setup PID computation
 double setpointPID, inputPID, outputPID;
-PID lfPID(&inputPID, &outputPID, &setpointPID, 0.0125,0.002,0.004, DIRECT);
+PID lfPID(&inputPID, &outputPID, &setpointPID, 0.023,0.0,0.008, DIRECT);
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 void setup()
@@ -137,20 +137,25 @@ void setup()
 
 void loop(void)
 {
-  
+  Serial.print("\n");
+  Serial.print("Location: ");
+  Serial.print(cur_loc);
+  Serial.print("\n"); 
  while(Serial.available()>0)    //First see if we have any incoming messages
  {
+   Serial.println("Got Something");
+   Serial.println(Serial.available());
    getData();
    delay(750); 
  }
- 
+ /*
  if(!courseConfig[cur_loc].skip_section)    //Make sure we're not supposed to skip this section
  {
    takeReading();                //Try to take a reading
    executeSegment(cur_loc);      //Carry on with current segment
  }
  
- moveOn();                     //Move to next location
+ moveOn();                     //Move to next location*/
 }
 
 
@@ -204,7 +209,7 @@ void getData(void)
       break;
     
     //Check to make sure we are sending it things
-    case 'd':    //Data command
+    case 'c':    //Data command
       if(Serial.available()>=22)
       {
         //Get the data
@@ -231,7 +236,7 @@ void getData(void)
         courseConfig[segment].KD=Vals[2].dval; 
         
         courseConfig[segment].skip_section=Serial.read();  
-        start_pos=Serial.read();   
+        start_pos=Serial.read(); 
      
      
         //Now save the data   

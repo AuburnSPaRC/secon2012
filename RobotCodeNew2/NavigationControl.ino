@@ -46,7 +46,7 @@ void executeSegment(int segment)
       followLine();
       if(delayer>100)checkTermination();
       else delayer++;
-      if(atTermination==courseConfig[segment].termination){nOccur++;if(nOccur>=courseConfig[segment].occurance){break;}}
+      if(atTermination==courseConfig[segment].termination){nOccur++;delayer=0;if(nOccur>=courseConfig[segment].occurance){break;}}
     }
     lfPID.SetMode(MANUAL);
   }
@@ -57,7 +57,7 @@ void executeSegment(int segment)
       encoderMove(5);
       if(delayer>100)checkTermination();
       else delayer++;
-      if(atTermination==courseConfig[segment].termination){nOccur++;if(nOccur>=courseConfig[segment].occurance){break;}}
+      if(atTermination==courseConfig[segment].termination){nOccur++;delayer=0;if(nOccur>=courseConfig[segment].occurance){break;}}
     }
   }
   

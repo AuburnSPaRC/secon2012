@@ -19,7 +19,7 @@
 #include "PinDefines.h"
 
 
-#define FTA_CYCLE_SIZE  22 // Defines the size (in bytes) of the ftaCycle struct.
+#define FTA_CYCLE_SIZE  23 // Defines the size (in bytes) of the ftaCycle struct.
 
 #define NUM_SEGMENTS  40 //The number of segments on the course
 #define NUM_SENSORS   16    // number of sensors used on each array

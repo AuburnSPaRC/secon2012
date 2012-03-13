@@ -52,10 +52,10 @@
     #define ADC_INT_CLR_MASK 0b11011111
 #endif
 
-    #define TOP_RIGHT_SWITCH A2 //YELLOW
-    #define TOP_LEFT_SWITCH A1 //ORANGE
-    #define BOTTOM_LEFT_SWITCH A0 //GREEN
-    #define BOTTOM_RIGHT_SWITCH A3 //RED
+    #define TOP_RIGHT_SWITCH A2 //ORANGE
+    #define TOP_LEFT_SWITCH A1 //YELLOW
+    #define BOTTOM_LEFT_SWITCH A3 //RED
+    #define BOTTOM_RIGHT_SWITCH A0 //GREEN
     
 // --- QTR Sensor Pin Definitions ---
 #ifdef OVERWRITE_QTR_PINS

@@ -79,6 +79,7 @@ struct ftaCycle{
   float KP;
   float KI;
   float KD;
+  byte skip_section;
 };
 
 ftaCycle courseConfig[NUM_SEGMENTS];     //Holds the settings for the course read in from EEProm 
@@ -129,72 +130,60 @@ void setup()
 
   delay(1000);
   
-  
-  
-//  setpointPID=8000;
-//  lfPID.SetTunings(0.02,0.000,0.004);
-//  lfPID.SetOutputLimits(-MAX_DELTA, MAX_DELTA); // force PID to the range of motor speeds.   
-//  lfPID.SetMode(AUTOMATIC); 
-  
   readConfigs(0, NUM_SEGMENTS);
   cur_loc=(int)EEPROM.read(1028);
 }
 
 
-void readConfigs(int startRead, int stopRead)
-{
-  int temp=0;
-  u_double tempVals[3];    //Temporary structs to read in the floats
-  for(int i=startRead;i<stopRead;i++)
-  {
-    // --- Retrieve FTA information from EEPROM: ---
-    courseConfig[i].follow = EEPROM.read(i * FTA_CYCLE_SIZE);          // Read the follow type
-    courseConfig[i].termination = EEPROM.read((i * FTA_CYCLE_SIZE) + 1); // Read the termination type
-    courseConfig[i].action = EEPROM.read((i * FTA_CYCLE_SIZE) + 2);    // Read the action type
-    
-    temp = EEPROM.read((i * FTA_CYCLE_SIZE) + 3); // Read leftAmount
-    if(temp>127){courseConfig[i].leftAmount = int(-1*(256-temp));}
-    else courseConfig[i].leftAmount=int(temp);
-  
-     temp = EEPROM.read((i * FTA_CYCLE_SIZE) + 4); // Read rightAmount
-    if(temp>127){courseConfig[i].rightAmount = int(-1*(256-temp));}
-    else courseConfig[i].rightAmount=int(temp);
-    
-    courseConfig[i].bot_speed = EEPROM.read((i * FTA_CYCLE_SIZE) + 5); // Read bot_speed
-    courseConfig[i].turn_speed = EEPROM.read((i * FTA_CYCLE_SIZE) + 6); // Read turn speed  
-    courseConfig[i].center = EEPROM.read((i * FTA_CYCLE_SIZE) + 7); // Read center of line
-    courseConfig[i].occurance = EEPROM.read((i * FTA_CYCLE_SIZE) + 8); // Read occurances of end action
-    courseConfig[i].clicks = EEPROM.read((i * FTA_CYCLE_SIZE) + 9); // Read clicks to travel before end action
-      
-    
-    //Read in the KP, KI, KD values 
-    tempVals[0].b[0]=EEPROM.read((i * FTA_CYCLE_SIZE) + 10);
-    tempVals[0].b[1]=EEPROM.read((i * FTA_CYCLE_SIZE) + 11);  
-    tempVals[0].b[2]=EEPROM.read((i * FTA_CYCLE_SIZE) + 12);
-    tempVals[0].b[3]=EEPROM.read((i * FTA_CYCLE_SIZE) + 13);  
-  
-    tempVals[1].b[0]=EEPROM.read((i * FTA_CYCLE_SIZE) + 14);
-    tempVals[1].b[1]=EEPROM.read((i * FTA_CYCLE_SIZE) + 15);  
-    tempVals[1].b[2]=EEPROM.read((i * FTA_CYCLE_SIZE) + 16);
-    tempVals[1].b[3]=EEPROM.read((i * FTA_CYCLE_SIZE) + 17);  
-
-    tempVals[2].b[0]=EEPROM.read((i * FTA_CYCLE_SIZE) + 18);
-    tempVals[2].b[1]=EEPROM.read((i * FTA_CYCLE_SIZE) + 19);  
-    tempVals[2].b[2]=EEPROM.read((i * FTA_CYCLE_SIZE) + 20);
-    tempVals[2].b[3]=EEPROM.read((i * FTA_CYCLE_SIZE) + 21);    
-  
-    courseConfig[i].KP=tempVals[0].dval;
-    courseConfig[i].KI=tempVals[1].dval;
-    courseConfig[i].KD=tempVals[2].dval;      
-  }
-}
-
 void loop(void)
 {
- executeSegment(0);
+  
+ while(Serial.available()>0)    //First see if we have any incoming messages
+ {
+   getData();
+   delay(750); 
+ }
+ 
+ if(!courseConfig[cur_loc].skip_section)    //Make sure we're not supposed to skip this section
+ {
+   takeReading();                //Try to take a reading
+   executeSegment(cur_loc);      //Carry on with current segment
+ }
+ 
+ moveOn();                     //Move to next location
 }
 
 
+void moveOn()
+{
+  if(goLeft){cur_loc+=4;}
+  else if((cur_loc==6)||(cur_loc==15)||(cur_loc==26)||(cur_loc==35)){cur_loc+=4;}  
+  else {cur_loc++;}
+  if(cur_loc>39)cur_loc=0;
+}
+
+void takeReading(void)
+{
+   switch (location)
+  {
+  case 3: // Voltage Task
+    //goLeft = readVoltage();
+    break;
+  case 12: // Capacitance Task 
+    //readCapacitance();      //For some reason it does better if we do this....
+    //goLeft = readCapacitance();
+    break;
+  case 23: // Temperature Task
+    //goLeft = readTemperature();    
+    break;
+  case 32: // Waveform Task
+    //goLeft = readWaveform();
+    break;
+  default:
+    goLeft = false; // Not at a task location.
+    break;
+  }
+}
 
 
 
@@ -239,7 +228,9 @@ void getData(void)
         }
         courseConfig[segment].KP=Vals[0].dval;
         courseConfig[segment].KI=Vals[1].dval;            
-        courseConfig[segment].KD=Vals[2].dval;   
+        courseConfig[segment].KD=Vals[2].dval; 
+        
+        courseConfig[segment].skip_section=Serial.read();  
         start_pos=Serial.read();   
      
      
@@ -273,6 +264,9 @@ void getData(void)
         EEPROM.write((segment * FTA_CYCLE_SIZE) + 20, Vals[2].b[2]);
         EEPROM.write((segment * FTA_CYCLE_SIZE) + 21, Vals[2].b[3]);
         
+        //Skip this section?
+        EEPROM.write((segment * FTA_CYCLE_SIZE) + 22, courseConfig[segment].skip_section);
+        
         //Start Position
         EEPROM.write(1028,(start_pos));
         
@@ -287,6 +281,56 @@ void getData(void)
 
 
 
+
+void readConfigs(int startRead, int stopRead)
+{
+  int temp=0;
+  u_double tempVals[3];    //Temporary structs to read in the floats
+  for(int i=startRead;i<stopRead;i++)
+  {
+    // --- Retrieve FTA information from EEPROM: ---
+    courseConfig[i].follow = EEPROM.read(i * FTA_CYCLE_SIZE);          // Read the follow type
+    courseConfig[i].termination = EEPROM.read((i * FTA_CYCLE_SIZE) + 1); // Read the termination type
+    courseConfig[i].action = EEPROM.read((i * FTA_CYCLE_SIZE) + 2);    // Read the action type
+    
+    temp = EEPROM.read((i * FTA_CYCLE_SIZE) + 3); // Read leftAmount
+    if(temp>127){courseConfig[i].leftAmount = int(-1*(256-temp));}
+    else courseConfig[i].leftAmount=int(temp);
+  
+     temp = EEPROM.read((i * FTA_CYCLE_SIZE) + 4); // Read rightAmount
+    if(temp>127){courseConfig[i].rightAmount = int(-1*(256-temp));}
+    else courseConfig[i].rightAmount=int(temp);
+    
+    courseConfig[i].bot_speed = EEPROM.read((i * FTA_CYCLE_SIZE) + 5); // Read bot_speed
+    courseConfig[i].turn_speed = EEPROM.read((i * FTA_CYCLE_SIZE) + 6); // Read turn speed  
+    courseConfig[i].center = EEPROM.read((i * FTA_CYCLE_SIZE) + 7); // Read center of line
+    courseConfig[i].occurance = EEPROM.read((i * FTA_CYCLE_SIZE) + 8); // Read occurances of end action
+    courseConfig[i].clicks = EEPROM.read((i * FTA_CYCLE_SIZE) + 9); // Read clicks to travel before end action
+      
+    
+    //Read in the KP, KI, KD values 
+    tempVals[0].b[0]=EEPROM.read((i * FTA_CYCLE_SIZE) + 10);
+    tempVals[0].b[1]=EEPROM.read((i * FTA_CYCLE_SIZE) + 11);  
+    tempVals[0].b[2]=EEPROM.read((i * FTA_CYCLE_SIZE) + 12);
+    tempVals[0].b[3]=EEPROM.read((i * FTA_CYCLE_SIZE) + 13);  
+  
+    tempVals[1].b[0]=EEPROM.read((i * FTA_CYCLE_SIZE) + 14);
+    tempVals[1].b[1]=EEPROM.read((i * FTA_CYCLE_SIZE) + 15);  
+    tempVals[1].b[2]=EEPROM.read((i * FTA_CYCLE_SIZE) + 16);
+    tempVals[1].b[3]=EEPROM.read((i * FTA_CYCLE_SIZE) + 17);  
+
+    tempVals[2].b[0]=EEPROM.read((i * FTA_CYCLE_SIZE) + 18);
+    tempVals[2].b[1]=EEPROM.read((i * FTA_CYCLE_SIZE) + 19);  
+    tempVals[2].b[2]=EEPROM.read((i * FTA_CYCLE_SIZE) + 20);
+    tempVals[2].b[3]=EEPROM.read((i * FTA_CYCLE_SIZE) + 21);
+  
+    courseConfig[i].KP=tempVals[0].dval;
+    courseConfig[i].KI=tempVals[1].dval;
+    courseConfig[i].KD=tempVals[2].dval;
+
+    courseConfig[i].skip_section = EEPROM.read((i * FTA_CYCLE_SIZE) + 22); // Read clicks to travel before end action       
+  }
+}
 
 
 

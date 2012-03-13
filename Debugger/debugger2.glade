@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk+" version="2.24"/>
-  <!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkDialog" id="ActionWindow">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
     <property name="type_hint">dialog</property>
     <property name="has_resize_grip">False</property>
     <child internal-child="vbox">
-      <object class="GtkVBox" id="dialog-vbox2">
+      <object class="GtkBox" id="dialog-vbox2">
         <property name="can_focus">False</property>
         <property name="spacing">2</property>
         <child internal-child="action_area">
-          <object class="GtkHButtonBox" id="dialog-action_area2">
+          <object class="GtkButtonBox" id="dialog-action_area2">
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
             <child>
@@ -80,8 +79,6 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
-                <property name="primary_icon_sensitive">True</property>
-                <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
                 <property name="x">170</property>
@@ -97,8 +94,6 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
-                <property name="primary_icon_sensitive">True</property>
-                <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
                 <property name="x">170</property>
@@ -402,8 +397,6 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
-                <property name="primary_icon_sensitive">True</property>
-                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_pos_changed" swapped="no"/>
               </object>
               <packing>
@@ -543,8 +536,6 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
-                <property name="primary_icon_sensitive">True</property>
-                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_P_changed" swapped="no"/>
               </object>
               <packing>
@@ -562,8 +553,6 @@
                 <property name="invisible_char_set">True</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
-                <property name="primary_icon_sensitive">True</property>
-                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_D_changed" swapped="no"/>
               </object>
               <packing>
@@ -581,8 +570,6 @@
                 <property name="invisible_char_set">True</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
-                <property name="primary_icon_sensitive">True</property>
-                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_I_changed" swapped="no"/>
               </object>
               <packing>
@@ -711,8 +698,6 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
-                <property name="primary_icon_sensitive">True</property>
-                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_speed_changed" swapped="no"/>
               </object>
               <packing>
@@ -755,8 +740,6 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
-                <property name="primary_icon_sensitive">True</property>
-                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_center_changed" swapped="no"/>
               </object>
               <packing>
@@ -786,8 +769,6 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
-                <property name="primary_icon_sensitive">True</property>
-                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_turnspeed_changed" swapped="no"/>
               </object>
               <packing>
@@ -839,8 +820,6 @@
             <property name="caps_lock_warning">False</property>
             <property name="primary_icon_activatable">False</property>
             <property name="secondary_icon_activatable">False</property>
-            <property name="primary_icon_sensitive">True</property>
-            <property name="secondary_icon_sensitive">True</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -884,12 +863,12 @@
     <property name="border_width">5</property>
     <property name="type_hint">dialog</property>
     <child internal-child="vbox">
-      <object class="GtkVBox" id="dialog-vbox1">
+      <object class="GtkBox" id="dialog-vbox1">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="spacing">1</property>
         <child internal-child="action_area">
-          <object class="GtkHButtonBox" id="dialog-action_area1">
+          <object class="GtkButtonBox" id="dialog-action_area1">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
@@ -991,8 +970,6 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
-                <property name="primary_icon_sensitive">True</property>
-                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_change_clicks" swapped="no"/>
               </object>
               <packing>
@@ -1031,6 +1008,9 @@
       </row>
       <row>
         <col id="0" translatable="yes">Turn Right, Then Left</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">Nothing</col>
       </row>
     </data>
   </object>
@@ -1175,9 +1155,6 @@
         <col id="0" translatable="yes">At Physical Switch</col>
       </row>
       <row>
-        <col id="0" translatable="yes">At Any Turn</col>
-      </row>
-      <row>
         <col id="0" translatable="yes">At A T</col>
       </row>
       <row>
@@ -1185,6 +1162,9 @@
       </row>
       <row>
         <col id="0" translatable="yes">At Right Turn</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">At Center</col>
       </row>
     </data>
   </object>

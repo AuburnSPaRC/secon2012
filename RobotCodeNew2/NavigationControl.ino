@@ -26,10 +26,21 @@ void executeSegment(int segment)
   
   delayer=0;                //reset the delayer
   atTermination=NOWHERE;    //reset our termination
+  
+  
   //First do the actual part
   if(courseConfig[segment].follow)    //Line following
   {
-    lfPID.SetMode(AUTOMATIC);
+    //Set up our PID for this section
+    setpointPID=courseConfig[segment].center*100;
+    FULL_SPEED=float(int(courseConfig[segment].bot_speed)/255.0);
+    TURN_SPEED=float(int(courseConfig[segment].turn_speed)/255.0);
+    MAX_DELTA = FULL_SPEED*MAX_VELOCITY;
+
+    lfPID.SetOutputLimits(-MAX_DELTA, MAX_DELTA); // force PID to the range of motor speeds.   
+    lfPID.SetTunings(courseConfig[segment].KP, courseConfig[segment].KI, courseConfig[segment].KD); // Set the PID loops tuning values to the new ones from EEPROM
+    lfPID.SetMode(AUTOMATIC); // Turn on PID    
+
     while(true)
     {
       followLine();

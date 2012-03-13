@@ -7,6 +7,10 @@ import serial
 import struct
 import string
 
+serialport=['/dev/ttyUSB0','/dev/ttyUSB1','/dev/ttyUSB2','/dev/ttyUSB3','/dev/ttyACM0','/dev/ttyACM1','/dev/ttyACM2','/dev/ttyACM3','/dev/ttyACM4','/dev/ttyACM5']
+
+serialnum=0;
+
 currentStage=-1	#The current stage we are working on
 enc_fol=0	#Following = 0, encoding =1
 termination=0
@@ -21,6 +25,8 @@ p=0;
 i=0;
 d=0;
 t_clicks=0;
+t_occur=0;
+ignore=0;
 
 class DebuggerGUI(object):       
 	def __init__(self):
@@ -34,15 +40,18 @@ class DebuggerGUI(object):
 		self.turn_window=builder.get_object("TerminationWindow")		#Termination Type Window
 		self.termination_combo=builder.get_object("termination_combo")		#List Box of Termination Types
 		self.action_list_box=builder.get_object("action_list_box")		#List Box of Action Types
+		self.serial_list_box=builder.get_object("serial_list_box")		#List Box of Serial Ports
 		self.pos_select=builder.get_object("pos_select")			#Entry Box for current position	
-		self.enc_fol_button=builder.get_object("follow_enc_main")		#Encoder/Following Toggle Button
+		self.enc_fol_button=builder.get_object("follow")			#Encoder/Following Toggle Button
+		self.ignore_button=builder.get_object("ignore")				#Ignore/Don't Ignore Toggle Button
 		self.right_amount_action_box=builder.get_object("right_amount_box")	#Right Wheel Clicks Action Amount
 		self.left_amount_action_box=builder.get_object("left_amount_box")	#Left Wheel Clicks Action Amount
 		self.start_list_box=builder.get_object("start_list_box")		#List Box of Start Positions
-		self.center_entry=builder.get_object("center_entry")		#List Box of Start Positions
-		self.speed_entry=builder.get_object("speed_entry")		#List Box of Start Positions
+		self.center_entry=builder.get_object("center_entry")			#List Box of Start Positions
+		self.speed_entry=builder.get_object("speed_entry")			#List Box of Start Positions
 		self.turnspeed_entry=builder.get_object("turnspeed_entry")		#List Box of Start Positions
-		self.clicks=builder.get_object("click_box")		#Box for clicks til termination
+		self.clicks=builder.get_object("click_entry")				#Box for clicks til termination
+		self.occur=builder.get_object("occur_entry")				#Box for occurances
 		self.p_box=builder.get_object("p_box")
 		self.i_box=builder.get_object("i_box")
 		self.d_box=builder.get_object("d_box")
@@ -76,6 +85,13 @@ class DebuggerGUI(object):
 		self.termination_combo.add_attribute(cell, "text", 0)
 		###############################################
 
+		#Add List To Serial Table
+		self.serial_list_box.set_active(serialnum)
+		cell = gtk.CellRendererText()
+		self.serial_list_box.pack_start(cell, True)
+		self.serial_list_box.add_attribute(cell, "text", 0)
+		###############################################
+
 		
 		self.window.set_position(gtk.WIN_POS_CENTER)	#Center the window on-screen
 		self.window.show_all()				#Show the window
@@ -102,10 +118,18 @@ class DebuggerGUI(object):
 		self.action_window.hide_all()
 	#############################################################
 
+	#Action Window Canceled#######################################
 	def callback_end_cancel(self, widget, callback_data=None):
 		self.action_window.hide_all()
+	#############################################################
+
+	#Action Window Canceled#######################################
+	def callback_serial_changed(self, widget, callback_data=None):
+		global serialnum
+		serialnum=self.serial_list_box.get_active()
+	#############################################################
 		
-	#Toggled line following/encoders
+	#Toggled line following/encoders###############################
 	def callback_toggle_following(self, widget, callback_data=None):
 		global enc_fol
 		if currentStage!=-1:
@@ -115,29 +139,50 @@ class DebuggerGUI(object):
 			else:
 				self.enc_fol_button.set_label("Following")
 				enc_fol=0
-			
+	##################################################################
+
+
+	#Toggled Ingore button###############################
+	def callback_toggle_ignore(self, widget, callback_data=None):
+		global ignore
+		if currentStage!=-1:
+			if ignore == 0:
+				self.ignore_button.set_label("Ignore")
+				ignore=1
+			else:
+				self.ignore_button.set_label("Don't Ignore")
+				ignore=0
+	##################################################################			
 
 
 
-	#Pressed the termination window button	
+	#Pressed the termination window button###########################	
 	def callback_termination(self, widget, callback_data=None):
 		self.termination_combo.set_active(termination)
 		self.clicks.set_text(str(t_clicks))
+		self.occur.set_text(str(t_occur))
 		self.turn_window.show_all()
+	#################################################################
 
-	#Pressed Ok in the termination window
+
+	#Pressed Ok in the termination window###########################
 	def callback_termination_ok(self,widget,callback_data=None):
 		global termination
 		global t_clicks
+		global t_occur
 		if currentStage!=-1:
 			termination=self.termination_combo.get_active()
 			t_clicks=self.clicks.get_text()
+			t_occur=self.occur.get_text()
 		self.turn_window.hide_all();
+	################################################################
 
-	#Pressed Cancel in the termination window
+	#Pressed Cancel in the termination window########################
 	def callback_termination_cancel(self, widget, callback_data=None):
 		self.turn_window.hide_all();
-	
+	#################################################################
+
+
 	#Pressed exit in MainWindow
 	def callback_exit(self, widget, callback_data=None):
 		gtk.main_quit()
@@ -155,7 +200,7 @@ class DebuggerGUI(object):
 			while l<=39:
 
 				if l==currentStage:
-					f.write(str(enc_fol)+" "+str(termination)+" "+str(termination_action)+" "+str(left_amnt)+" "+str(right_amnt)+" "+str(speed)+" "+" "+str(turnspeed)+" "+str(center)+" "+str(p)+" "+str(i)+" "+str(d)+" "+str(t_clicks)+"\n")
+					f.write(str(enc_fol)+" "+str(termination)+" "+str(termination_action)+" "+str(left_amnt)+" "+str(right_amnt)+" "+str(speed)+" "+str(turnspeed)+" "+str(center)+" "+str(p)+" "+str(i)+" "+str(d)+" "+str(t_occur)+" "+str(t_clicks)+" "+str(ignore)+"\n")
 				else:
 					f.write(lines[l])	
 				l=l+1;
@@ -218,6 +263,7 @@ class DebuggerGUI(object):
 		global i
 		global d
 		global t_clicks
+		global t_occur
 
 		l=0
 		if str.isdigit(self.pos_select.get_text()):
@@ -250,14 +296,20 @@ class DebuggerGUI(object):
 			p=float(linelist[8])
 			i=float(linelist[9])
 			d=float(linelist[10])
-			t_clicks=int(linelist[11])
+			t_occur=int(linelist[11])
+			t_clicks=int(linelist[12])
+			ignore=int(linelist[13])
 		        
 			#Set the buttons and values correctly in the GUI
 			if enc_fol == 0:
 				self.enc_fol_button.set_label("Following")
 			else:
 				self.enc_fol_button.set_label("Encoders")
-
+			
+			if ignore == 0:
+				self.enc_fol_button.set_label("Don't Ignore")
+			else:
+				self.enc_fol_button.set_label("Ignore")
 			
 			self.speed_entry.set_text(str(speed))
 			self.center_entry.set_text(str(center))
@@ -276,24 +328,16 @@ class DebuggerGUI(object):
 		f.flush()
 		f.close()
 	#########################
-	
-	#Send global data
-	def callback_send_globals(self,widget,callback_data=None):	
-		#global i,p,d,start_pos
-		ser=serial.Serial('/dev/ttyUSB2',baudrate=9600)
-		info=struct.pack('=cB','g',start_pos)
-		ser.write(info)
-		ser.close()
-		print "sent"
-	##################
+
 
 	#Pressed send in MainWindow
 	def callback_send(self, widget, callback_data=None):
 		if currentStage!=-1:
-			ser=serial.Serial('/dev/ttyUSB2',baudrate=9600)
-			info=struct.pack('=cBBBBbbBBBfff','c',currentStage, enc_fol,termination,termination_action,left_amnt,right_amnt,speed,turnspeed,center,p,i,d)
+			ser=serial.Serial(serialport[serialnum],baudrate=9600)
+			info=struct.pack('=cBBBBbbBBBBBfffB','c',currentStage, enc_fol,termination,termination_action,left_amnt,right_amnt,speed,turnspeed,center,t_occur, t_clicks,p,i,d,ignore,start_pos)
 			ser.write(info)
 			ser.close()
+			print "sent"
 			
 
 if __name__ == "__main__":

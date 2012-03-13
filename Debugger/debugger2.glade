@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk+" version="2.24"/>
+  <!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkDialog" id="ActionWindow">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
     <property name="type_hint">dialog</property>
     <property name="has_resize_grip">False</property>
     <child internal-child="vbox">
-      <object class="GtkBox" id="dialog-vbox2">
+      <object class="GtkVBox" id="dialog-vbox2">
         <property name="can_focus">False</property>
         <property name="spacing">2</property>
         <child internal-child="action_area">
-          <object class="GtkButtonBox" id="dialog-action_area2">
+          <object class="GtkHButtonBox" id="dialog-action_area2">
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
             <child>
@@ -79,6 +80,8 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
                 <property name="x">170</property>
@@ -94,6 +97,8 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
                 <property name="x">170</property>
@@ -343,8 +348,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="send_course">
-                <property name="label" translatable="yes">Send</property>
+              <object class="GtkButton" id="send">
+                <property name="label" translatable="yes">Send To:</property>
                 <property name="width_request">100</property>
                 <property name="height_request">30</property>
                 <property name="visible">True</property>
@@ -360,7 +365,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="turn_type">
+              <object class="GtkButton" id="termination">
                 <property name="label" translatable="yes">Termination</property>
                 <property name="width_request">100</property>
                 <property name="height_request">30</property>
@@ -397,6 +402,8 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_pos_changed" swapped="no"/>
               </object>
               <packing>
@@ -437,24 +444,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label4">
-                <property name="width_request">250</property>
-                <property name="height_request">30</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Global Parameters
-</property>
-                <attributes>
-                  <attribute name="size" value="20000"/>
-                </attributes>
-              </object>
-              <packing>
-                <property name="x">615</property>
-                <property name="y">175</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToggleButton" id="follow_enc_main">
+              <object class="GtkToggleButton" id="follow">
                 <property name="label" translatable="yes">Following</property>
                 <property name="width_request">100</property>
                 <property name="height_request">30</property>
@@ -488,7 +478,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="action_main">
+              <object class="GtkButton" id="endaction">
                 <property name="label" translatable="yes">End Action</property>
                 <property name="width_request">100</property>
                 <property name="height_request">30</property>
@@ -504,30 +494,6 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVSeparator" id="seporator">
-                <property name="width_request">100</property>
-                <property name="height_request">350</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-              <packing>
-                <property name="x">495</property>
-                <property name="y">60</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkVSeparator" id="seporator1">
-                <property name="width_request">100</property>
-                <property name="height_request">350</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-              <packing>
-                <property name="x">500</property>
-                <property name="y">60</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkEntry" id="p_box">
                 <property name="width_request">50</property>
                 <property name="height_request">20</property>
@@ -536,6 +502,8 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_P_changed" swapped="no"/>
               </object>
               <packing>
@@ -553,6 +521,8 @@
                 <property name="invisible_char_set">True</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_D_changed" swapped="no"/>
               </object>
               <packing>
@@ -570,6 +540,8 @@
                 <property name="invisible_char_set">True</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_I_changed" swapped="no"/>
               </object>
               <packing>
@@ -626,8 +598,8 @@
                 <property name="label" translatable="yes">Starting Position:</property>
               </object>
               <packing>
-                <property name="x">590</property>
-                <property name="y">250</property>
+                <property name="x">580</property>
+                <property name="y">400</property>
               </packing>
             </child>
             <child>
@@ -652,41 +624,8 @@
                 <signal name="changed" handler="callback_global_changed" swapped="no"/>
               </object>
               <packing>
-                <property name="x">725</property>
-                <property name="y">250</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="save_global_main">
-                <property name="label" translatable="yes">Save Globals</property>
-                <property name="width_request">100</property>
-                <property name="height_request">30</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
-                <signal name="clicked" handler="callback_save_global_data" swapped="no"/>
-              </object>
-              <packing>
-                <property name="x">640</property>
-                <property name="y">360</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="send_global">
-                <property name="label" translatable="yes">Send Globals</property>
-                <property name="width_request">100</property>
-                <property name="height_request">30</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
-                <signal name="clicked" handler="callback_send_globals" swapped="no"/>
-                <signal name="clicked" handler="callback_save_global_data" swapped="no"/>
-              </object>
-              <packing>
-                <property name="x">760</property>
-                <property name="y">360</property>
+                <property name="x">710</property>
+                <property name="y">400</property>
               </packing>
             </child>
             <child>
@@ -698,6 +637,8 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_speed_changed" swapped="no"/>
               </object>
               <packing>
@@ -740,6 +681,8 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_center_changed" swapped="no"/>
               </object>
               <packing>
@@ -769,11 +712,44 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
                 <signal name="changed" handler="callback_turnspeed_changed" swapped="no"/>
               </object>
               <packing>
                 <property name="x">470</property>
                 <property name="y">250</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToggleButton" id="ignore">
+                <property name="label" translatable="yes">Don't Ignore</property>
+                <property name="width_request">100</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <property name="focus_on_click">False</property>
+                <signal name="toggled" handler="callback_toggle_ignore" swapped="no"/>
+              </object>
+              <packing>
+                <property name="x">570</property>
+                <property name="y">165</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBox" id="serial_list_box">
+                <property name="width_request">125</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="model">serial_list</property>
+                <signal name="changed" handler="callback_serial_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="x">460</property>
+                <property name="y">360</property>
               </packing>
             </child>
           </object>
@@ -798,77 +774,17 @@
       </object>
     </child>
   </object>
-  <object class="GtkWindow" id="SummaryWindow">
-    <property name="width_request">500</property>
-    <property name="height_request">500</property>
-    <property name="can_focus">False</property>
-    <property name="has_resize_grip">False</property>
-    <child>
-      <object class="GtkVBox" id="box1">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <child>
-          <object class="GtkEntry" id="entry1">
-            <property name="width_request">400</property>
-            <property name="height_request">400</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="editable">False</property>
-            <property name="has_frame">False</property>
-            <property name="invisible_char">•</property>
-            <property name="shadow_type">none</property>
-            <property name="caps_lock_warning">False</property>
-            <property name="primary_icon_activatable">False</property>
-            <property name="secondary_icon_activatable">False</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkFixed" id="fixed2">
-            <property name="height_request">100</property>
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <child>
-              <object class="GtkButton" id="summary_ok">
-                <property name="label" translatable="yes">OK</property>
-                <property name="width_request">100</property>
-                <property name="height_request">30</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
-                <property name="relief">none</property>
-              </object>
-              <packing>
-                <property name="x">200</property>
-                <property name="y">50</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-  </object>
   <object class="GtkDialog" id="TerminationWindow">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
     <property name="type_hint">dialog</property>
     <child internal-child="vbox">
-      <object class="GtkBox" id="dialog-vbox1">
+      <object class="GtkVBox" id="dialog-vbox1">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="spacing">1</property>
         <child internal-child="action_area">
-          <object class="GtkButtonBox" id="dialog-action_area1">
+          <object class="GtkHButtonBox" id="dialog-action_area1">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
@@ -929,18 +845,17 @@
                 <property name="model">termination_list</property>
               </object>
               <packing>
-                <property name="x">30</property>
-                <property name="y">40</property>
+                <property name="y">70</property>
               </packing>
             </child>
             <child>
               <object class="GtkLabel" id="clicklabel">
-                <property name="width_request">110</property>
-                <property name="height_request">80</property>
+                <property name="width_request">150</property>
+                <property name="height_request">30</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="yalign">0.50999999046325684</property>
-                <property name="label" translatable="yes">Clicks to Travel: 
+                <property name="label" translatable="yes">Max Clicks to Travel: 
 </property>
               </object>
               <packing>
@@ -949,20 +864,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="turntype">
-                <property name="width_request">160</property>
-                <property name="height_request">80</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Select the type of turn.</property>
-              </object>
-              <packing>
-                <property name="x">40</property>
-                <property name="y">93</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkEntry" id="click_box">
+              <object class="GtkEntry" id="click_entry">
                 <property name="width_request">60</property>
                 <property name="height_request">30</property>
                 <property name="visible">True</property>
@@ -970,11 +872,38 @@
                 <property name="invisible_char">•</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
-                <signal name="changed" handler="callback_change_clicks" swapped="no"/>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
-                <property name="x">300</property>
-                <property name="y">100</property>
+                <property name="x">320</property>
+                <property name="y">70</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="end_label">
+                <property name="width_request">100</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Stop At:</property>
+              </object>
+              <packing>
+                <property name="x">153</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="turnlabel">
+                <property name="width_request">100</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Turn Type:
+</property>
+              </object>
+              <packing>
+                <property name="x">45</property>
+                <property name="y">30</property>
               </packing>
             </child>
           </object>
@@ -985,7 +914,40 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkFixed" id="fixed78">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkLabel" id="occurance_label">
+                <property name="width_request">100</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Occurance:</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkEntry" id="occur_entry">
+                <property name="width_request">50</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">•</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
+              </object>
+              <packing>
+                <property name="x">100</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
         </child>
       </object>
     </child>
@@ -1017,6 +979,44 @@
   <object class="GtkEntryBuffer" id="entrybuffer1"/>
   <object class="GtkEntryBuffer" id="entrybuffer2"/>
   <object class="GtkEntryBuffer" id="entrybuffer3"/>
+  <object class="GtkListStore" id="serial_list">
+    <columns>
+      <!-- column-name SerialPorts -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0" translatable="yes">/dev/ttyUSB0</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">/dev/ttyUSB1</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">/dev/ttyUSB2</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">/dev/ttyUSB3</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">/dev/ttyACM0</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">/dev/ttyACM1</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">/dev/ttyACM2</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">/dev/ttyACM3</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">/dev/ttyACM4</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">/dev/ttyACM5</col>
+      </row>
+    </data>
+  </object>
   <object class="GtkListStore" id="start_list">
     <columns>
       <!-- column-name Starts -->

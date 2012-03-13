@@ -164,7 +164,7 @@ void moveOn()
 
 void takeReading(void)
 {
-   switch (location)
+   switch (cur_loc)
   {
   case 3: // Voltage Task
     //goLeft = readVoltage();

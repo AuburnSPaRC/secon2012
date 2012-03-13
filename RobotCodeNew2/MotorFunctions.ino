@@ -12,9 +12,14 @@ void updateMotors()
 {
   double tempLeftSpeed  = forwardSpeed + leftDelta;   // Left motor speed from -255 to 255
   double tempRightSpeed = forwardSpeed + rightDelta;  // Reft motor speed from -255 to 255
-
-  #ifdef DEBUG_MOTOR_SPEED
-    Serial.print("LeftD: ");
+  if(tempLeftSpeed>255)tempLeftSpeed=FULL_SPEED*MAX_VELOCITY;
+  else if(tempLeftSpeed<-FULL_SPEED*MAX_VELOCITY)tempLeftSpeed=-FULL_SPEED*MAX_VELOCITY;
+  
+  if(tempRightSpeed>FULL_SPEED*MAX_VELOCITY)tempRightSpeed=FULL_SPEED*MAX_VELOCITY;
+  else if(tempRightSpeed<-FULL_SPEED*MAX_VELOCITY)tempRightSpeed=-FULL_SPEED*MAX_VELOCITY;  
+  
+  
+  /*  Serial.print("LeftD: ");
     Serial.print(leftDelta);
     Serial.print("\tRightD: ");
     Serial.print(rightDelta);
@@ -22,8 +27,8 @@ void updateMotors()
     Serial.print("\t\tLeft: ");
     Serial.print(tempLeftSpeed);
     Serial.print("\tRight: ");
-    Serial.println(tempRightSpeed);
-  #endif
+    Serial.println(tempRightSpeed);*/
+
   
   digitalWrite(LEFT_EN_PIN, HIGH);   // Left motor enable
   digitalWrite(RIGHT_EN_PIN, HIGH);  // Right motor enable
@@ -59,23 +64,26 @@ void updateMotors()
 }
 
 
+
+/*
 // Does PID for line folliwing and sets the motor delta speeds.
-void followLine()
+void followLineHung()
 {
   // Read calibrated front sensor values and obtain a measure of the line position from 0 to NUM_SENSORS-1
   unsigned int pOsitIon = fSensors.readLine(fSensorValues,QTR_EMITTERS_ON,1);
 //  Serial.println(courseConfig[location].center);
-//  Serial.println(pOsitIon);
+
   inputPID = pOsitIon;            // set PID input to position of line
   
   lfPID.Compute();                // compute correction, store in outputPID
-  if (outputPID > 0)
+    Serial.println(outputPID);
+  if (outputPID > 30)
   {
     setMove(STOP_LEFT);
   }
-  else
+  else if(outputPID<-30)
   {
     setMove(STOP_RIGHT);
   }
 }
-
+*/

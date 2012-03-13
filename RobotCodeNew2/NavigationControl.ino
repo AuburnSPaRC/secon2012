@@ -156,8 +156,15 @@ int checkTermination(void)
   boolean isRight = (fSensorValues[NUM_SENSORS-1] < REFLECT_THRESHOLD);    //&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
   boolean isLeft  = (fSensorValues[0]  < REFLECT_THRESHOLD);
   
-  if (isRight){atTermination=AT_RIGHT;return 1;}
-  if (isLeft){atTermination=AT_LEFT;return 1;}
+  if (isRight && isLeft) {
+    atTermination = AT_T;
+    return 1; }
+  if (isRight) {
+    atTermination = AT_RIGHT;
+    return 1; }
+  if (isLeft) {
+    atTermination = AT_LEFT;
+    return 1; }
   
   atTermination=NOWHERE;
   return 0;

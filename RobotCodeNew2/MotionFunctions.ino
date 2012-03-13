@@ -174,7 +174,7 @@ void turnWheel(int clicks, boolean leftWheel)
 //true in the argument means left then right, false means right then left
 void turnLeftThenRight(int rightC, int leftC, boolean defaultWay)
 {
-  if(defaultWay){turnWheel(leftC,1);turnWheel(rightC,0);}
+  if(defaultWay){turnWheel(leftC,1);Serial.println("hellowagain");turnWheel(rightC,0);}
   else {turnWheel(rightC,0);turnWheel(leftC,1);}
 }
 
@@ -278,7 +278,10 @@ void encoderMove(int clicks)
     if(rClicks>0)rightDelta=-prop;
     if(lClicks>0||rClicks>0)updateMotors();    
     
+
+    
     encoders.readCalibrated(encoderValues,QTR_EMITTERS_ON);
+    
     if(lClicks>0) 
     {
       
@@ -324,6 +327,7 @@ void encoderMove(int clicks)
     }
     else {setMove(STOP_RIGHT_WHEEL);if(lClicks<=0){setMove(STOP_LEFT_WHEEL);break;}}     
   } 
+  setMove(STOP);
 }
 
 

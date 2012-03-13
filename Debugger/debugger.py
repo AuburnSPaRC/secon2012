@@ -172,8 +172,8 @@ class DebuggerGUI(object):
 		global t_occur
 		if currentStage!=-1:
 			termination=self.termination_combo.get_active()
-			t_clicks=self.clicks.get_text()
-			t_occur=self.occur.get_text()
+			t_clicks=int(self.clicks.get_text())
+			t_occur=int(self.occur.get_text())
 		self.turn_window.hide_all();
 	################################################################
 
@@ -307,9 +307,9 @@ class DebuggerGUI(object):
 				self.enc_fol_button.set_label("Encoders")
 			
 			if ignore == 0:
-				self.enc_fol_button.set_label("Don't Ignore")
+				self.ignore_button.set_label("Don't Ignore")
 			else:
-				self.enc_fol_button.set_label("Ignore")
+				self.ignore_button.set_label("Ignore")
 			
 			self.speed_entry.set_text(str(speed))
 			self.center_entry.set_text(str(center))
@@ -334,7 +334,7 @@ class DebuggerGUI(object):
 	def callback_send(self, widget, callback_data=None):
 		if currentStage!=-1:
 			ser=serial.Serial(serialport[serialnum],baudrate=9600)
-			info=struct.pack('=cBBBBbbBBBBBfffB','c',currentStage, enc_fol,termination,termination_action,left_amnt,right_amnt,speed,turnspeed,center,t_occur, t_clicks,p,i,d,ignore,start_pos)
+			info=struct.pack('=cBBBBbbBBBBBfffBB','c',currentStage, enc_fol,termination,termination_action,left_amnt,right_amnt,speed,turnspeed,center,t_occur, t_clicks,p,i,d,ignore,start_pos)
 			ser.write(info)
 			ser.close()
 			print "sent"

@@ -283,6 +283,7 @@ boolean readTemperature()
     ds.write(0x44);
     delay(100);
     tempPlate = readSensorTemp(ID_PLATE); 
+    if(tempAmbient<20||tempAmbient>40){tempAmbient=tempPlate;}
     
     if (tempPlate > tempAmbient + TEMP_RANGE - TRIGGER)
     {
@@ -343,6 +344,7 @@ boolean readTemperature()
   ds.write(0x44);
   delay(500);
   tempAmbient = readSensorTemp(ID_AMBIENT);
+  
   for(i=0;i<100;i++)    //Wait at maximum, ten readings
   {
     tempPlate = readSensorTemp(ID_PLATE);
@@ -398,12 +400,12 @@ float readSensorTemp(byte addr[])
   whole=Tc_100/100;
   fract=int(Tc_100) % 100;
   Tc_100=float(whole+float(float(fract)/100));
-  /*Serial.print(whole);
+  Serial.print(whole);
    Serial.print(".");
    if(fract<10)Serial.print("0");
    Serial.print(fract);
    Serial.print("\n");
-  Serial.println(Tc_100);*/
+  Serial.println(Tc_100);
   return Tc_100; 
 }
 

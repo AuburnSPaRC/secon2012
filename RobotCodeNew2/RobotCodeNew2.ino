@@ -80,6 +80,8 @@ struct ftaCycle{
   float KI;
   float KD;
   byte skip_section;
+  
+  int type;      //INTERNAL USE ONLY     0 //NO BOX AROUND   1 //BOX IS TO ROBOT'S LEFT   2  // BOX IS TO ROBOT'S RIGHT
 };
 
 //A global variable used to store the current termination
@@ -150,7 +152,7 @@ void setup()
   delay(1000);
   
   readConfigs(0, NUM_SEGMENTS);
-  cur_loc=2;//(int)EEPROM.read(1028);
+  cur_loc=(int)EEPROM.read(1028);
 }
 
 
@@ -169,14 +171,14 @@ void loop(void)
    setMove(STOP); 
  }
  
- if(!courseConfig[cur_loc].skip_section)    //Make sure we're not supposed to skip this section
+/* if(!courseConfig[cur_loc].skip_section)    //Make sure we're not supposed to skip this section
  {
    takeReading();
    executeSegment(cur_loc);      //Carry on with current segment
  }
  else {Serial.print("Skipped that!\n");}
  
- moveOn();                     //Move to next location
+ moveOn();                     //Move to next location*/
  //readTemperature();
  
 }
@@ -321,6 +323,10 @@ void readConfigs(int startRead, int stopRead)
   u_double tempVals[3];    //Temporary structs to read in the floats
   for(int i=startRead;i<stopRead;i++)
   {
+    if(i==0||i==1||i==10||i==19||i==20||i==21||i==30||i==39)courseConfig[i].type=0;  ///BOX is not around
+    else if(i==7||i==8||i==9||i==16||i==17||i==18||i==27||i==28||i==29||i==36||i==37||i==38)courseConfig[i].type=2;    //BOX is to robot's right side
+    else courseConfig[i].type=1;    //BOX is to robot's left side
+    
     // --- Retrieve FTA information from EEPROM: ---
     courseConfig[i].follow = EEPROM.read(i * FTA_CYCLE_SIZE);          // Read the follow type
     courseConfig[i].termination = EEPROM.read((i * FTA_CYCLE_SIZE) + 1); // Read the termination type

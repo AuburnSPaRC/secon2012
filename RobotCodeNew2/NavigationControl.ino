@@ -83,12 +83,38 @@ void executeSegment(int segment)
     {
       
       followLine();
-      if(delayer>50)checkTermination();
+      if(delayer>50)
+      { 
+        checkTermination();
+  
+        //Timeout on the course up to the T
+        if(segment==1||segment==10||segment==21||segment==30)
+        {
+          if(delayer>(courseConfig[segment].clicks*2)){break;}
+          else {delayer++;}
+        }
+        else   //Something is stuck, backup a little
+        {
+          if(delayer>(courseConfig[segment].clicks*2))
+          {
+            setMove(STOP);
+            if(courseConfig[segment].type==0)setMove(MOVE_BACKWARD);
+            else if(courseConfig[segment].type==1)setMove(RIGHT_BACK);
+            else if(courseConfig[segment].type==2)setMove(LEFT_BACK);
+            delay(250);
+            setMove(STOP);
+            delayer=0;
+          }
+          else delayer++;
+        }
+      }
       else delayer++;
+      
       if(atTermination==courseConfig[segment].termination){nOccur++;delayer=0;atTermination=NOWHERE;if(nOccur>=courseConfig[segment].occurance){break;}}
+      
+      
     }
     lfPID.SetMode(MANUAL);
-    //delay(50);
   }
   else      //Encoders
   {
@@ -97,23 +123,39 @@ void executeSegment(int segment)
       if(cur_loc==3||cur_loc==12||cur_loc==23||cur_loc==32)
       {
         setMove(MOVE_BACKWARD);
-        delay(10);
+        if(cur_loc==23)delay(75);
+        else delay(15);
         setMove(STOP);
         break;
       }
       else
       {
-        if((segment==2||segment==11||segment==22||segment==31)&&delayer<=10){Serial.println("SLow");setMove(MOVE_FORWARD);delayer++;}
-        else encoderMove(2);
-        
-        atTermination=NOWHERE;
-        
-        if(delayer>10||segment==2||segment==11||segment==22||segment==31)checkTermination();
-        else delayer++;
-       
-        Serial.println(delayer);
-        if((delayer>10)&&(segment==2||segment==11||segment==22||segment==31)){Serial.println("Fast");setMove(MOVE_FAST);}
-        
+        if((segment==2||segment==11||segment==22||segment==31))
+        {
+          if(delayer<=20)setMove(MOVE_FORWARD);
+          checkTermination();
+          if(delayer>20)
+          { 
+            setMove(MOVE_FAST);
+            if(segment==22)
+            {
+              if(delayer>50){break;}
+              else delayer++;
+            }
+          }
+          else delayer++;
+         
+           
+        }
+        else 
+        {
+          encoderMove(2);
+          atTermination=NOWHERE;
+          if(delayer>20)checkTermination();
+          else delayer++;
+          
+        }
+  
         if(atTermination==courseConfig[segment].termination){nOccur++;delayer=0;atTermination=NOWHERE;if(nOccur>=courseConfig[segment].occurance){setMove(STOP);break;}}
       }
     }
@@ -179,19 +221,27 @@ int checkTermination(void)
   boolean hitSwitchVals[4] = {(digitalRead(TOP_RIGHT_SWITCH)==LOW),(digitalRead(TOP_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_RIGHT_SWITCH)==LOW)};
   boolean hitSwitch=((hitSwitchVals[0]||hitSwitchVals[1])&&(hitSwitchVals[2]||hitSwitchVals[3]));
   
+  
   if(hitSwitch){
     atTermination=HIT_SWITCH;
     return 1; }
+  
+  if(cur_loc==15||cur_loc==35){
+    if (isRight || isLeft) {
+      atTermination = AT_T;
+      return 1; }
+  }
+    
   if (isRight && isLeft) {
     atTermination = AT_T;
     return 1; }
-  if (isRight) {
+  else if (isRight) {
     atTermination = AT_RIGHT;
     return 1; }
-  if (isLeft) {
+  else if (isLeft) {
     atTermination = AT_LEFT;
     return 1; }
-  if (isCenter){
+  else if (isCenter){
     atTermination = AT_CENTER;
     return 1; }
   

@@ -264,6 +264,7 @@ class DebuggerGUI(object):
 		global d
 		global t_clicks
 		global t_occur
+		global ignore
 
 		l=0
 		if str.isdigit(self.pos_select.get_text()):

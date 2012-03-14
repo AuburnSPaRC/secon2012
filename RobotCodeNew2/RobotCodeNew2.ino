@@ -51,7 +51,7 @@
 #define MAX_VELOCITY  255  // Maximum motor velocity
 #define MOTOR_OFFSET  0
 
-float FULL_SPEED = 0.8; // Fraction of MAX_VELOCITY that is 'full' speed, set each segment
+float FULL_SPEED = 0.4; // Fraction of MAX_VELOCITY that is 'full' speed, set each segment
 float TURN_SPEED = 0.8; // Fraction of MAX_VELOCITY that is 'turning' speed, set each segment
 
 float MAX_DELTA = FULL_SPEED*MAX_VELOCITY;
@@ -81,6 +81,9 @@ struct ftaCycle{
   float KD;
   byte skip_section;
 };
+
+//A global variable used to store the current termination
+int atTermination;
 
 ftaCycle courseConfig[NUM_SEGMENTS];     //Holds the settings for the course read in from EEProm 
 boolean goLeft=0;                        //Whether or not we have read the box as going left
@@ -121,7 +124,23 @@ void setup()
   delay(500);                // Wait for serial comm to come online
 
   // Setup pin IO:
+  pinMode(LEFT_PWM_PIN, OUTPUT);
+  pinMode(LEFT_DIR_PIN, OUTPUT);
+  pinMode(RIGHT_PWM_PIN, OUTPUT);
+  pinMode(RIGHT_DIR_PIN, OUTPUT);
+  pinMode(RELAY_K1_PIN, OUTPUT);
+  pinMode(RELAY_K2_PIN, OUTPUT);
+  pinMode(TOP_RIGHT_SWITCH, INPUT);
+  pinMode(BOTTOM_RIGHT_SWITCH, INPUT);
+  pinMode(TOP_LEFT_SWITCH, INPUT);
+  pinMode(BOTTOM_LEFT_SWITCH, INPUT);
+  
 
+  delay(50);
+  
+    digitalWrite(RELAY_K1_PIN, 0);
+  digitalWrite(RELAY_K2_PIN, 0);
+  
   delay(50);
   
   lfPID.SetSampleTime(10);
@@ -137,23 +156,29 @@ void setup()
 
 void loop(void)
 {
-  Serial.print("\n");
+/*  Serial.print("\n");
   Serial.print("Location: ");
   Serial.print(cur_loc);
-  Serial.print("\n"); 
+  Serial.print("\n"); */
  while(Serial.available()>0)    //First see if we have any incoming messages
  {
+   Serial.println(Serial.available());
+   setMove(MOVE_FORWARD);
    getData();
-   delay(750); 
+   delay(250);
+   setMove(STOP); 
  }
  
  if(!courseConfig[cur_loc].skip_section)    //Make sure we're not supposed to skip this section
  {
+   takeReading();
    executeSegment(cur_loc);      //Carry on with current segment
  }
  else {Serial.print("Skipped that!\n");}
  
  moveOn();                     //Move to next location
+ //readTemperature();
+ 
 }
 
 
@@ -169,23 +194,25 @@ void takeReading(void)
 {
    switch (cur_loc)
   {
-  case 2: // Voltage Task
-    //goLeft = readVoltage();
+  case 3: // Voltage Task
+    goLeft = readVoltage();
     break;
-  case 11: // Capacitance Task 
-    //readCapacitance();      //For some reason it does better if we do this....
-    //goLeft = readCapacitance();
+  case 12: // Capacitance Task 
+    readCapacitance();      //For some reason it does better if we do this....
+    goLeft = readCapacitance();
     break;
-  case 22: // Temperature Task
-    //goLeft = readTemperature();    
+  case 23: // Temperature Task
+    goLeft = readTemperature();    
     break;
-  case 31: // Waveform Task
-    //goLeft = readWaveform();
+  case 32: // Waveform Task
+    goLeft = readWaveform();
     break;
   default:
     goLeft = false; // Not at a task location.
     break;
   }
+    digitalWrite(RELAY_K1_PIN, 0);
+  digitalWrite(RELAY_K2_PIN, 0);
 }
 
 
@@ -200,6 +227,7 @@ void getData(void)
   
   
   command=Serial.read();
+  Serial.println(command);
   switch(command)
   {
     case 'p':			//Just a test command
@@ -208,6 +236,7 @@ void getData(void)
     
     //Check to make sure we are sending it things
     case 'c':    //Data command
+      delay(100);
       if(Serial.available()>=22)
       {
         //Get the data
@@ -274,6 +303,7 @@ void getData(void)
         EEPROM.write(1028,(start_pos));
         
         readConfigs(segment,segment+1);
+        Serial.println("We got it!");
 
       }
       break;
@@ -341,7 +371,7 @@ void calibrateSensors()
 {
   float temp=TURN_SPEED;
   
-  TURN_SPEED=0.25;
+  TURN_SPEED=0.3;
   setMove(TURN_LEFT);
   // Calibrate sensors  (robot must be fully on the line)
   // Note: still needs calibration motor routine

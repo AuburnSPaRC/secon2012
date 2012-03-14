@@ -25,6 +25,7 @@
 // Bot move actions
 void setMove(int moveType)
 {
+  boolean turn=0;
   switch (moveType)
   {
     case STOP:
@@ -36,31 +37,37 @@ void setMove(int moveType)
       forwardSpeed = 0;
       leftDelta    = -TURN_SPEED * MAX_VELOCITY;
       rightDelta   = TURN_SPEED * MAX_VELOCITY;
+      turn=true;
       break;
     case TURN_RIGHT:
       forwardSpeed = 0;
       leftDelta    = TURN_SPEED * MAX_VELOCITY;
       rightDelta   = -TURN_SPEED * MAX_VELOCITY;
+      turn=true;
       break;
     case LEFT_FORWARD:
       forwardSpeed = 0;
       leftDelta    = TURN_SPEED * MAX_VELOCITY;
       rightDelta   = 0;
+      turn=true;
       break;
     case LEFT_BACK:
       forwardSpeed = 0;
       leftDelta    = -TURN_SPEED * MAX_VELOCITY;
       rightDelta   = 0;
+      turn=true;
       break;
     case RIGHT_FORWARD:
       forwardSpeed = 0;
       leftDelta    = 0;
-      rightDelta   = TURN_SPEED * MAX_VELOCITY;;
+      rightDelta   = TURN_SPEED * MAX_VELOCITY;
+      turn=true;
       break;
     case RIGHT_BACK:
       forwardSpeed = 0;
       leftDelta    = 0;
       rightDelta   = -TURN_SPEED * MAX_VELOCITY;
+      turn=true;
       break;
     case MOVE_FORWARD:
       forwardSpeed = FULL_SPEED*MAX_VELOCITY;
@@ -89,34 +96,34 @@ void setMove(int moveType)
       leftDelta    = 0;
       rightDelta   = 0;
   }
-  updateMotors();
+  updateMotors(turn);
 }
 
 
+// Does PID for line folliwing and sets the motor delta speeds.
 void followLine()
 {
-  
   // Read calibrated front sensor values and obtain a measure of the line position from 0 to NUM_SENSORS-1
-
   unsigned int pOsitIon = fSensors.readLine(fSensorValues,QTR_EMITTERS_ON,1);
- 
+
   inputPID = pOsitIon;            // set PID input to position of line
   
-  lfPID.Compute();                // compute correction, store in outputPID
   
+  lfPID.Compute();                // compute correction, store in outputPID
   if (outputPID < 0)
   {
     forwardSpeed = FULL_SPEED*MAX_VELOCITY;
-    leftDelta = 0;//outputPID;         // sets right wheel's speed variation
-    rightDelta = outputPID;//outputPID;
+    leftDelta = -outputPID;         // sets right wheel's speed variation
+    rightDelta = outputPID;
   }
   else
   {
     forwardSpeed = FULL_SPEED*MAX_VELOCITY;
-    rightDelta  = 0;        // sets left wheel's speed variation
-    leftDelta   = -outputPID;//-outputPID;
+    rightDelta  = outputPID;        // sets left wheel's speed variation
+    leftDelta   = -outputPID;
   }
-  updateMotors();
+
+  updateMotors(0);
 }
 
 //Arguments are number of clicks to turn and true if leftwheel, false if right
@@ -174,7 +181,7 @@ void turnWheel(int clicks, boolean leftWheel)
 //true in the argument means left then right, false means right then left
 void turnLeftThenRight(int rightC, int leftC, boolean defaultWay)
 {
-  if(defaultWay){turnWheel(leftC,1);Serial.println("hellowagain");turnWheel(rightC,0);}
+  if(defaultWay){turnWheel(leftC,1);turnWheel(rightC,0);}
   else {turnWheel(rightC,0);turnWheel(leftC,1);}
 }
 
@@ -263,8 +270,9 @@ void encoderMove(int clicks)
   boolean lLastColor,rLastColor;
   float prop;                        //A proportionality constant
   
-  if(lClicks>0){setMove(MOVE_FORWARD);}
-  else if(lClicks<0){setMove(MOVE_BACKWARD);rClicks*=-1;lClicks*=-1;}      
+  setMove(STOP);
+  if(lClicks>0){leftDelta=FULL_SPEED*MAX_VELOCITY;rightDelta=leftDelta;updateMotors(0);}
+  else if(lClicks<0){leftDelta=-FULL_SPEED*MAX_VELOCITY;rightDelta=leftDelta;updateMotors(0);rClicks*=-1;lClicks*=-1;}      
   
   encoders.readCalibrated(encoderValues,QTR_EMITTERS_ON);
   lLastColor=(encoderValues[LEFT]>500);
@@ -272,16 +280,15 @@ void encoderMove(int clicks)
   
   while(true)
   {
-    prop = 20*(lClicks-rClicks);
+    prop = 3*(lClicks-rClicks);
     
-    if(lClicks>0)leftDelta=prop;
-    if(rClicks>0)rightDelta=-prop;
-    if(lClicks>0||rClicks>0)updateMotors();    
+    if(lClicks>0)leftDelta+=prop;
+    if(rClicks>0)rightDelta+=-prop;
+    if(lClicks>0||rClicks>0)updateMotors(0);    
     
 
     
     encoders.readCalibrated(encoderValues,QTR_EMITTERS_ON);
-    
     if(lClicks>0) 
     {
       
@@ -325,9 +332,12 @@ void encoderMove(int clicks)
         }
       }
     }
-    else {setMove(STOP_RIGHT_WHEEL);if(lClicks<=0){setMove(STOP_LEFT_WHEEL);break;}}     
+    else {setMove(STOP_RIGHT_WHEEL);if(lClicks<=0){setMove(STOP_LEFT_WHEEL);break;}}
+    
+    checkTermination();
+    if(atTermination==courseConfig[cur_loc].termination){break;}
   } 
-  setMove(STOP);
+
 }
 
 

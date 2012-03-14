@@ -8,16 +8,19 @@
 */
 
 
-void updateMotors()
+void updateMotors(boolean turn)
 {
   double tempLeftSpeed  = forwardSpeed + leftDelta;   // Left motor speed from -255 to 255
   double tempRightSpeed = forwardSpeed + rightDelta;  // Reft motor speed from -255 to 255
-  if(tempLeftSpeed>255)tempLeftSpeed=FULL_SPEED*MAX_VELOCITY;
-  else if(tempLeftSpeed<-FULL_SPEED*MAX_VELOCITY)tempLeftSpeed=-FULL_SPEED*MAX_VELOCITY;
   
-  if(tempRightSpeed>FULL_SPEED*MAX_VELOCITY)tempRightSpeed=FULL_SPEED*MAX_VELOCITY;
-  else if(tempRightSpeed<-FULL_SPEED*MAX_VELOCITY)tempRightSpeed=-FULL_SPEED*MAX_VELOCITY;  
-  
+  if(!turn)
+  {
+    if(tempLeftSpeed>255)tempLeftSpeed=255;
+    else if(tempLeftSpeed<-255)tempLeftSpeed=-255;
+    
+    if(tempRightSpeed>255)tempRightSpeed=255;
+    else if(tempRightSpeed<-255)tempRightSpeed=-255;  
+  }
   
   /*  Serial.print("LeftD: ");
     Serial.print(leftDelta);

@@ -15,8 +15,7 @@
 #define RIGHT_THEN_LEFT 2 // Turn right wheel then left wheel
 #define DO_NOTHING      3 // Do nothing
 
-//A global variable used to store the current termination
-int atTermination;
+
 int delayer;        //Used to delay the checking of the termination types after the start of each section to give the robot time to get off the line
 
 // Executes the three-stage cycle (follow, terminate, action) for a given segment of course.
@@ -27,7 +26,7 @@ void executeSegment(int segment)
   delayer=0;                //reset the delayer
   atTermination=NOWHERE;    //reset our termination
   
-    Serial.print("\n");
+  /*  Serial.print("\n");
     Serial.print("Follow:");
     Serial.print((courseConfig[segment].follow));
     Serial.print("\n");
@@ -64,7 +63,7 @@ void executeSegment(int segment)
     Serial.println(courseConfig[segment].clicks);
     Serial.print("Occurances: ");  
     Serial.println(courseConfig[segment].occurance);  
-   Serial.print("\n"); //Debugging print out
+   Serial.print("\n"); //Debugging print out*/
  
   FULL_SPEED=float(int(courseConfig[segment].bot_speed)/255.0);
   TURN_SPEED=float(int(courseConfig[segment].turn_speed)/255.0);
@@ -74,7 +73,7 @@ void executeSegment(int segment)
   {
     //Set up our PID for this section
     setpointPID=courseConfig[segment].center*100;
-    MAX_DELTA = FULL_SPEED*MAX_VELOCITY;
+    MAX_DELTA = 0.22*MAX_VELOCITY;
 
     lfPID.SetOutputLimits(-MAX_DELTA, MAX_DELTA); // force PID to the range of motor speeds.   
     lfPID.SetTunings(courseConfig[segment].KP, courseConfig[segment].KI, courseConfig[segment].KD); // Set the PID loops tuning values to the new ones from EEPROM
@@ -84,45 +83,57 @@ void executeSegment(int segment)
     {
       
       followLine();
-      if(delayer>100)checkTermination();
+      if(delayer>50)checkTermination();
       else delayer++;
-      if(atTermination==courseConfig[segment].termination){nOccur++;delayer=0;if(nOccur>=courseConfig[segment].occurance){break;}}
+      if(atTermination==courseConfig[segment].termination){nOccur++;delayer=0;atTermination=NOWHERE;if(nOccur>=courseConfig[segment].occurance){break;}}
     }
     lfPID.SetMode(MANUAL);
+    //delay(50);
   }
   else      //Encoders
   {
-    if(courseConfig[segment].termination==HIT_SWITCH){delayer=100;}
     while(true)
     {
-      setMove(MOVE_FORWARD);
-      if(delayer>100)checkTermination();
-      else delayer++;
-      if(atTermination==courseConfig[segment].termination){nOccur++;delayer=0;if(nOccur>=courseConfig[segment].occurance){setMove(STOP);break;}}
+      if(cur_loc==3||cur_loc==12||cur_loc==23||cur_loc==32)
+      {
+        setMove(MOVE_BACKWARD);
+        delay(10);
+        setMove(STOP);
+        break;
+      }
+      else
+      {
+        if((segment==2||segment==11||segment==22||segment==31)&&delayer<=10){Serial.println("SLow");setMove(MOVE_FORWARD);delayer++;}
+        else encoderMove(2);
+        
+        atTermination=NOWHERE;
+        
+        if(delayer>10||segment==2||segment==11||segment==22||segment==31)checkTermination();
+        else delayer++;
+       
+        Serial.println(delayer);
+        if((delayer>10)&&(segment==2||segment==11||segment==22||segment==31)){Serial.println("Fast");setMove(MOVE_FAST);}
+        
+        if(atTermination==courseConfig[segment].termination){nOccur++;delayer=0;atTermination=NOWHERE;if(nOccur>=courseConfig[segment].occurance){setMove(STOP);break;}}
+      }
     }
   }
   
-  if(segment==2||segment==11||segment==22||segment==31)
-  {
-    //takeReading();                //Try to take a reading
-  }
   
   //Turn left then right
   if(courseConfig[segment].action==LEFT_THEN_RIGHT)
   {
     
-    if(!goLeft){Serial.print("Hello0");turnLeftThenRight(courseConfig[segment].rightAmount,courseConfig[segment].leftAmount,true);}
+    if(!goLeft){turnLeftThenRight(courseConfig[segment].rightAmount,courseConfig[segment].leftAmount,true);}
     else turnLeftThenRight(courseConfig[segment].leftAmount,courseConfig[segment].rightAmount,false);
   }
   else if(courseConfig[segment].action==RIGHT_THEN_LEFT)    //Turn right then left
   {
-    Serial.print("Hello1");
     if(!goLeft)turnLeftThenRight(courseConfig[segment].rightAmount,courseConfig[segment].leftAmount,false);
     else turnLeftThenRight(courseConfig[segment].leftAmount,courseConfig[segment].rightAmount,true);
   }  
   else if(courseConfig[segment].action==TURN_IN_PLACE)
   {
-    Serial.print("Hello2");
     if(!goLeft)turnInPlace(courseConfig[segment].leftAmount);
     else turnInPlace(-courseConfig[segment].leftAmount);
   }
@@ -164,6 +175,7 @@ int checkTermination(void)
 
   boolean isRight = (fSensorValues[NUM_SENSORS-1] < REFLECT_THRESHOLD);    //&&(fSensorValues[(NUM_SENSORS)-2] < REFLECT_THRESHOLD));
   boolean isLeft  = (fSensorValues[0]  < REFLECT_THRESHOLD);
+  boolean isCenter = (fSensorValues[NUM_SENSORS/2] < REFLECT_THRESHOLD)&&(fSensorValues[NUM_SENSORS/2-1] < REFLECT_THRESHOLD);
   boolean hitSwitchVals[4] = {(digitalRead(TOP_RIGHT_SWITCH)==LOW),(digitalRead(TOP_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_LEFT_SWITCH)==LOW),(digitalRead(BOTTOM_RIGHT_SWITCH)==LOW)};
   boolean hitSwitch=((hitSwitchVals[0]||hitSwitchVals[1])&&(hitSwitchVals[2]||hitSwitchVals[3]));
   
@@ -178,6 +190,9 @@ int checkTermination(void)
     return 1; }
   if (isLeft) {
     atTermination = AT_LEFT;
+    return 1; }
+  if (isCenter){
+    atTermination = AT_CENTER;
     return 1; }
   
   atTermination=NOWHERE;

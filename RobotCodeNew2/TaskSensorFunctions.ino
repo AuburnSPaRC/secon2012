@@ -283,7 +283,7 @@ boolean readTemperature()
     ds.write(0x44);
     delay(100);
     tempPlate = readSensorTemp(ID_PLATE); 
-    tempAmbient=tempPlate;///REMOVE THIS LATER!*/
+    
     if (tempPlate > tempAmbient + TEMP_RANGE - TRIGGER)
     {
       accurateFlag = true;
@@ -323,15 +323,12 @@ boolean readTemperature()
       if(numTimes>=2)
       {
         if(!upping){
-          #ifdef DEBUG_TEMP
-          Serial.print("LEFT");
-          #endif
+          //Serial.print("LEFT");
+
           return LEFT;
         }
         else {
-          #ifdef DEBUG_TEMP
-          Serial.print("RIGHT");
-          #endif
+          //Serial.print("RIGHT");
           return RIGHT;
         }        
       }
@@ -405,10 +402,8 @@ float readSensorTemp(byte addr[])
    Serial.print(".");
    if(fract<10)Serial.print("0");
    Serial.print(fract);
-   Serial.print("\n");*/
-#ifdef DEBUG_TEMP
-  Serial.println(Tc_100);
-#endif
+   Serial.print("\n");
+  Serial.println(Tc_100);*/
   return Tc_100; 
 }
 

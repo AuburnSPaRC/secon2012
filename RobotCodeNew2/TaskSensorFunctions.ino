@@ -23,7 +23,7 @@
 #define ERROR LEFT             // Default direction when sensor reading fails
 
 // Waveform Constants:
-#define V_SQ_MAX    185        // Maximum square wave voltage level
+#define V_SQ_MAX    150        // Maximum square wave voltage level
 #define V_SQ_MIN    47         // Minimum square wave voltage level
 #define NUM_SAMPLES 500        // Number of samples
 #define VOLT_THRESH 0.15       // Voltage threshold
@@ -78,16 +78,11 @@ boolean readWaveform()
   digitalWrite(RELAY_K2_PIN, 0);
   // -------------
 
-  delay(100);
+  delay(200);
   int sqcount = 0;
   int sawcount = 0; //count for the square wave/sawtooth wave, variable for signal value
   int my_status;
   byte val = 0;
-
-#ifdef DEBUG_WAVEFORM
-  Serial.println("WAVEFORM----");
-#endif
-
 
   digitalWrite(PIN_CS,LOW); //enable ADC chip
   delay(1);  //give it time to start up
@@ -107,12 +102,12 @@ boolean readWaveform()
     //digitalWrite(pin_RD, HIGH); //stop reading in data
     ADC_RD_PORT |= ADC_RD_SET_MASK;  // replaces the commented line above
 
-#ifdef DEBUG_WAVEFORM
-    Serial.println(blah);
-#endif
 
-    if ((blah*1.0 >= (V_SQ_MAX - V_SQ_MAX*VOLT_THRESH)) && 
-      (blah*1.0 <= (V_SQ_MAX + V_SQ_MAX*VOLT_THRESH)))  //if voltage is within 10% of square wave maximum
+    //Serial.println(blah);
+
+
+    if ((float(blah) >= (V_SQ_MAX - V_SQ_MAX*VOLT_THRESH)) && 
+      (float(blah) <= (V_SQ_MAX + V_SQ_MAX*VOLT_THRESH)))  //if voltage is within 10% of square wave maximum
       sqcount++;
     else if ((blah*1.0 >= (V_SQ_MIN - V_SQ_MAX*VOLT_THRESH)) && 
       (blah*1.0 <= (V_SQ_MIN + V_SQ_MAX*VOLT_THRESH)))  //if voltage is within 10% of square wave minimum
@@ -123,30 +118,33 @@ boolean readWaveform()
 
   digitalWrite(PIN_CS,HIGH);  //disables the ADC
 
-#ifdef DEBUG_WAVEFORM
+/*(  for (int i=0; i<NUM_SAMPLES; i++)
+  {
+    Serial.println(arrs[i]);
+    if(i%3==0)delay(50);
+  }
+  delay(2000);
+    
+
   Serial.print("Square: ");
   Serial.println(sqcount);
   Serial.print("Saw: ");
   Serial.println(sawcount);
   //  Serial.print("time: ");
   //  Serial.println(t2-t1);
-  Serial.println("-------------");
-#endif
+  Serial.println("-------------");*/
 
   if (sqcount > NUM_SAMPLES*(SQ_THRESH_PERCENT))   //if x% of samples are within range, then it must be a square wave
   {
     accurateFlag = true;
-  #ifdef DEBUG_WAVEFORM
-    Serial.print("RIGHT");    
-  #endif
+   // Serial.print("RIGHT");    
+
     return RIGHT;
   }
   else if (sawcount > NUM_SAMPLES*(SAW_THRESH_PERCENT))   //if x% of samples are NOT within range, then it must be a sawtooth wave
   {
     accurateFlag = true;
-  #ifdef DEBUG_WAVEFORM
-    Serial.print("LEFT");
-  #endif
+//   Serial.print("LEFT");
     return LEFT;
   }
   else
@@ -400,12 +398,12 @@ float readSensorTemp(byte addr[])
   whole=Tc_100/100;
   fract=int(Tc_100) % 100;
   Tc_100=float(whole+float(float(fract)/100));
-  Serial.print(whole);
+/*  Serial.print(whole);
    Serial.print(".");
    if(fract<10)Serial.print("0");
    Serial.print(fract);
    Serial.print("\n");
-  Serial.println(Tc_100);
+  Serial.println(Tc_100);*/
   return Tc_100; 
 }
 

@@ -134,12 +134,12 @@ void executeSegment(int segment)
         {
           if(delayer<=20)setMove(MOVE_FORWARD);
           checkTermination();
-          if(delayer>20)
+          if(delayer>100)
           { 
             setMove(MOVE_FAST);
             if(segment==22)
             {
-              if(delayer>50){break;}
+              if(delayer>140){break;}
               else delayer++;
             }
           }
@@ -151,7 +151,7 @@ void executeSegment(int segment)
         {
           encoderMove(2);
           atTermination=NOWHERE;
-          if(delayer>20)checkTermination();
+          if(delayer>15)checkTermination();
           else delayer++;
           
         }

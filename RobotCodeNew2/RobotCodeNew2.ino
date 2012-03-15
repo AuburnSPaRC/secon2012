@@ -332,8 +332,8 @@ void readConfigs(int startRead, int stopRead)
   u_double tempVals[3];    //Temporary structs to read in the floats
   for(int i=startRead;i<stopRead;i++)
   {
-    if(i==0||i==1||i==10||i==19||i==20||i==21||i==30||i==39)courseConfig[i].type=0;  ///BOX is not around
-    else if(i==7||i==8||i==9||i==16||i==17||i==18||i==27||i==28||i==29||i==36||i==37||i==38)courseConfig[i].type=2;    //BOX is to robot's right side
+    if(i==1||i==10||i==19||i==21||i==30||i==39)courseConfig[i].type=0;  ///BOX is not around
+    else if(i==7||i==8||i==9||i==16||i==17||i==18||i==27||i==28||i==29||i==36||i==37||i==38||i==20||i==0)courseConfig[i].type=2;    //BOX is to robot's right side
     else courseConfig[i].type=1;    //BOX is to robot's left side
     
     // --- Retrieve FTA information from EEPROM: ---

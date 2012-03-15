@@ -293,6 +293,7 @@ void encoderMove(int clicks)
   int rClicks=clicks,lClicks=clicks;
   boolean lLastColor,rLastColor;
   float prop;                        //A proportionality constant
+  int delayEnc=0;
   
   setMove(STOP);
   if(lClicks>0){leftDelta=FULL_SPEED*MAX_VELOCITY;rightDelta=leftDelta;updateMotors(0);}
@@ -363,6 +364,18 @@ void encoderMove(int clicks)
     
     if(courseConfig[cur_loc].clicks-lClicks>10)checkTermination();
     if(atTermination==courseConfig[cur_loc].termination){break;}
+    
+    if(delayEnc>500)
+    {
+      setMove(STOP);
+      setMove(LEFT_BACK);
+      delay(500);
+      setMove(STOP);
+      if(lClicks>0){leftDelta=FULL_SPEED*MAX_VELOCITY;updateMotors(0);}
+      if(rClicks>0){rightDelta=FULL_SPEED*MAX_VELOCITY;updateMotors(0);} 
+      delayEnc=0;
+    }
+    else delayEnc++;
   } 
 
 }

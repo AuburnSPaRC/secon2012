@@ -20,7 +20,7 @@
 #define AT_RIGHT      6 // Bot is at right turn
 #define AT_CENTER     7 // Bot is at the center
 
-
+int delayTurns;    //Delayer for turns
 
 // Bot move actions
 void setMove(int moveType)
@@ -132,6 +132,8 @@ void turnWheel(int clicks, boolean leftWheel)
   int nClicks=clicks;
   boolean lastColor;
   int wheel=!leftWheel;
+  float temp;
+  delayTurns=0;
   
   if(leftWheel)
   {
@@ -170,11 +172,33 @@ void turnWheel(int clicks, boolean leftWheel)
         }
       }
     }
-    else {break;}        
+    else {break;} 
+    
+    if(delayTurns>1000&&nClicks>0)
+    {
+      setMove(STOP);
+      delay(50);
+      temp=TURN_SPEED;
+      TURN_SPEED=1;
+      if(leftWheel)
+      {
+        if(clicks>0){setMove(LEFT_FORWARD);}
+        else if(clicks<0){setMove(LEFT_BACK);}  
+      }
+      else 
+      {
+        if(clicks>0){setMove(RIGHT_FORWARD);}
+        else if(clicks<0){setMove(RIGHT_BACK);}      
+      }
+      TURN_SPEED=temp;        
+      delayTurns=0;
+    }
+    else delayTurns++;
+  
   }
   
   if(leftWheel){setMove(STOP_LEFT_WHEEL);}
-  else {setMove(STOP_RIGHT_WHEEL);} 
+  else {setMove(STOP_RIGHT_WHEEL);}
 }
 
 
@@ -280,7 +304,10 @@ void encoderMove(int clicks)
   
   while(true)
   {
-    prop = 3*(lClicks-rClicks);
+    if(lClicks>0){leftDelta=FULL_SPEED*MAX_VELOCITY;updateMotors(0);}
+    if(rClicks>0){rightDelta=FULL_SPEED*MAX_VELOCITY;updateMotors(0);} 
+  
+    prop = 2*(lClicks-rClicks);
     
     if(lClicks>0)leftDelta+=prop;
     if(rClicks>0)rightDelta+=-prop;
@@ -334,7 +361,7 @@ void encoderMove(int clicks)
     }
     else {setMove(STOP_RIGHT_WHEEL);if(lClicks<=0){setMove(STOP_LEFT_WHEEL);break;}}
     
-    checkTermination();
+    if(courseConfig[cur_loc].clicks-lClicks>10)checkTermination();
     if(atTermination==courseConfig[cur_loc].termination){break;}
   } 
 

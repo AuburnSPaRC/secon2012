@@ -83,7 +83,7 @@ void executeSegment(int segment)
     {
       
       followLine();
-      if(delayer>50)
+      if(delayer>30)
       { 
         checkTermination();
   
@@ -124,7 +124,7 @@ void executeSegment(int segment)
       {
         setMove(MOVE_BACKWARD);
         if(cur_loc==23)delay(75);
-        else delay(15);
+        else delay(75);
         setMove(STOP);
         break;
       }
@@ -134,12 +134,12 @@ void executeSegment(int segment)
         {
           if(delayer<=20)setMove(MOVE_FORWARD);
           checkTermination();
-          if(delayer>100)
+          if(delayer>courseConfig[segment].clicks)
           { 
             setMove(MOVE_FAST);
             if(segment==22)
             {
-              if(delayer>140){break;}
+              if(delayer>(courseConfig[segment].clicks+40)){break;}
               else delayer++;
             }
           }
@@ -149,11 +149,7 @@ void executeSegment(int segment)
         }
         else 
         {
-          encoderMove(2);
-          atTermination=NOWHERE;
-          if(delayer>15)checkTermination();
-          else delayer++;
-          
+          encoderMove(courseConfig[segment].clicks);
         }
   
         if(atTermination==courseConfig[segment].termination){nOccur++;delayer=0;atTermination=NOWHERE;if(nOccur>=courseConfig[segment].occurance){setMove(STOP);break;}}

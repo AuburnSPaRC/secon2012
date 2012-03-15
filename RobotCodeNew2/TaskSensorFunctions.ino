@@ -23,7 +23,7 @@
 #define ERROR LEFT             // Default direction when sensor reading fails
 
 // Waveform Constants:
-#define V_SQ_MAX    150        // Maximum square wave voltage level
+#define V_SQ_MAX    180        // Maximum square wave voltage level
 #define V_SQ_MIN    47         // Minimum square wave voltage level
 #define NUM_SAMPLES 500        // Number of samples
 #define VOLT_THRESH 0.15       // Voltage threshold

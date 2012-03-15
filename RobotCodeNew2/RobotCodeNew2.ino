@@ -26,7 +26,7 @@
 #define TIMEOUT       2500  // waits for 2500 us for sensor outputs to go low
 #define MID_LINE      ((NUM_SENSORS-1)*1000)/2  // value of sensor when line is centered (0-7000)
 #define WHITE_LINE    1     // '1' = white line, '0' = black line
-#define REFLECT_THRESHOLD 500  // part of 1000 at which line is not found
+#define REFLECT_THRESHOLD 300  // part of 1000 at which line is not found
 
 // Direction Definitions
 #define LEFT    0    // Left direction 
@@ -153,6 +153,7 @@ void setup()
   
   readConfigs(0, NUM_SEGMENTS);
   cur_loc=(int)EEPROM.read(1028);
+
 }
 
 
@@ -166,10 +167,12 @@ void loop(void)
  {
    Serial.println(Serial.available());
    setMove(MOVE_FORWARD);
+   delay(100);
+   setMove(STOP);
    getData();
-   delay(250);
-   setMove(STOP); 
- }
+   setMove(MOVE_FORWARD);
+   delay(100);
+   setMove(STOP); }
  
  if(!courseConfig[cur_loc].skip_section)    //Make sure we're not supposed to skip this section
  {
@@ -179,8 +182,6 @@ void loop(void)
  else {Serial.print("Skipped that!\n");}
  
  moveOn();                     //Move to next location
- 
- //delay(5000);
 }
 
 
@@ -194,7 +195,9 @@ void moveOn()
 
 void takeReading(void)
 {
-  
+
+    setMove(MOVE_FAST);
+    delay(50);  
   
    switch (cur_loc)
   {
@@ -209,17 +212,17 @@ void takeReading(void)
     goLeft = readTemperature();    
     break;
   case 32: // Waveform Task
-    setMove(MOVE_FAST);
-    delay(50);
     goLeft = readWaveform();
-     setMove(STOP);
+
     break;
   default:
     goLeft = false; // Not at a task location.
     break;
   }
+       setMove(STOP);
     digitalWrite(RELAY_K1_PIN, 0);
   digitalWrite(RELAY_K2_PIN, 0);
+  
  
 }
 

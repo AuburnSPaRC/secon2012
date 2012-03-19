@@ -101,7 +101,8 @@ void executeSegment(int segment)
             if(courseConfig[segment].type==0)setMove(MOVE_BACKWARD);
             else if(courseConfig[segment].type==1)setMove(RIGHT_BACK);
             else if(courseConfig[segment].type==2)setMove(LEFT_BACK);
-            delay(250);
+            if(segment==0||segment==20)delay(600);
+            else delay(250);
             setMove(STOP);
             delayer=0;
           }
@@ -123,8 +124,8 @@ void executeSegment(int segment)
       if(cur_loc==3||cur_loc==12||cur_loc==23||cur_loc==32)
       {
         setMove(MOVE_BACKWARD);
-        if(cur_loc==23)delay(75);
-        else delay(75);
+        if(cur_loc==23)delay(50);
+        else delay(50);
         setMove(STOP);
         break;
       }

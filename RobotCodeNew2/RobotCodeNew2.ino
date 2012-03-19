@@ -26,7 +26,7 @@
 #define TIMEOUT       2500  // waits for 2500 us for sensor outputs to go low
 #define MID_LINE      ((NUM_SENSORS-1)*1000)/2  // value of sensor when line is centered (0-7000)
 #define WHITE_LINE    1     // '1' = white line, '0' = black line
-#define REFLECT_THRESHOLD 300  // part of 1000 at which line is not found
+#define REFLECT_THRESHOLD 250  // part of 1000 at which line is not found
 
 // Direction Definitions
 #define LEFT    0    // Left direction 
@@ -80,7 +80,7 @@ struct ftaCycle{
   float KI;
   float KD;
   byte skip_section;
-  
+
   int type;      //INTERNAL USE ONLY     0 //NO BOX AROUND   1 //BOX IS TO ROBOT'S LEFT   2  // BOX IS TO ROBOT'S RIGHT
 };
 
@@ -96,6 +96,12 @@ union u_double
   byte b[4];
   float dval;
   int ival;
+};  //A structure to read in floats from the serial ports
+
+union u_int
+{
+  byte b[2];
+  unsigned int ival;
 };  //A structure to read in floats from the serial ports
 
 int cur_loc=0;    //Our current location on the course
@@ -120,10 +126,21 @@ double setpointPID, inputPID, outputPID;
 PID lfPID(&inputPID, &outputPID, &setpointPID, 0.023,0.0,0.008, DIRECT);
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+
+//Calibrations stuff/
+unsigned int fCalMax[16];
+unsigned int fCalMin[16];
+unsigned int encMax[1];
+unsigned int encMin[1];
+///////////////////////////
+
+
 void setup()
 {
+  int calval=123;
+
   Serial.begin(9600);        // Begin serial comm for debugging  
-  delay(500);                // Wait for serial comm to come online
+  delay(100);                // Wait for serial comm to come online
 
   // Setup pin IO:
   pinMode(LEFT_PWM_PIN, OUTPUT);
@@ -136,70 +153,178 @@ void setup()
   pinMode(BOTTOM_RIGHT_SWITCH, INPUT);
   pinMode(TOP_LEFT_SWITCH, INPUT);
   pinMode(BOTTOM_LEFT_SWITCH, INPUT);
-  
+
+  if((digitalRead(TOP_RIGHT_SWITCH)==LOW)&&(digitalRead(TOP_LEFT_SWITCH)==LOW)){
+    EEPROM.write(1029,123);
+  }
+  if((digitalRead(BOTTOM_RIGHT_SWITCH)==LOW)&&(digitalRead(BOTTOM_LEFT_SWITCH)==LOW)){
+    EEPROM.write(1029,321);
+  }
 
   delay(50);
-  
-    digitalWrite(RELAY_K1_PIN, 0);
+
+  digitalWrite(RELAY_K1_PIN, 0);
   digitalWrite(RELAY_K2_PIN, 0);
-  
+
   delay(50);
-  
+
+  calval=EEPROM.read(1029);
+
   lfPID.SetSampleTime(10);
 
-  calibrateSensors(); // Calibrate line sensors
+  if(calval==123)
+  {
+    calibrateSensors(); // Calibrate line sensors
+    writeCalibrations();
+    readCalibrations();
+  }
+  else 
+  {   
+    fSensors.calibrate(QTR_EMITTERS_ON);
+    encoders.calibrate(QTR_EMITTERS_ON);
+    readCalibrations();
+    digitalWrite(RELAY_K1_PIN, 0);
+    digitalWrite(RELAY_K2_PIN, 0);
+  }
 
-  delay(1000);
-  
+
+  delay(200);
+
   readConfigs(0, NUM_SEGMENTS);
   cur_loc=(int)EEPROM.read(1028);
 
 }
 
 
+void writeCalibrations(void)
+{
+  u_int maxval,minval;
+  int i, j;
+
+  // Serial.println("Writing values!");
+
+  for(int i=0;i<16;i++)
+  { 
+    maxval.ival=fSensors.calibratedMaximumOn[i];
+    minval.ival=fSensors.calibratedMinimumOn[i];
+    for(int j=0;j<2;j++)
+    {
+      EEPROM.write(1030+(i*2)+j,maxval.b[j]);
+      EEPROM.write(1062+(i*2)+j,minval.b[j]);
+    }
+    //        Serial.println(fSensors.calibratedMaximumOn[i]);
+    //  Serial.println(fSensors.calibratedMinimumOn[i]);
+    // Serial.print("\n\n");    
+  }
+
+  for(int i=0;i<2;i++)
+  { 
+    maxval.ival=encoders.calibratedMaximumOn[i];
+    minval.ival=encoders.calibratedMinimumOn[i];
+    for(int j=0;j<2;j++)
+    {
+      EEPROM.write(1094+(i*2)+j,maxval.b[j]);
+      EEPROM.write(1098+(i*2)+j,minval.b[j]);
+    }
+    //      Serial.println(encoders.calibratedMaximumOn[i]);
+    //  Serial.println(encoders.calibratedMinimumOn[i]);
+    // Serial.print("\n\n");
+  }
+
+
+}
+
+
+void readCalibrations(void)
+{
+  u_int maxval,minval;
+  int i, j;
+
+  //  Serial.println("Reading values!");
+  for(int i=0;i<16;i++)
+  { 
+    for(int j=0;j<2;j++)
+    {
+      maxval.b[j]=EEPROM.read(1030+(i*2)+j);
+      minval.b[j]=EEPROM.read(1062+(i*2)+j);
+    }
+    fSensors.calibratedMaximumOn[i]=maxval.ival;
+    fSensors.calibratedMinimumOn[i]=minval.ival;
+
+    /*  Serial.println(maxval.ival);
+     Serial.println(minval.ival);
+     Serial.print("\n\n");*/
+
+  }
+
+  for(int i=0;i<2;i++)
+  { 
+    for(int j=0;j<2;j++)
+    {
+      maxval.b[j]=EEPROM.read(1094+(i*2)+j);
+      minval.b[j]=EEPROM.read(1098+(i*2)+j);
+    }
+    encoders.calibratedMaximumOn[i]=maxval.ival;
+    encoders.calibratedMinimumOn[i]=minval.ival;
+
+    /*    Serial.println(maxval.ival);
+     Serial.println(minval.ival);
+     Serial.print("\n\n");    */
+  }
+}
+
 void loop(void)
 {
-/*  Serial.print("\n");
-  Serial.print("Location: ");
-  Serial.print(cur_loc);
-  Serial.print("\n"); */
- while(Serial.available()>0)    //First see if we have any incoming messages
- {
-   Serial.println(Serial.available());
-   setMove(MOVE_FORWARD);
-   delay(100);
-   setMove(STOP);
-   getData();
-   setMove(MOVE_FORWARD);
-   delay(100);
-   setMove(STOP); }
- 
- if(!courseConfig[cur_loc].skip_section)    //Make sure we're not supposed to skip this section
- {
-   takeReading();
-   executeSegment(cur_loc);      //Carry on with current segment
- }
- else {Serial.print("Skipped that!\n");}
- 
- moveOn();                     //Move to next location
+  /*  Serial.print("\n");
+   Serial.print("Location: ");
+   Serial.print(cur_loc);
+   Serial.print("\n"); */
+  while(Serial.available()>0)    //First see if we have any incoming messages
+  {
+    Serial.println(Serial.available());
+    setMove(MOVE_FORWARD);
+    delay(100);
+    setMove(STOP);
+    getData();
+    setMove(MOVE_FORWARD);
+    delay(100);
+    setMove(STOP); 
+  }
+
+  if(!courseConfig[cur_loc].skip_section)    //Make sure we're not supposed to skip this section
+  {
+    takeReading();
+    executeSegment(cur_loc);      //Carry on with current segment
+  }
+  else {
+    Serial.print("Skipped that!\n");
+  }
+
+  moveOn();                     //Move to next location
 }
 
 
 void moveOn()
 {
-  if(goLeft){cur_loc+=4;}
-  else if((cur_loc==6)||(cur_loc==15)||(cur_loc==26)||(cur_loc==35)){cur_loc+=4;}  
-  else {cur_loc++;}
+  if(goLeft){
+    cur_loc+=4;
+  }
+  else if((cur_loc==6)||(cur_loc==15)||(cur_loc==26)||(cur_loc==35)){
+    cur_loc+=4;
+  }  
+  else {
+    cur_loc++;
+  }
   if(cur_loc>39)cur_loc=0;
 }
 
 void takeReading(void)
 {
 
-    setMove(MOVE_FAST);
-    delay(50);  
-  
-   switch (cur_loc)
+  setMove(MOVE_FAST);
+  delay(50);  
+
+  switch (cur_loc)
   {
   case 3: // Voltage Task
     goLeft = readVoltage();
@@ -219,11 +344,11 @@ void takeReading(void)
     goLeft = false; // Not at a task location.
     break;
   }
-       setMove(STOP);
-    digitalWrite(RELAY_K1_PIN, 0);
+  setMove(STOP);
+  digitalWrite(RELAY_K1_PIN, 0);
   digitalWrite(RELAY_K2_PIN, 0);
-  
- 
+
+
 }
 
 
@@ -235,92 +360,92 @@ void getData(void)
   int i,j;  
   byte start_pos, leftAmount, rightAmount;
   u_double Vals[3];
-  
-  
+
+
   command=Serial.read();
   Serial.println(command);
   switch(command)
   {
-    case 'p':			//Just a test command
-      Serial.print("Print!");
-      break;
-    
+  case 'p':			//Just a test command
+    Serial.print("Print!");
+    break;
+
     //Check to make sure we are sending it things
-    case 'c':    //Data command
-      delay(100);
-      if(Serial.available()>=22)
+  case 'c':    //Data command
+    delay(100);
+    if(Serial.available()>=22)
+    {
+      //Get the data
+      segment=Serial.read();
+      courseConfig[segment].follow=Serial.read();
+      courseConfig[segment].termination=Serial.read();            
+      courseConfig[segment].action=Serial.read();    
+      leftAmount=Serial.read();             
+      rightAmount=Serial.read();      
+      courseConfig[segment].bot_speed=Serial.read();
+      courseConfig[segment].turn_speed=Serial.read();
+      courseConfig[segment].center=Serial.read();
+      courseConfig[segment].occurance=Serial.read();
+      courseConfig[segment].clicks=Serial.read();
+      for(i=0;i<3;i++)		//Read in PID values
       {
-        //Get the data
-        segment=Serial.read();
-        courseConfig[segment].follow=Serial.read();
-        courseConfig[segment].termination=Serial.read();            
-        courseConfig[segment].action=Serial.read();    
-        leftAmount=Serial.read();             
-        rightAmount=Serial.read();      
-        courseConfig[segment].bot_speed=Serial.read();
-        courseConfig[segment].turn_speed=Serial.read();
-        courseConfig[segment].center=Serial.read();
-        courseConfig[segment].occurance=Serial.read();
-        courseConfig[segment].clicks=Serial.read();
-        for(i=0;i<3;i++)		//Read in PID values
+        for(j=0;j<4;j++)
         {
-          for(j=0;j<4;j++)
-          {
-            Vals[i].b[j]=Serial.read();
-          }
+          Vals[i].b[j]=Serial.read();
         }
-        courseConfig[segment].KP=Vals[0].dval;
-        courseConfig[segment].KI=Vals[1].dval;            
-        courseConfig[segment].KD=Vals[2].dval; 
-        
-        courseConfig[segment].skip_section=Serial.read();  
-        start_pos=Serial.read(); 
-     
-     
-        //Now save the data   
-        EEPROM.write(segment * FTA_CYCLE_SIZE,courseConfig[segment].follow);          
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 1,courseConfig[segment].termination);
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 2, courseConfig[segment].action);
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 3,leftAmount);          
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 4,rightAmount);
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 5, courseConfig[segment].bot_speed);          
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 6, courseConfig[segment].turn_speed);          
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 7,courseConfig[segment].center);
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 8,courseConfig[segment].occurance);
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 9,courseConfig[segment].clicks);
-
-        //KP
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 10, Vals[0].b[0]);
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 11, Vals[0].b[1]);
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 12, Vals[0].b[2]);
-        EEPROM.write  ((segment * FTA_CYCLE_SIZE) + 13, Vals[0].b[3]);
-    
-        //KI
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 14, Vals[1].b[0]);
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 15, Vals[1].b[1]);
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 16, Vals[1].b[2]);
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 17, Vals[1].b[3]);
-    
-        //KD
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 18, Vals[2].b[0]);
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 19, Vals[2].b[1]);
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 20, Vals[2].b[2]);
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 21, Vals[2].b[3]);
-        
-        //Skip this section?
-        EEPROM.write((segment * FTA_CYCLE_SIZE) + 22, courseConfig[segment].skip_section);
-        
-        //Start Position
-        EEPROM.write(1028,(start_pos));
-        
-        readConfigs(segment,segment+1);
-        Serial.println("We got it!");
-
       }
-      break;
-      
+      courseConfig[segment].KP=Vals[0].dval;
+      courseConfig[segment].KI=Vals[1].dval;            
+      courseConfig[segment].KD=Vals[2].dval; 
+
+      courseConfig[segment].skip_section=Serial.read();  
+      start_pos=Serial.read(); 
+
+
+      //Now save the data   
+      EEPROM.write(segment * FTA_CYCLE_SIZE,courseConfig[segment].follow);          
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 1,courseConfig[segment].termination);
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 2, courseConfig[segment].action);
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 3,leftAmount);          
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 4,rightAmount);
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 5, courseConfig[segment].bot_speed);          
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 6, courseConfig[segment].turn_speed);          
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 7,courseConfig[segment].center);
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 8,courseConfig[segment].occurance);
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 9,courseConfig[segment].clicks);
+
+      //KP
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 10, Vals[0].b[0]);
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 11, Vals[0].b[1]);
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 12, Vals[0].b[2]);
+      EEPROM.write  ((segment * FTA_CYCLE_SIZE) + 13, Vals[0].b[3]);
+
+      //KI
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 14, Vals[1].b[0]);
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 15, Vals[1].b[1]);
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 16, Vals[1].b[2]);
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 17, Vals[1].b[3]);
+
+      //KD
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 18, Vals[2].b[0]);
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 19, Vals[2].b[1]);
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 20, Vals[2].b[2]);
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 21, Vals[2].b[3]);
+
+      //Skip this section?
+      EEPROM.write((segment * FTA_CYCLE_SIZE) + 22, courseConfig[segment].skip_section);
+
+      //Start Position
+      EEPROM.write(1028,(start_pos));
+
+      readConfigs(segment,segment+1);
+      Serial.println("We got it!");
+
+    }
+    break;
+
   }
-  
+
 }
 
 
@@ -335,33 +460,37 @@ void readConfigs(int startRead, int stopRead)
     if(i==1||i==10||i==19||i==21||i==30||i==39)courseConfig[i].type=0;  ///BOX is not around
     else if(i==7||i==8||i==9||i==16||i==17||i==18||i==27||i==28||i==29||i==36||i==37||i==38||i==20||i==0)courseConfig[i].type=2;    //BOX is to robot's right side
     else courseConfig[i].type=1;    //BOX is to robot's left side
-    
+
     // --- Retrieve FTA information from EEPROM: ---
     courseConfig[i].follow = EEPROM.read(i * FTA_CYCLE_SIZE);          // Read the follow type
     courseConfig[i].termination = EEPROM.read((i * FTA_CYCLE_SIZE) + 1); // Read the termination type
     courseConfig[i].action = EEPROM.read((i * FTA_CYCLE_SIZE) + 2);    // Read the action type
-    
+
     temp = EEPROM.read((i * FTA_CYCLE_SIZE) + 3); // Read leftAmount
-    if(temp>127){courseConfig[i].leftAmount = int(-1*(256-temp));}
+    if(temp>127){
+      courseConfig[i].leftAmount = int(-1*(256-temp));
+    }
     else courseConfig[i].leftAmount=int(temp);
-  
-     temp = EEPROM.read((i * FTA_CYCLE_SIZE) + 4); // Read rightAmount
-    if(temp>127){courseConfig[i].rightAmount = int(-1*(256-temp));}
+
+    temp = EEPROM.read((i * FTA_CYCLE_SIZE) + 4); // Read rightAmount
+    if(temp>127){
+      courseConfig[i].rightAmount = int(-1*(256-temp));
+    }
     else courseConfig[i].rightAmount=int(temp);
-    
+
     courseConfig[i].bot_speed = EEPROM.read((i * FTA_CYCLE_SIZE) + 5); // Read bot_speed
     courseConfig[i].turn_speed = EEPROM.read((i * FTA_CYCLE_SIZE) + 6); // Read turn speed  
     courseConfig[i].center = EEPROM.read((i * FTA_CYCLE_SIZE) + 7); // Read center of line
     courseConfig[i].occurance = EEPROM.read((i * FTA_CYCLE_SIZE) + 8); // Read occurances of end action
     courseConfig[i].clicks = EEPROM.read((i * FTA_CYCLE_SIZE) + 9); // Read clicks to travel before end action
-      
-    
+
+
     //Read in the KP, KI, KD values 
     tempVals[0].b[0]=EEPROM.read((i * FTA_CYCLE_SIZE) + 10);
     tempVals[0].b[1]=EEPROM.read((i * FTA_CYCLE_SIZE) + 11);  
     tempVals[0].b[2]=EEPROM.read((i * FTA_CYCLE_SIZE) + 12);
     tempVals[0].b[3]=EEPROM.read((i * FTA_CYCLE_SIZE) + 13);  
-  
+
     tempVals[1].b[0]=EEPROM.read((i * FTA_CYCLE_SIZE) + 14);
     tempVals[1].b[1]=EEPROM.read((i * FTA_CYCLE_SIZE) + 15);  
     tempVals[1].b[2]=EEPROM.read((i * FTA_CYCLE_SIZE) + 16);
@@ -371,7 +500,7 @@ void readConfigs(int startRead, int stopRead)
     tempVals[2].b[1]=EEPROM.read((i * FTA_CYCLE_SIZE) + 19);  
     tempVals[2].b[2]=EEPROM.read((i * FTA_CYCLE_SIZE) + 20);
     tempVals[2].b[3]=EEPROM.read((i * FTA_CYCLE_SIZE) + 21);
-  
+
     courseConfig[i].KP=tempVals[0].dval;
     courseConfig[i].KI=tempVals[1].dval;
     courseConfig[i].KD=tempVals[2].dval;
@@ -385,30 +514,43 @@ void readConfigs(int startRead, int stopRead)
 void calibrateSensors()
 {
   float temp=TURN_SPEED;
-  
+  boolean toggle = true;
+
   TURN_SPEED=0.3;
   setMove(TURN_LEFT);
   // Calibrate sensors  (robot must be fully on the line)
   // Note: still needs calibration motor routine
-  for (int i = 0; i < 50; i++)  // Make the calibration take about 5 seconds
+  for (int i = 0; i < 40; i++)  // Make the calibration take about 5 seconds
   {
     // Reads both sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
     fSensors.calibrate(QTR_EMITTERS_ON);
     encoders.calibrate(QTR_EMITTERS_ON);
-    //rEncoder.calibrate(QTR_EMITTERS_ON);
+    if(i%3==0)
+    {
+      digitalWrite(RELAY_K1_PIN, toggle); // Make sound!
+      toggle = !toggle;
+    }
   }
 
+  toggle = true;
   setMove(TURN_RIGHT);
-  for (int i = 0; i < 50; i++)  // Make the calibration take about 5 seconds
+  for (int i = 0; i < 40; i++)  // Make the calibration take about 5 seconds
   {
     // Reads both sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
     fSensors.calibrate(QTR_EMITTERS_ON);
     encoders.calibrate(QTR_EMITTERS_ON);
-  //  rEncoder.calibrate(QTR_EMITTERS_ON);
+    if(i%3==0)
+    {
+      digitalWrite(RELAY_K1_PIN, toggle); // Make sound!
+      toggle = !toggle;
+    }
   }
   setMove(STOP);
   TURN_SPEED=temp;
+  digitalWrite(RELAY_K1_PIN, 0);
+  digitalWrite(RELAY_K2_PIN, 0);
 }
+
 
 
 

@@ -23,7 +23,7 @@
 #define ERROR LEFT             // Default direction when sensor reading fails
 
 // Waveform Constants:
-#define V_SQ_MAX    180        // Maximum square wave voltage level
+#define V_SQ_MAX    170        // Maximum square wave voltage level
 #define V_SQ_MIN    47         // Minimum square wave voltage level
 #define NUM_SAMPLES 500        // Number of samples
 #define VOLT_THRESH 0.15       // Voltage threshold
@@ -74,16 +74,18 @@ boolean readWaveform()
   pinMode(PIN_RD, OUTPUT); //Pin 10 will be low to read in our values, and high when finished (RD)
   pinMode(PIN_INT, INPUT);  //Pin 11 will read the ADC's interrupt output to see when to stop looping (INT)
   ADC_DDR = 0;  //Sets ADC Port to be an input
-  digitalWrite(RELAY_K1_PIN, 0);
+/*  digitalWrite(RELAY_K1_PIN, 0);
   digitalWrite(RELAY_K2_PIN, 0);
-  // -------------
+  Serial.println("-------------");*/
+
 
   delay(200);
   int sqcount = 0;
   int sawcount = 0; //count for the square wave/sawtooth wave, variable for signal value
   int my_status;
   byte val = 0;
-
+  unsigned int arrs[NUM_SAMPLES];
+  
   digitalWrite(PIN_CS,LOW); //enable ADC chip
   delay(1);  //give it time to start up
   for (int i=0; i<NUM_SAMPLES; i++)
@@ -103,7 +105,7 @@ boolean readWaveform()
     ADC_RD_PORT |= ADC_RD_SET_MASK;  // replaces the commented line above
 
 
-    //Serial.println(blah);
+   // Serial.println(blah);
 
 
     if ((float(blah) >= (V_SQ_MAX - V_SQ_MAX*VOLT_THRESH)) && 
@@ -118,7 +120,7 @@ boolean readWaveform()
 
   digitalWrite(PIN_CS,HIGH);  //disables the ADC
 
-/*(  for (int i=0; i<NUM_SAMPLES; i++)
+ /*for (int i=0; i<NUM_SAMPLES; i++)
   {
     Serial.println(arrs[i]);
     if(i%3==0)delay(50);
@@ -130,8 +132,6 @@ boolean readWaveform()
   Serial.println(sqcount);
   Serial.print("Saw: ");
   Serial.println(sawcount);
-  //  Serial.print("time: ");
-  //  Serial.println(t2-t1);
   Serial.println("-------------");*/
 
   if (sqcount > NUM_SAMPLES*(SQ_THRESH_PERCENT))   //if x% of samples are within range, then it must be a square wave

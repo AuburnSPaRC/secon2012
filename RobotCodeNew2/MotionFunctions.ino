@@ -369,7 +369,7 @@ void encoderMove(int clicks)
     {
       setMove(STOP);
       setMove(LEFT_BACK);
-      delay(500);
+      delay(600);
       setMove(STOP);
       if(lClicks>0){leftDelta=FULL_SPEED*MAX_VELOCITY;updateMotors(0);}
       if(rClicks>0){rightDelta=FULL_SPEED*MAX_VELOCITY;updateMotors(0);} 
